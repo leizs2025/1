@@ -196,38 +196,46 @@
         calculateTotal();
     }
 
-    function saveCurrentPageData() {
-        formData[currentPage] = {
-            name: document.getElementById("name").value.trim(),
-            zodiac: document.getElementById("zodiac").value.trim(),
-            taiSui: document.getElementById("taiSui").value.trim(),
-            paperGold1: Number(document.getElementById("paperGold1").value) || 0,
-            light: document.getElementById("light").value.trim(),
-            paperGold2: Number(document.getElementById("paperGold2").value) || 0,
-            longevity: document.getElementById("longevity").value.trim(),
-            paperGold3: Number(document.getElementById("paperGold3").value) || 0,
-            wisdom: document.getElementById("wisdom").value.trim(),
-            paperGold4: Number(document.getElementById("paperGold4").value) || 0,
-            arhat: document.getElementById("arhat").value.trim(),
-            paperGold5: Number(document.getElementById("paperGold5").value) || 0,
-            donation: Number(document.getElementById("donation").value) || 0
-        };
-    }
+function saveCurrentPageData() {
+    if (currentPage === 0) return; // 主祈者页不保存项目数据
 
-    function updatePage() {
-        document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
-        let data = formData[currentPage];
-        Object.keys(data).forEach(id => {
-            let el = document.getElementById(id);
-            if (el) {
-                if (typeof data[id] === 'number' && data[id] === 0) {
-                    el.value = "";
-                } else {
-                    el.value = data[id];
-                }
+    const index = currentPage - 1; // 正确对应 formData[0~14]
+
+    formData[index] = {
+        name: document.getElementById("name").value,
+        zodiac: document.getElementById("zodiac").value,
+        taiSui: document.getElementById("taiSui").value,
+        paperGold1: Number(document.getElementById("paperGold1").value) || 0,
+        light: document.getElementById("light").value,
+        paperGold2: Number(document.getElementById("paperGold2").value) || 0,
+        longevity: document.getElementById("longevity").value,
+        paperGold3: Number(document.getElementById("paperGold3").value) || 0,
+        wisdom: document.getElementById("wisdom").value,
+        paperGold4: Number(document.getElementById("paperGold4").value) || 0,
+        arhat: document.getElementById("arhat").value,
+        paperGold5: Number(document.getElementById("paperGold5").value) || 0,
+        donation: Number(document.getElementById("donation").value) || 0
+    };
+}
+
+
+function updatePage() {
+    document.getElementById("pageTitle").textContent = `第 ${currentPage} 页`;
+
+    const data = formData[currentPage - 1];
+
+    Object.keys(data).forEach(id => {
+        let el = document.getElementById(id);
+        if (el) {
+            if (typeof data[id] === 'number' && data[id] === 0) {
+                el.value = "";
+            } else {
+                el.value = data[id];
             }
-        });
-    }
+        }
+    });
+}
+
 
     function calculateTotal() {
         let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
