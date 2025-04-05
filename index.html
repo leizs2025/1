@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报名表单</title>
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+}
+
+.container {
+    width: 100%;
+    max-width: 350px; /* 整体更紧凑 */
+    margin: auto;
+    text-align: center;
+}
+
+.field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px; /* 进一步缩小间距 */
+}
+
+label {
+    font-size: 18px;
+    flex: 0.45; /* label 占比稍大 */
+    text-align: left;
+    margin-right: 3px; /* 让 label 更靠近输入框 */
+}
+
+.paper-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.paper-field label {
+    font-size: 18px;
+    flex: 1;               /* label 占整行剩下的空间 */
+    text-align: left;
+}
+
+.paper-gold {
+    width: 36%;            /* 纸金宽度 */
+    height: 35px;
+    padding: 5px;
+    font-size: 18px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+
+
+
+/* 统一输入框和下拉菜单 */
+.input, select {
+    flex: 0.5; /* 进一步缩短输入框和下拉菜单 */
+    font-size: 18px;
+    padding: 5px;
+    height: 40px; /* 缩短高度 */
+    line-height: 28px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background: white;
+    box-sizing: border-box;
+}
+
+/* 让 select 的箭头和 input 统一风格 */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 22px;
+    background: url('data:image/svg+xml;utf8,<svg fill="%23000" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5H7z"/></svg>') no-repeat right 8px center;
+    background-size: 12px;
+}
+
+button {
+    margin: 6px;
+    padding: 8px 12px;
+    font-size: 15px; /* 按钮稍微缩小 */
+    cursor: pointer;
+    border: none;
+    background: #007BFF;
+    color: white;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.hidden {
+    display: none;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>报名表单</h2>
+
+        <!-- 主祈者信息 -->
+        <div id="mainInfo">
+            <div class="field">
+                <label>主祈者姓名:</label>
+                <input type="text" id="mainName" class="input">
+            </div>
+            <div class="field">
+                <label>电话:</label>
+                <input type="text" id="phoneNumber" class="input">
+            </div>
+            <button onclick="nextPage()">下一页</button>
+        </div>
+
+        <!-- 15 页填写内容 -->
+        <div id="formPages" class="hidden">
+            <h3 id="pageTitle">第 1 页</h3>
+            <div class="field"><label>姓名:</label> <input type="text" id="name" class="input"></div>
+            <div class="field"><label>生肖:</label> <input type="text" id="zodiac" class="input"></div>
+
+            <div class="field"><label>太岁:</label> <select id="taiSui" class="input"><option value=""></option><option value="是">是</option></select></div>
+            <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold1" class="paper-gold"></div>
+            <div class="field"><label>光明灯:</label> <select id="light" class="input"><option value=""></option><option value="是">是</option></select></div>
+            <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold2" class="paper-gold"></div>
+            <div class="field"><label>长生禄位:</label> <select id="longevity" class="input"><option value=""></option><option value="是">是</option></select></div>
+            <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold3" class="paper-gold"></div>
+            <div class="field"><label>文昌帝君:</label> <select id="wisdom" class="input"><option value=""></option><option value="是">是</option></select></div>
+            <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold4" class="paper-gold"></div>
+
+            <div class="field"><label>十六罗汉:</label> <select id="arhat" class="input"><option value=""></option><option value="是">是</option></select></div>
+            <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
+
+            <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
+
+            <button onclick="prevPage()">上一页</button>
+            <button onclick="nextPage()">下一页</button>
+            <button onclick="gotoSummary()">跳转到第 17 页</button>
+        </div>
+
+        <!-- 第 17 页 (结算 + 提交) -->
+        <div id="summaryPage" class="hidden">
+            <h3>结算</h3>
+            <p id="totalAmount">总金额: 0 元</p>
+            <button onclick="prevPage()">返回上一页</button>
+            <button onclick="submitForm()">提交</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        let formData = Array(15).fill(null).map(() => ({
+            name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
+            longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
+            donation: 0
+        }));
+
+ function nextPage() {
+    if (currentPage === 0) {
+        // 获取输入值
+        let mainName = document.getElementById("mainName");
+        let phoneNumber = document.getElementById("phoneNumber");
+
+        // 验证是否填写
+        if (!mainName.value.trim()) {
+            alert("请填写主祈者姓名！");
+            mainName.style.border = "2px solid red"; // 标红提示
+            return;
+        } else {
+            mainName.style.border = ""; // 清除红色警告
+        }
+
+        if (!phoneNumber.value.trim()) {
+            alert("请填写电话！");
+            phoneNumber.style.border = "2px solid red"; // 标红提示
+            return;
+        } else {
+            phoneNumber.style.border = ""; // 清除红色警告
+        }
+
+        // 通过验证，进入下一页
+        document.getElementById("mainInfo").classList.add("hidden");
+        document.getElementById("formPages").classList.remove("hidden");
+    }
+
+    saveCurrentPageData();
+    
+    if (currentPage < 15) {
+        currentPage++;
+        updatePage();
+    } else {
+        gotoSummary();
+    }
+}
+
+
+        function prevPage() {
+            if (currentPage > 0) {
+                saveCurrentPageData();
+                currentPage--;
+                updatePage();
+            } else {
+                document.getElementById("mainInfo").classList.remove("hidden");
+                document.getElementById("formPages").classList.add("hidden");
+            }
+        }
+
+        function gotoSummary() {
+            saveCurrentPageData();
+            document.getElementById("formPages").classList.add("hidden");
+            document.getElementById("summaryPage").classList.remove("hidden");
+            calculateTotal();
+        }
+
+        function saveCurrentPageData() {
+            formData[currentPage] = {
+                name: document.getElementById("name").value,
+                zodiac: document.getElementById("zodiac").value,
+                taiSui: document.getElementById("taiSui").value,
+                paperGold1: Number(document.getElementById("paperGold1").value) || 0,
+                light: document.getElementById("light").value,
+                paperGold2: Number(document.getElementById("paperGold2").value) || 0,
+                longevity: document.getElementById("longevity").value,
+                paperGold3: Number(document.getElementById("paperGold3").value) || 0,
+                wisdom: document.getElementById("wisdom").value,
+                paperGold4: Number(document.getElementById("paperGold4").value) || 0,
+                arhat: document.getElementById("arhat").value,
+                paperGold5: Number(document.getElementById("paperGold5").value) || 0,
+                donation: Number(document.getElementById("donation").value) || 0
+            };
+        }
+
+        function updatePage() {
+            document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
+            let data = formData[currentPage];
+	Object.keys(data).forEach(id => {
+ 	   let el = document.getElementById(id);
+  	  if (el) {
+   	     // 如果是数字且为 0，则不显示
+  	      if (typeof data[id] === 'number' && data[id] === 0) {
+  	          el.value = "";
+  	      } else {
+   	         el.value = data[id];
+  	      }
+  	  }
+	});
+        }
+
+        function calculateTotal() {
+            let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
+            document.getElementById("totalAmount").textContent = `总金额: ${total} 元`;
+        }
+
+
+function submitForm() {
+    let mainName = document.getElementById("mainName").value;
+    let phoneNumber = document.getElementById("phoneNumber").value;
+
+    if (!mainName || !phoneNumber) {
+        alert("请填写主祈者姓名和电话！");
+        return;
+    }
+
+    let filteredData = formData.filter(entry => entry.name);
+
+    const payload = {
+        mainName,
+        phoneNumber,
+        data: filteredData
+    };
+
+    // 替换成你自己的 Google Apps Script Web App 发布地址
+    const scriptURL = "https://script.google.com/macros/s/你的部署ID/exec";
+
+    fetch(scriptURL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(() => alert("提交成功！"))
+    .catch((error) => {
+        alert("提交失败：" + error.message);
+        console.error(error);
+    });
+}
+
+ 
+    </script>
+</body>
+</html>
