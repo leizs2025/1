@@ -259,8 +259,8 @@ button:hover {
 
 
 function submitForm() {
-    let mainName = document.getElementById("mainName").value;
-    let phoneNumber = document.getElementById("phoneNumber").value;
+    let mainName = document.getElementById("mainName").value.trim();
+    let phoneNumber = document.getElementById("phoneNumber").value.trim();
 
     if (!mainName || !phoneNumber) {
         alert("请填写主祈者姓名和电话！");
@@ -275,22 +275,29 @@ function submitForm() {
         data: filteredData
     };
 
-    // 替换成你自己的 Google Apps Script Web App 发布地址
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwLr1j1rgYr12eiuegE30SWHpi6c5Y_rr905bSCw6R1LdUFwE8loz67NHm2BkPDDssq/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyfbHixqEFjMuHVhRW4Oa_jZ8cM1O5JlZesGxbsaywNK5fEK1vGDUADTBUPqgE-leqw/exec";
 
     fetch(scriptURL, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: JSON.stringify(payload)
+        body: `payload=${encodeURIComponent(JSON.stringify(payload))}`
     })
-    .then(() => alert("提交成功！"))
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("提交成功！");
+        } else {
+            alert("提交失败：" + (data.message || "未知错误"));
+        }
+    })
     .catch((error) => {
         alert("提交失败：" + error.message);
         console.error(error);
     });
 }
+
 
  
     </script>
