@@ -259,45 +259,63 @@ button:hover {
 
 
 function submitForm() {
-    let mainName = document.getElementById("mainName").value.trim();
-    let phoneNumber = document.getElementById("phoneNumber").value.trim();
+  let mainName = document.getElementById("mainName").value.trim();
+  let phoneNumber = document.getElementById("phoneNumber").value.trim();
 
-    if (!mainName || !phoneNumber) {
-        alert("请填写主祈者姓名和电话！");
-        return;
-    }
-
-    // 保留有填写姓名的项
-    let filteredData = formData.filter(entry => entry.name && entry.name.trim());
-
-    const payload = {
-        mainName,
-        phoneNumber,
-        data: filteredData
-    };
-
-const scriptURL = "https://script.google.com/macros/s/AKfycbyziL3vz9_Cc0zxHeCyCjsEa0EvBqjO3YxcG0c1jZ44eBkUZoWUOgT0KAFoLF7Qicjo/exec";
-
-fetch(scriptURL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-})
-.then(response => response.json())
-.then(data => {
-  if (data.status === "success" || data.success === true) {
-    alert("提交成功！");
-  } else {
-    alert("提交失败：" + (data.message || "未知错误"));
+  if (!mainName || !phoneNumber) {
+    alert("请填写主祈者姓名和电话！");
+    return;
   }
-})
-.catch((error) => {
-  alert("提交失败：" + error.message);
-  console.error(error);
-});
 
+  // 构造固定15项，保持顺序，避免错位
+  let completeFormData = [];
+  for (let i = 0; i < 15; i++) {
+    let entry = formData[i] || {};
+    completeFormData.push({
+      name: entry.name || "",
+      zodiac: entry.zodiac || "",
+      taiSui: entry.taiSui || "",
+      paperGold1: entry.paperGold1 || "",
+      light: entry.light || "",
+      paperGold2: entry.paperGold2 || "",
+      longevity: entry.longevity || "",
+      paperGold3: entry.paperGold3 || "",
+      wisdom: entry.wisdom || "",
+      paperGold4: entry.paperGold4 || "",
+      arhat: entry.arhat || "",
+      paperGold5: entry.paperGold5 || "",
+      donation: entry.donation || ""
+    });
+  }
+
+  const payload = {
+    mainName,
+    phoneNumber,
+    data: completeFormData
+  };
+
+  const scriptURL = "https://script.google.com/macros/s/AKfycbw1i0jH2jaQtfg7cDQlMiDcKVbQQF2uacV95kkFUpsLf-W10lU2oYvjgORFEs9j_zp2/exec";
+
+  fetch(scriptURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+        alert("提交成功！");
+      } else {
+        alert("提交失败：" + (data.message || "未知错误"));
+      }
+    })
+    .catch(err => {
+      alert("提交失败：" + err.message);
+      console.error(err);
+    });
+}
 
  
     </script>
