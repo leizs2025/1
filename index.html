@@ -294,27 +294,28 @@ function submitForm() {
     data: completeFormData
   };
 
-  const scriptURL = "https://script.google.com/macros/s/AKfycbw1i0jH2jaQtfg7cDQlMiDcKVbQQF2uacV95kkFUpsLf-W10lU2oYvjgORFEs9j_zp2/exec";
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzRrPqkpNXzCumKYf41_5xLJ7yb8x6DVvc8yCLtjrTXpZt055wisqG9uFhgFfxE7UGl/exec";
 
   fetch(scriptURL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+        "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === "success") {
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
         alert("提交成功！");
-      } else {
-        alert("提交失败：" + (data.message || "未知错误"));
-      }
-    })
-    .catch(err => {
-      alert("提交失败：" + err.message);
-      console.error(err);
-    });
+    } else {
+        alert("提交失败：" + (data.error || "未知错误"));
+    }
+})
+.catch((error) => {
+    alert("提交失败：" + error.message);
+    console.error(error);
+});
+
 }
 
  
