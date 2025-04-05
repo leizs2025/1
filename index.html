@@ -276,8 +276,9 @@ function submitForm() {
         data: filteredData
     };
 
+const scriptURL = "https://script.google.com/macros/s/AKfycbyziL3vz9_Cc0zxHeCyCjsEa0EvBqjO3YxcG0c1jZ44eBkUZoWUOgT0KAFoLF7Qicjo/exec";
 
-    fetch("https://script.google.com/macros/s/AKfycbzZWllyfSVEgsTK4kkPtjQwFZTkwv5wSlmr45q2r0UfdTq2YiCaCobQV-rRxO68uKmL/exec", {
+fetch(scriptURL, {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
@@ -286,7 +287,7 @@ function submitForm() {
 })
 .then(response => response.json())
 .then(data => {
-  if (data.status === "success") {
+  if (data.status === "success" || data.success === true) {
     alert("提交成功！");
   } else {
     alert("提交失败：" + (data.message || "未知错误"));
@@ -294,8 +295,9 @@ function submitForm() {
 })
 .catch((error) => {
   alert("提交失败：" + error.message);
+  console.error(error);
 });
-}
+
 
  
     </script>
