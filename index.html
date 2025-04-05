@@ -132,158 +132,172 @@
     </div>
 </div>
 
+
 <script>
-let currentPage = 0;
-let formData = Array(15).fill(null).map(() => ({
-    name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
-    longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
-    donation: 0
-}));
-
-function nextPage() {
-    if (currentPage === 0) {
-        let mainName = document.getElementById("mainName");
-        let phoneNumber = document.getElementById("phoneNumber");
-        if (!mainName.value.trim()) {
-            alert("请填写主祈者姓名！");
-            mainName.style.border = "2px solid red";
-            return;
-        } else {
-            mainName.style.border = "";
-        }
-        if (!phoneNumber.value.trim()) {
-            alert("请填写电话！");
-            phoneNumber.style.border = "2px solid red";
-            return;
-        } else {
-            phoneNumber.style.border = "";
-        }
-        document.getElementById("mainInfo").classList.add("hidden");
-        document.getElementById("formPages").classList.remove("hidden");
-    }
-
-    saveCurrentPageData();
-    if (currentPage < 15) {
-        currentPage++;
-        updatePage();
-    } else {
-        gotoSummary();
-    }
-}
-
-function prevPage() {
-    if (currentPage > 0) {
-        saveCurrentPageData();
-        currentPage--;
-        updatePage();
-    } else {
-        document.getElementById("mainInfo").classList.remove("hidden");
-        document.getElementById("formPages").classList.add("hidden");
-    }
-}
-
-function gotoSummary() {
-    saveCurrentPageData();
-    document.getElementById("formPages").classList.add("hidden");
-    document.getElementById("summaryPage").classList.remove("hidden");
-    calculateTotal();
-}
-
-function saveCurrentPageData() {
-    formData[currentPage] = {
-        name: document.getElementById("name").value,
-        zodiac: document.getElementById("zodiac").value,
-        taiSui: document.getElementById("taiSui").value,
-        paperGold1: Number(document.getElementById("paperGold1").value) || 0,
-        light: document.getElementById("light").value,
-        paperGold2: Number(document.getElementById("paperGold2").value) || 0,
-        longevity: document.getElementById("longevity").value,
-        paperGold3: Number(document.getElementById("paperGold3").value) || 0,
-        wisdom: document.getElementById("wisdom").value,
-        paperGold4: Number(document.getElementById("paperGold4").value) || 0,
-        arhat: document.getElementById("arhat").value,
-        paperGold5: Number(document.getElementById("paperGold5").value) || 0,
-        donation: Number(document.getElementById("donation").value) || 0
-    };
-}
-
-function updatePage() {
-    document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
-    let data = formData[currentPage];
-    Object.keys(data).forEach(id => {
-        let el = document.getElementById(id);
-        if (el) {
-            el.value = typeof data[id] === 'number' && data[id] === 0 ? "" : data[id];
-        }
-    });
-}
-
-function calculateTotal() {
-    let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
-    document.getElementById("totalAmount").textContent = `总金额: ${total} 元`;
-}
-
-function resetForm() {
-    document.getElementById("mainName").value = "";
-    document.getElementById("phoneNumber").value = "";
-    formData = Array(15).fill(null).map(() => ({
+    let currentPage = 0;
+    let formData = Array(15).fill(null).map(() => ({
         name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
         longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
         donation: 0
     }));
-    currentPage = 0;
-    document.getElementById("formPages").classList.add("hidden");
-    document.getElementById("summaryPage").classList.add("hidden");
-    document.getElementById("mainInfo").classList.remove("hidden");
-}
 
-function submitForm() {
-    let mainName = document.getElementById("mainName").value.trim();
-    let phoneNumber = document.getElementById("phoneNumber").value.trim();
+    function nextPage() {
+        if (currentPage === 0) {
+            let mainName = document.getElementById("mainName");
+            let phoneNumber = document.getElementById("phoneNumber");
 
-    if (!mainName || !phoneNumber) {
-        alert("请填写主祈者姓名和电话！");
-        return;
+            if (!mainName.value.trim()) {
+                alert("请填写主祈者姓名！");
+                mainName.style.border = "2px solid red";
+                return;
+            } else {
+                mainName.style.border = "";
+            }
+
+            if (!phoneNumber.value.trim()) {
+                alert("请填写电话！");
+                phoneNumber.style.border = "2px solid red";
+                return;
+            } else {
+                phoneNumber.style.border = "";
+            }
+
+            // ⚠️ 关键：保存第一页（第0页）数据
+            saveCurrentPageData();
+            document.getElementById("mainInfo").classList.add("hidden");
+            document.getElementById("formPages").classList.remove("hidden");
+        } else {
+            saveCurrentPageData();
+        }
+
+        if (currentPage < 14) {
+            currentPage++;
+            updatePage();
+        } else {
+            gotoSummary();
+        }
     }
 
-    let completeFormData = formData.map(entry => ({
-        name: entry.name || "",
-        zodiac: entry.zodiac || "",
-        taiSui: entry.taiSui || "",
-        paperGold1: entry.paperGold1 || "",
-        light: entry.light || "",
-        paperGold2: entry.paperGold2 || "",
-        longevity: entry.longevity || "",
-        paperGold3: entry.paperGold3 || "",
-        wisdom: entry.wisdom || "",
-        paperGold4: entry.paperGold4 || "",
-        arhat: entry.arhat || "",
-        paperGold5: entry.paperGold5 || "",
-        donation: entry.donation || ""
-    }));
-
-    const payload = { mainName, phoneNumber, data: completeFormData };
-    const scriptURL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
-
-    fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("提交成功！");
-            resetForm();
+    function prevPage() {
+        if (currentPage > 0) {
+            saveCurrentPageData();
+            currentPage--;
+            updatePage();
         } else {
-            alert("提交失败：" + (data.error || "未知错误"));
+            document.getElementById("mainInfo").classList.remove("hidden");
+            document.getElementById("formPages").classList.add("hidden");
         }
-    })
-    .catch(error => {
-        alert("提交失败：" + error.message);
-        console.error(error);
-    });
-}
+    }
+
+    function gotoSummary() {
+        saveCurrentPageData();
+        document.getElementById("formPages").classList.add("hidden");
+        document.getElementById("summaryPage").classList.remove("hidden");
+        calculateTotal();
+    }
+
+    function saveCurrentPageData() {
+        formData[currentPage] = {
+            name: document.getElementById("name").value.trim(),
+            zodiac: document.getElementById("zodiac").value.trim(),
+            taiSui: document.getElementById("taiSui").value.trim(),
+            paperGold1: Number(document.getElementById("paperGold1").value) || 0,
+            light: document.getElementById("light").value.trim(),
+            paperGold2: Number(document.getElementById("paperGold2").value) || 0,
+            longevity: document.getElementById("longevity").value.trim(),
+            paperGold3: Number(document.getElementById("paperGold3").value) || 0,
+            wisdom: document.getElementById("wisdom").value.trim(),
+            paperGold4: Number(document.getElementById("paperGold4").value) || 0,
+            arhat: document.getElementById("arhat").value.trim(),
+            paperGold5: Number(document.getElementById("paperGold5").value) || 0,
+            donation: Number(document.getElementById("donation").value) || 0
+        };
+    }
+
+    function updatePage() {
+        document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
+        let data = formData[currentPage];
+        Object.keys(data).forEach(id => {
+            let el = document.getElementById(id);
+            if (el) {
+                if (typeof data[id] === 'number' && data[id] === 0) {
+                    el.value = "";
+                } else {
+                    el.value = data[id];
+                }
+            }
+        });
+    }
+
+    function calculateTotal() {
+        let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
+        document.getElementById("totalAmount").textContent = `总金额: ${total} 元`;
+    }
+
+    function submitForm() {
+        saveCurrentPageData();  // ⚠️ 保证最后一页数据被保存
+
+        let mainName = document.getElementById("mainName").value.trim();
+        let phoneNumber = document.getElementById("phoneNumber").value.trim();
+
+        if (!mainName || !phoneNumber) {
+            alert("请填写主祈者姓名和电话！");
+            return;
+        }
+
+        let completeFormData = [];
+        for (let i = 0; i < 15; i++) {
+            let entry = formData[i] || {};
+            completeFormData.push({
+                name: entry.name || "",
+                zodiac: entry.zodiac || "",
+                taiSui: entry.taiSui || "",
+                paperGold1: entry.paperGold1 || 0,
+                light: entry.light || "",
+                paperGold2: entry.paperGold2 || 0,
+                longevity: entry.longevity || "",
+                paperGold3: entry.paperGold3 || 0,
+                wisdom: entry.wisdom || "",
+                paperGold4: entry.paperGold4 || 0,
+                arhat: entry.arhat || "",
+                paperGold5: entry.paperGold5 || 0,
+                donation: entry.donation || 0
+            });
+        }
+
+        const payload = {
+            mainName,
+            phoneNumber,
+            data: completeFormData
+        };
+
+        // ✅ 调试日志
+        console.log("📦 提交数据 payload：", payload);
+
+        const scriptURL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+
+        fetch(scriptURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("提交成功！");
+            } else {
+                alert("提交失败：" + (data.error || "未知错误"));
+            }
+        })
+        .catch((error) => {
+            alert("提交失败：" + error.message);
+            console.error(error);
+        });
+    }
 </script>
+
+
 </body>
 </html>
