@@ -305,7 +305,7 @@
 
     // ✅ 加载编号并显示在 <div id="serialDisplay">
     window.addEventListener("DOMContentLoaded", () => {
-        fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev/?getSerial=true")
+        fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev/?getSerial=1")
             .then(res => res.text())
             .then(serial => {
                 document.getElementById("serialDisplay").innerText = `本次编号：${serial}`;
