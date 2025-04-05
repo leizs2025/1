@@ -267,7 +267,8 @@ function submitForm() {
         return;
     }
 
-    let filteredData = formData.filter(entry => entry.name);
+    // 保留有填写姓名的项
+    let filteredData = formData.filter(entry => entry.name && entry.name.trim());
 
     const payload = {
         mainName,
@@ -275,30 +276,28 @@ function submitForm() {
         data: filteredData
     };
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzVdKrIsDRw-viGGsaSZCwHlodphfhIft01A6siiPntJX1GJh9oIekcATlg_FstBtXU/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbx_sOoHJuzHFjzkuSZuahCyjTYAXj2CwkQY1_fmGikLxe9pS9HQHdmNEtmmM1cVAI7-/exec";
 
-fetch(scriptURL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-})
-.then(response => response.json())
-.then(data => {
-  if (data.status === "success" || data.success === true) {
-    alert("提交成功！");
-  } else {
-    alert("提交失败：" + (data.message || "未知错误"));
-  }
-})
-.catch((error) => {
-  alert("提交失败：" + error.message);
-  console.error(error);
-});
-
+    fetch(scriptURL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success" || data.success === true) {
+            alert("提交成功！");
+        } else {
+            alert("提交失败：" + (data.message || "未知错误"));
+        }
+    })
+    .catch((error) => {
+        alert("提交失败：" + error.message);
+        console.error(error);
+    });
 }
-
 
  
     </script>
