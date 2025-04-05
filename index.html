@@ -88,7 +88,9 @@
 <body>
 <div class="container">
     <h2>太岁光明灯报名表单</h2>
-
+<div id="serialDisplay" style="font-weight:bold; font-size: 16px; color:#c00; margin-bottom:10px;">
+  本次编号：加载中...
+</div>
     <!-- 主祈者信息 -->
     <div id="mainInfo">
         <div class="field">
@@ -162,7 +164,6 @@
                 phoneNumber.style.border = "";
             }
 
-            // ⚠️ 关键：保存第一页（第0页）数据
             saveCurrentPageData();
             document.getElementById("mainInfo").classList.add("hidden");
             document.getElementById("formPages").classList.remove("hidden");
@@ -196,46 +197,44 @@
         calculateTotal();
     }
 
-function saveCurrentPageData() {
-    if (currentPage === 0) return; // 主祈者页不保存项目数据
+    function saveCurrentPageData() {
+        if (currentPage === 0) return;
 
-    const index = currentPage - 1; // 正确对应 formData[0~14]
+        const index = currentPage - 1;
 
-    formData[index] = {
-        name: document.getElementById("name").value,
-        zodiac: document.getElementById("zodiac").value,
-        taiSui: document.getElementById("taiSui").value,
-        paperGold1: Number(document.getElementById("paperGold1").value) || 0,
-        light: document.getElementById("light").value,
-        paperGold2: Number(document.getElementById("paperGold2").value) || 0,
-        longevity: document.getElementById("longevity").value,
-        paperGold3: Number(document.getElementById("paperGold3").value) || 0,
-        wisdom: document.getElementById("wisdom").value,
-        paperGold4: Number(document.getElementById("paperGold4").value) || 0,
-        arhat: document.getElementById("arhat").value,
-        paperGold5: Number(document.getElementById("paperGold5").value) || 0,
-        donation: Number(document.getElementById("donation").value) || 0
-    };
-}
+        formData[index] = {
+            name: document.getElementById("name").value,
+            zodiac: document.getElementById("zodiac").value,
+            taiSui: document.getElementById("taiSui").value,
+            paperGold1: Number(document.getElementById("paperGold1").value) || 0,
+            light: document.getElementById("light").value,
+            paperGold2: Number(document.getElementById("paperGold2").value) || 0,
+            longevity: document.getElementById("longevity").value,
+            paperGold3: Number(document.getElementById("paperGold3").value) || 0,
+            wisdom: document.getElementById("wisdom").value,
+            paperGold4: Number(document.getElementById("paperGold4").value) || 0,
+            arhat: document.getElementById("arhat").value,
+            paperGold5: Number(document.getElementById("paperGold5").value) || 0,
+            donation: Number(document.getElementById("donation").value) || 0
+        };
+    }
 
+    function updatePage() {
+        document.getElementById("pageTitle").textContent = `第 ${currentPage} 页`;
 
-function updatePage() {
-    document.getElementById("pageTitle").textContent = `第 ${currentPage} 页`;
+        const data = formData[currentPage - 1];
 
-    const data = formData[currentPage - 1];
-
-    Object.keys(data).forEach(id => {
-        let el = document.getElementById(id);
-        if (el) {
-            if (typeof data[id] === 'number' && data[id] === 0) {
-                el.value = "";
-            } else {
-                el.value = data[id];
+        Object.keys(data).forEach(id => {
+            let el = document.getElementById(id);
+            if (el) {
+                if (typeof data[id] === 'number' && data[id] === 0) {
+                    el.value = "";
+                } else {
+                    el.value = data[id];
+                }
             }
-        }
-    });
-}
-
+        });
+    }
 
     function calculateTotal() {
         let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
@@ -243,7 +242,7 @@ function updatePage() {
     }
 
     function submitForm() {
-        saveCurrentPageData();  // ⚠️ 保证最后一页数据被保存
+        saveCurrentPageData();
 
         let mainName = document.getElementById("mainName").value.trim();
         let phoneNumber = document.getElementById("phoneNumber").value.trim();
@@ -279,7 +278,6 @@ function updatePage() {
             data: completeFormData
         };
 
-        // ✅ 调试日志
         console.log("📦 提交数据 payload：", payload);
 
         const scriptURL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
@@ -304,6 +302,19 @@ function updatePage() {
             console.error(error);
         });
     }
+
+    // ✅ 加载编号并显示在 <div id="serialDisplay">
+    window.addEventListener("DOMContentLoaded", () => {
+        fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev/?getSerial=true")
+            .then(res => res.text())
+            .then(serial => {
+                document.getElementById("serialDisplay").innerText = `本次编号：${serial}`;
+            })
+            .catch(err => {
+                console.error("编号获取失败", err);
+                document.getElementById("serialDisplay").innerText = `编号获取失败`;
+            });
+    });
 </script>
 
 
