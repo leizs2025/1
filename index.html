@@ -83,6 +83,17 @@
         .hidden {
             display: none;
         }
+        @media (max-width: 600px) {
+  /* 缩短移动端的输入框宽度，避免文字被挤压 */
+  #mainName.input,
+  #phoneNumber.input,
+  #name.input,
+  #zodiac.input,
+  #donation.input {
+    width: 65%;
+  }
+}
+
     </style>
 </head>
 <body>
