@@ -1,333 +1,68 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>报名表单</title>
-    <style>
-        /* 保留你原有的样式（未改动） */
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 18px;
-        }
-        .container {
-            width: 100%;
-            max-width: 350px;
-            margin: auto;
-            text-align: center;
-        }
-        .field {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        label {
-            font-size: 18px;
-            flex: 0.45;
-            text-align: left;
-            margin-right: 3px;
-        }
-        .paper-field {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .paper-field label {
-            font-size: 18px;
-            flex: 1;
-            text-align: left;
-        }
-        .paper-gold {
-            width: 36%;
-            height: 35px;
-            padding: 5px;
-            font-size: 18px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .input, select {
-            flex: 0.5;
-            font-size: 18px;
-            padding: 5px;
-            height: 40px;
-            line-height: 28px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            background: white;
-            box-sizing: border-box;
-        }
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            padding-right: 22px;
-            background: url('data:image/svg+xml;utf8,<svg fill="%23000" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5H7z"/></svg>') no-repeat right 8px center;
-            background-size: 12px;
-        }
-        button {
-            margin: 6px;
-            padding: 8px 12px;
-            font-size: 15px;
-            cursor: pointer;
-            border: none;
-            background: #007BFF;
-            color: white;
-            border-radius: 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .hidden {
-            display: none;
-        }
-        @media (max-width: 600px) {
-  /* 缩短移动端的输入框宽度，避免文字被挤压 */
-  #mainName.input,
-  #phoneNumber.input,
-  #name.input,
-  #zodiac.input,
-  #donation.input {
-    width: 65%;
-  }
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>太岁光明灯报名与查询</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fff5f5;
+      color: #880000;
+    }
 
-    </style>
+    header {
+      background-color: #cc0000;
+      color: gold;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    main {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      margin: 1rem 0;
+      padding: 1rem;
+      font-size: 1.2rem;
+      background-color: #cc0000;
+      color: gold;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #aa0000;
+    }
+
+    .note {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-    <h2>太岁光明灯报名表单</h2>
-<div id="serialDisplay" style="font-weight:bold; font-size: 16px; color:#c00; margin-bottom:10px;">
-  本次编号：加载中...
-</div>
-    <!-- 主祈者信息 -->
-    <div id="mainInfo">
-        <div class="field">
-            <label>主祈者姓名:</label>
-            <input type="text" id="mainName" class="input">
-        </div>
-        <div class="field">
-            <label>电话:</label>
-            <input type="text" id="phoneNumber" class="input">
-        </div>
-        <button onclick="nextPage()">下一页</button>
-    </div>
-
-    <!-- 循环页 -->
-    <div id="formPages" class="hidden">
-        <h3 id="pageTitle">第 1 页</h3>
-        <div class="field"><label>姓名:</label> <input type="text" id="name" class="input"></div>
-        <div class="field"><label>生肖:</label> <input type="text" id="zodiac" class="input"></div>
-        <div class="field"><label>太岁:</label> <select id="taiSui" class="input"><option value=""></option><option value="是">是</option></select></div>
-        <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold1" class="paper-gold"></div>
-        <div class="field"><label>光明灯:</label> <select id="light" class="input"><option value=""></option><option value="是">是</option></select></div>
-        <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold2" class="paper-gold"></div>
-        <div class="field"><label>长生禄位:</label> <select id="longevity" class="input"><option value=""></option><option value="是">是</option></select></div>
-        <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold3" class="paper-gold"></div>
-        <div class="field"><label>文昌帝君:</label> <select id="wisdom" class="input"><option value=""></option><option value="是">是</option></select></div>
-        <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold4" class="paper-gold"></div>
-        <div class="field"><label>十六罗汉:</label> <select id="arhat" class="input"><option value=""></option><option value="是">是</option></select></div>
-        <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
-        <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
-        <button onclick="prevPage()">上一页</button>
-        <button onclick="nextPage()">下一页</button>
-        <button onclick="gotoSummary()">跳转到第 17 页</button>
-    </div>
-
-    <!-- 结算页 -->
-    <div id="summaryPage" class="hidden">
-        <h3>结算</h3>
-        <p id="totalAmount">总金额: 0 元</p>
-        <button onclick="prevPage()">返回上一页</button>
-        <button onclick="submitForm()">提交</button>
-    </div>
-</div>
-
-
-<script>
-    let currentPage = 0;
-    let formData = Array(15).fill(null).map(() => ({
-        name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
-        longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
-        donation: 0
-    }));
-
-    function nextPage() {
-        if (currentPage === 0) {
-            let mainName = document.getElementById("mainName");
-            let phoneNumber = document.getElementById("phoneNumber");
-
-            if (!mainName.value.trim()) {
-                alert("请填写主祈者姓名！");
-                mainName.style.border = "2px solid red";
-                return;
-            } else {
-                mainName.style.border = "";
-            }
-
-            if (!phoneNumber.value.trim()) {
-                alert("请填写电话！");
-                phoneNumber.style.border = "2px solid red";
-                return;
-            } else {
-                phoneNumber.style.border = "";
-            }
-
-            saveCurrentPageData();
-            document.getElementById("mainInfo").classList.add("hidden");
-            document.getElementById("formPages").classList.remove("hidden");
-        } else {
-            saveCurrentPageData();
-        }
-
-        if (currentPage < 14) {
-            currentPage++;
-            updatePage();
-        } else {
-            gotoSummary();
-        }
-    }
-
-    function prevPage() {
-        if (currentPage > 0) {
-            saveCurrentPageData();
-            currentPage--;
-            updatePage();
-        } else {
-            document.getElementById("mainInfo").classList.remove("hidden");
-            document.getElementById("formPages").classList.add("hidden");
-        }
-    }
-
-    function gotoSummary() {
-        saveCurrentPageData();
-        document.getElementById("formPages").classList.add("hidden");
-        document.getElementById("summaryPage").classList.remove("hidden");
-        calculateTotal();
-    }
-
-    function saveCurrentPageData() {
-        if (currentPage === 0) return;
-
-        const index = currentPage - 1;
-
-        formData[index] = {
-            name: document.getElementById("name").value,
-            zodiac: document.getElementById("zodiac").value,
-            taiSui: document.getElementById("taiSui").value,
-            paperGold1: Number(document.getElementById("paperGold1").value) || 0,
-            light: document.getElementById("light").value,
-            paperGold2: Number(document.getElementById("paperGold2").value) || 0,
-            longevity: document.getElementById("longevity").value,
-            paperGold3: Number(document.getElementById("paperGold3").value) || 0,
-            wisdom: document.getElementById("wisdom").value,
-            paperGold4: Number(document.getElementById("paperGold4").value) || 0,
-            arhat: document.getElementById("arhat").value,
-            paperGold5: Number(document.getElementById("paperGold5").value) || 0,
-            donation: Number(document.getElementById("donation").value) || 0
-        };
-    }
-
-    function updatePage() {
-        document.getElementById("pageTitle").textContent = `第 ${currentPage} 页`;
-
-        const data = formData[currentPage - 1];
-
-        Object.keys(data).forEach(id => {
-            let el = document.getElementById(id);
-            if (el) {
-                if (typeof data[id] === 'number' && data[id] === 0) {
-                    el.value = "";
-                } else {
-                    el.value = data[id];
-                }
-            }
-        });
-    }
-
-    function calculateTotal() {
-        let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
-        document.getElementById("totalAmount").textContent = `总金额: ${total} 元`;
-    }
-
-    function submitForm() {
-        saveCurrentPageData();
-
-        let mainName = document.getElementById("mainName").value.trim();
-        let phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-        if (!mainName || !phoneNumber) {
-            alert("请填写主祈者姓名和电话！");
-            return;
-        }
-
-        let completeFormData = [];
-        for (let i = 0; i < 15; i++) {
-            let entry = formData[i] || {};
-            completeFormData.push({
-                name: entry.name || "",
-                zodiac: entry.zodiac || "",
-                taiSui: entry.taiSui || "",
-                paperGold1: entry.paperGold1 || 0,
-                light: entry.light || "",
-                paperGold2: entry.paperGold2 || 0,
-                longevity: entry.longevity || "",
-                paperGold3: entry.paperGold3 || 0,
-                wisdom: entry.wisdom || "",
-                paperGold4: entry.paperGold4 || 0,
-                arhat: entry.arhat || "",
-                paperGold5: entry.paperGold5 || 0,
-                donation: entry.donation || 0
-            });
-        }
-
-        const payload = {
-            mainName,
-            phoneNumber,
-            data: completeFormData
-        };
-
-        console.log("📦 提交数据 payload：", payload);
-
-        const scriptURL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
-
-        fetch(scriptURL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("提交成功！");
-            } else {
-                alert("提交失败：" + (data.error || "未知错误"));
-            }
-        })
-        .catch((error) => {
-            alert("提交失败：" + error.message);
-            console.error(error);
-        });
-    }
-
-    // ✅ 加载编号并显示在 <div id="serialDisplay">
-    window.addEventListener("DOMContentLoaded", () => {
-        fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev/?getSerial=1")
-            .then(res => res.text())
-            .then(serial => {
-                document.getElementById("serialDisplay").innerText = `本次编号：${serial}`;
-            })
-            .catch(err => {
-                console.error("编号获取失败", err);
-                document.getElementById("serialDisplay").innerText = `编号获取失败`;
-            });
-    });
-</script>
-
-
+  <header>祈福表单管理门户</header>
+  <main>
+    <button onclick="location.href='form.html'">📝 我要填表</button>
+    <button onclick="location.href='query.html'">🔍 查询记录</button>
+    <!-- 📄 查看原始资料（仅管理者）按钮已移除 -->
+    <p class="note">※ 请妥善保管您的编号或电话以供后续查询使用。</p>
+  </main>
 </body>
 </html>
