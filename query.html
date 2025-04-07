@@ -64,6 +64,8 @@
       padding: 8px;
       text-align: center;
       font-size: 16px;
+      word-break: keep-all;
+      white-space: nowrap;
     }
     th {
       background-color: #ffd699;
@@ -131,8 +133,11 @@
         <tr><td colspan="14" class="highlight">🧾 填写者：${found[1] || ""}　📱 电话：${found[2] || ""}</td></tr>
         <tr>
           <th>姓名</th><th>生肖</th><th>太岁</th><th>纸金</th>
-          <th>光明灯</th><th>纸金</th><th>长生禄位</th><th>纸金</th>
-          <th>文昌帝君</th><th>纸金</th><th>十六罗汉</th><th>纸金</th><th>安奉功德金</th>
+          <th>光明<br>灯</th><th>纸金</th>
+          <th>长生<br>禄位</th><th>纸金</th>
+          <th>文昌<br>帝君</th><th>纸金</th>
+          <th>十六<br>罗汉</th><th>纸金</th>
+          <th>安奉<br>功德金</th>
         </tr>`;
 
       for (let i = 0; i < 15; i++) {
