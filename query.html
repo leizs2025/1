@@ -1,152 +1,167 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2025年 太岁光明灯查询记录</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      font-family: "Microsoft JhengHei", sans-serif;
-      background: linear-gradient(to bottom, #fff8f0, #ffe4d4);
-      padding: 16px;
-      max-width: 720px;
-      margin: auto;
-      color: #5b2400;
-      font-size: 18px;
+      background: linear-gradient(to bottom, #fff8f0, #fdf6e3);
+      padding: 20px;
+      font-family: "Noto Sans SC", sans-serif;
     }
     h1 {
       text-align: center;
-      color: #c9302c;
-      font-size: 26px;
-      border-bottom: 2px solid #c9302c;
-      padding-bottom: 10px;
-      margin-bottom: 24px;
+      font-size: 1.8rem;
+      color: #b73728;
+      margin-bottom: 20px;
     }
-    .input-group {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
+    .form-inline {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 80%;
+      max-width: 300px;
       margin-bottom: 10px;
     }
-    input {
-      flex: 1 1 250px;
-      padding: 10px;
-      font-size: 16px;
-      border: 2px solid #d2691e;
-      border-radius: 5px;
-      box-sizing: border-box;
-      background-color: #fff8f0;
-      color: #5b2400;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #c9302c;
+    .btn-search {
+      background-color: #b73728;
       color: white;
       border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      padding: 8px 20px;
+      border-radius: 6px;
     }
-    button:hover {
-      background-color: #a91f1a;
+    .btn-search:hover {
+      background-color: #9e2e22;
+    }
+    .result-box {
+      overflow-x: auto;
+      margin-top: 10px;
     }
     table {
-      width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background-color: #fffaf5;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-      font-size: 16px;
+      width: max-content;
+      min-width: 900px;
     }
     th, td {
-      border: 1px solid #d9b38c;
-      padding: 8px;
+      border: 1px solid #dcb;
+      padding: 6px 10px;
       text-align: center;
+      background-color: #fffdf7;
+      font-size: 15px;
     }
     th {
-      background-color: #ffd699;
-      color: #5b2400;
-    }
-    tr:nth-child(even) {
-      background-color: #fff2e6;
-    }
-    .highlight {
-      background-color: #fff0cc;
+      background-color: #fce5b5;
       font-weight: bold;
+      white-space: nowrap;
     }
-    .not-found {
-      margin-top: 20px;
-      color: #a00;
-      text-align: center;
-      font-size: 16px;
+    .info-header {
+      background-color: #fff6d6;
+      padding: 10px;
+      margin-bottom: 0;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .info-header span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
   </style>
 </head>
 <body>
   <h1>2025年 太岁光明灯查询记录</h1>
 
-  <div class="input-group">
-    <input type="text" id="searchInput" placeholder="请输入电话或编号进行查询">
-    <button onclick="search()">🔍 查询</button>
+  <div class="form-inline">
+    <input type="text" id="searchInput" class="form-control" placeholder="请输入电话或编号" />
+    <button class="btn btn-search" onclick="searchRecord()">🔍 查询</button>
   </div>
 
-  <div id="result"></div>
+  <div id="info" class="info-header" style="display: none;">
+    <span>🧾 填写者：<strong id="mainName"></strong></span>
+    <span>📱 电话：<strong id="phoneNumber"></strong></span>
+  </div>
 
+  <div class="result-box">
+    <table class="table table-bordered" id="resultTable" style="display: none;">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
-    async function search() {
-      const keyword = document.getElementById('searchInput').value.trim();
-      if (!keyword) {
-        alert("请输入电话号码或编号！");
-        return;
-      }
+    const firebaseConfig = {
+      databaseURL: "https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json" // 替换成你的 Firebase DB 路径
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-      const res = await fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json");
-      const data = await res.json();
+    const headRow = ["姓名", "生肖", "太岁", "纸金", "光明灯", "纸金", "长生禄位", "纸金", "文昌帝君", "纸金", "十六罗汉", "纸金", "安奉功德金", "纸金"];
 
-      let found = null;
-      let matchKey = "";
+    function searchRecord() {
+      const keyword = document.getElementById("searchInput").value.trim();
+      if (!keyword) return;
 
-      for (const [key, entry] of Object.entries(data)) {
-        if (entry[2] === keyword || key === keyword) {
-          found = entry;
-          matchKey = key;
-          break;
+      db.ref("/").once("value", (snapshot) => {
+        const data = snapshot.val();
+        let found = null;
+
+        for (let key in data) {
+          const record = data[key];
+          if (!Array.isArray(record)) continue;
+
+          if (record[0]?.includes(keyword) || record[2]?.includes(keyword)) {
+            found = record;
+            break;
+          }
         }
-      }
 
-      if (!found) {
-        document.getElementById("result").innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
-        return;
-      }
+        if (!found) {
+          alert("未找到相关记录");
+          return;
+        }
 
-      let html = `<table>
-        <tr class="highlight"><td colspan="14">🧾 填写者：${found[1] || ""}　📱 电话：${found[2] || ""}</td></tr>
-        <tr>
-          <th>姓名</th><th>生肖</th><th>太岁</th><th>纸金</th>
-          <th>光明灯</th><th>纸金</th><th>长生禄位</th><th>纸金</th>
-          <th>文昌帝君</th><th>纸金</th><th>十六罗汉</th><th>纸金</th><th>安奉功德金</th>
-        </tr>`;
+        // 显示填写者信息
+        document.getElementById("mainName").textContent = found[1] || "－";
+        document.getElementById("phoneNumber").textContent = found[2] || "－";
+        document.getElementById("info").style.display = "flex";
 
-      for (let i = 0; i < 15; i++) {
-        const base = 4 + i * 13;
-        const name = found[base];
-        if (!name) continue;
+        // 表头
+        const thead = document.getElementById("tableHead");
+        const tbody = document.getElementById("tableBody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
 
-        html += `<tr>
-          <td>${name}</td>
-          <td>${found[base + 1] || ""}</td>
-          <td>${found[base + 2] || ""}</td><td>${found[base + 3] || ""}</td>
-          <td>${found[base + 4] || ""}</td><td>${found[base + 5] || ""}</td>
-          <td>${found[base + 6] || ""}</td><td>${found[base + 7] || ""}</td>
-          <td>${found[base + 8] || ""}</td><td>${found[base + 9] || ""}</td>
-          <td>${found[base + 10] || ""}</td><td>${found[base + 11] || ""}</td>
-          <td>${found[base + 12] || ""}</td>
-        </tr>`;
-      }
+        const trHead = document.createElement("tr");
+        headRow.forEach(col => {
+          const th = document.createElement("th");
+          th.textContent = col;
+          trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
 
-      html += "</table>";
-      document.getElementById("result").innerHTML = html;
+        for (let i = 0; i < 15; i++) {
+          const rowData = found.slice(4 + i * 13, 4 + (i + 1) * 13);
+          if (rowData.every(val => !val)) continue;
+
+          const tr = document.createElement("tr");
+          rowData.forEach(val => {
+            const td = document.createElement("td");
+            td.textContent = val || "";
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+
+        document.getElementById("resultTable").style.display = "table";
+      });
     }
   </script>
 </body>
