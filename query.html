@@ -2,29 +2,37 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>2025年 太岁光明灯查询记录</title>
   <style>
     body {
       font-family: "Microsoft JhengHei", sans-serif;
       background: linear-gradient(to bottom, #fff8f0, #ffe4d4);
-      padding: 20px;
-      max-width: 960px;
+      padding: 16px;
+      max-width: 720px;
       margin: auto;
       color: #5b2400;
+      font-size: 18px;
     }
     h1 {
       text-align: center;
       color: #c9302c;
-      font-size: 28px;
+      font-size: 26px;
       border-bottom: 2px solid #c9302c;
       padding-bottom: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
-    input, button {
-      padding: 12px;
+    .input-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    input {
+      flex: 1 1 250px;
+      padding: 10px;
       font-size: 16px;
-      margin: 8px 0;
-      width: 100%;
       border: 2px solid #d2691e;
       border-radius: 5px;
       box-sizing: border-box;
@@ -32,8 +40,12 @@
       color: #5b2400;
     }
     button {
+      padding: 10px 20px;
+      font-size: 16px;
       background-color: #c9302c;
       color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
     button:hover {
@@ -45,12 +57,12 @@
       margin-top: 20px;
       background-color: #fffaf5;
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      font-size: 16px;
     }
     th, td {
       border: 1px solid #d9b38c;
       padding: 8px;
       text-align: center;
-      font-size: 14px;
     }
     th {
       background-color: #ffd699;
@@ -74,8 +86,10 @@
 <body>
   <h1>2025年 太岁光明灯查询记录</h1>
 
-  <input type="text" id="searchInput" placeholder="请输入电话或编号进行查询">
-  <button onclick="search()">🔍 查询</button>
+  <div class="input-group">
+    <input type="text" id="searchInput" placeholder="请输入电话或编号进行查询">
+    <button onclick="search()">🔍 查询</button>
+  </div>
 
   <div id="result"></div>
 
@@ -93,14 +107,13 @@
       let found = null;
       let matchKey = "";
 
-for (const [key, entry] of Object.entries(data)) {
-  if (entry[2] === keyword || entry[3] === keyword) {
-    found = entry;
-    matchKey = key;
-    break;
-  }
-}
-
+      for (const [key, entry] of Object.entries(data)) {
+        if (entry[2] === keyword || key === keyword) {
+          found = entry;
+          matchKey = key;
+          break;
+        }
+      }
 
       if (!found) {
         document.getElementById("result").innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
@@ -108,26 +121,27 @@ for (const [key, entry] of Object.entries(data)) {
       }
 
       let html = `<table>
-        <tr class="highlight"><td colspan="14">🧾 填写者：${found["报名填写者："] || ""}　📱 电话：${found["电话"] || ""}</td></tr>
+        <tr class="highlight"><td colspan="14">🧾 填写者：${found[1] || ""}　📱 电话：${found[2] || ""}</td></tr>
         <tr>
           <th>姓名</th><th>生肖</th><th>太岁</th><th>纸金</th>
           <th>光明灯</th><th>纸金</th><th>长生禄位</th><th>纸金</th>
           <th>文昌帝君</th><th>纸金</th><th>十六罗汉</th><th>纸金</th><th>安奉功德金</th>
         </tr>`;
 
-      for (let i = 1; i <= 15; i++) {
-        const name = found[`祈福者姓名${i}`];
+      for (let i = 0; i < 15; i++) {
+        const base = 4 + i * 13;
+        const name = found[base];
         if (!name) continue;
 
         html += `<tr>
           <td>${name}</td>
-          <td>${found[`生肖${i}`] || ""}</td>
-          <td>${found[`太岁${i}`] || ""}</td><td>${found[`太岁纸金${i}`] || ""}</td>
-          <td>${found[`光明灯${i}`] || ""}</td><td>${found[`光明灯纸金${i}`] || ""}</td>
-          <td>${found[`长生禄位${i}`] || ""}</td><td>${found[`长生禄位纸金${i}`] || ""}</td>
-          <td>${found[`文昌帝君${i}`] || ""}</td><td>${found[`文昌帝君纸金${i}`] || ""}</td>
-          <td>${found[`十六罗汉${i}`] || ""}</td><td>${found[`十六罗汉纸金${i}`] || ""}</td>
-          <td>${found[`安奉功德金${i}`] || ""}</td>
+          <td>${found[base + 1] || ""}</td>
+          <td>${found[base + 2] || ""}</td><td>${found[base + 3] || ""}</td>
+          <td>${found[base + 4] || ""}</td><td>${found[base + 5] || ""}</td>
+          <td>${found[base + 6] || ""}</td><td>${found[base + 7] || ""}</td>
+          <td>${found[base + 8] || ""}</td><td>${found[base + 9] || ""}</td>
+          <td>${found[base + 10] || ""}</td><td>${found[base + 11] || ""}</td>
+          <td>${found[base + 12] || ""}</td>
         </tr>`;
       }
 
