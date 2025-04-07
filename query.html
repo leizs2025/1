@@ -93,13 +93,14 @@
       let found = null;
       let matchKey = "";
 
-      for (const [key, entry] of Object.entries(data)) {
-        if (entry["电话"] === keyword || key === keyword) {
-          found = entry;
-          matchKey = key;
-          break;
-        }
-      }
+for (const [key, entry] of Object.entries(data)) {
+  if (entry[2] === keyword || entry[3] === keyword) {
+    found = entry;
+    matchKey = key;
+    break;
+  }
+}
+
 
       if (!found) {
         document.getElementById("result").innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
