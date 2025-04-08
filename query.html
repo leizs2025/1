@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -99,37 +100,38 @@
 
   <div id="result" class="table-container"></div>
 
-  <script>
-    async function search() {
-      const keyword = document.getElementById('searchInput').value.trim();
-      if (!keyword) {
-        alert("请输入电话号码或编号！");
-        return;
+ <script>
+  async function search() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    if (!keyword) {
+      alert("请输入电话号码或编号！");
+      return;
+    }
+
+    const res = await fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json");
+    const data = await res.json();
+
+    const matched = [];
+
+    for (const [key, entry] of Object.entries(data)) {
+      if (!Array.isArray(entry)) continue;
+      const phone = (entry[2] || "").toString();
+      const serial = (entry[0] || "").toString();
+      const combined = phone + serial + key;
+      if (combined.includes(keyword)) {
+        matched.push(entry);
       }
+    }
 
-      const res = await fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json");
-      const data = await res.json();
+    if (matched.length === 0) {
+      document.getElementById("result").innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
+      return;
+    }
 
-      let found = null;
-      let matchKey = "";
+    let html = `<div class="match-count">🔎 共找到 ${matched.length} 笔符合资料</div>`;
 
-      for (const [key, entry] of Object.entries(data)) {
-        if (!Array.isArray(entry)) continue;
-        const phone = entry[2];
-        const id = entry[0];
-        if (phone === keyword || key === keyword || id === keyword) {
-          found = entry;
-          matchKey = key;
-          break;
-        }
-      }
-
-      if (!found) {
-        document.getElementById("result").innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
-        return;
-      }
-
-      let html = `<table>
+    matched.forEach((found, index) => {
+      html += `<table>
         <tr><td colspan="14" class="highlight">🧾 填写者：${found[1] || ""}　📱 电话：${found[2] || ""}</td></tr>
         <tr>
           <th>姓名</th><th>生肖</th><th>太岁</th><th>纸金</th>
@@ -140,10 +142,12 @@
           <th>安奉<br>功德金</th>
         </tr>`;
 
+      let count = 0;
       for (let i = 0; i < 15; i++) {
         const base = 4 + i * 13;
         const name = found[base];
         if (!name) continue;
+        count++;
         html += `<tr>
           <td>${name}</td>
           <td>${found[base + 1] || ""}</td>
@@ -156,9 +160,15 @@
         </tr>`;
       }
 
-      html += "</table>";
-      document.getElementById("result").innerHTML = html;
-    }
-  </script>
+      // 👇 插入一行空白，视觉上更舒服
+      html += `<tr><td colspan="13" style="height: 10px;"></td></tr>`;
+      html += "</table><br>";
+    });
+
+    document.getElementById("result").innerHTML = html;
+  }
+</script>
+
+
 </body>
 </html>
