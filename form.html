@@ -281,7 +281,7 @@ h1, h2, h3 {
 
     function calculateTotal() {
         let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
-        document.getElementById("totalAmount").textContent = `总金额: ${total} 元`;
+        document.getElementById("totalAmount").textContent = `赞助总金额: ${total} 元`;
     }
 
     function submitForm() {
