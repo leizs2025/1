@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>超度报名</title>
+  <style>
+    /* 简单的 CSS 样式 */
+    body { font-family: sans-serif; }
+    form { max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+    label { display: block; margin-bottom: 5px; }
+    input[type="text"], input[type="tel"], input[type="date"], textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box; }
+    button[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; font-size: 16px; }
+    #message { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>超度报名表</h1>
+  <form id="registrationForm">
+    <div>
+      <label for="name">姓名:</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    <div>
+      <label for="gender">性别:</label>
+      <input type="text" id="gender" name="gender">
+    </div>
+    <div>
+      <label for="phone">联系电话:</label>
+      <input type="tel" id="phone" name="phone">
+    </div>
+    <div>
+      <label for="deceasedName">超度对象姓名:</label>
+      <input type="text" id="deceasedName" name="deceasedName" required>
+    </div>
+    <div>
+      <label for="dedicationDate">超度日期:</label>
+      <input type="date" id="dedicationDate" name="dedicationDate">
+    </div>
+    <div>
+      <label for="remarks">其他备注:</label>
+      <textarea id="remarks" name="remarks"></textarea>
+    </div>
+    <button type="submit">提交报名</button>
+    <div id="message"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('registrationForm');
+    const messageDiv = document.getElementById('message');
+    const gasEndpoint = 'YOUR_WEB_APP_URL'; // 将 YOUR_WEB_APP_URL 替换为你的 GAS Web 应用 URL
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault(); // 阻止表单默认提交行为
+
+      const formData = new FormData(form);
+      const formDataObject = {};
+      formData.forEach((value, key) => {
+        formDataObject[key] = value;
+      });
+
+      fetch(gasEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(formData).toString(),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.result === 'success') {
+          messageDiv.textContent = data.message;
+          form.reset(); // 清空表单
+        } else {
+          messageDiv.textContent = data.message;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        messageDiv.textContent = '提交失败，请检查网络或稍后再试。';
+      });
+    });
+  </script>
+</body>
+</html>
