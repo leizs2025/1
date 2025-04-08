@@ -5,108 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>超度報名表單</title>
   <style>
+    :root {
+      --primary: #2196F3;
+      --error: #f44336;
+      --text: #333;
+    }
     * {
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 12px;
       background: #f5f5f5;
-      margin: 0;
       line-height: 1.5;
-      color: #333;
-    }
-    h2 {
-      text-align: center;
-      margin: 0 0 20px;
-      font-size: 1.5rem;
-      color: #222;
     }
     .form-page {
-      display: none;
-      max-width: 100%;
-      margin: 0 auto;
       background: white;
+      border-radius: 8px;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: none;
     }
     .form-page.active {
       display: block;
-      animation: fadeIn 0.3s ease;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    h2 {
+      font-size: 1.4rem;
+      color: #222;
+      margin-bottom: 20px;
+      text-align: center;
     }
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     label {
       display: block;
-      font-weight: 600;
+      font-weight: 500;
       margin-bottom: 6px;
-      font-size: 0.95rem;
+      color: #444;
     }
     .required::after {
       content: "*";
-      color: #f44336;
-      margin-left: 4px;
+      color: var(--error);
+      margin-left: 3px;
     }
     input, select {
       width: 100%;
-      padding: 12px 15px;
-      font-size: 1rem;
+      padding: 12px;
       border: 1px solid #ddd;
-      border-radius: 8px;
+      border-radius: 6px;
+      font-size: 1rem;
       background: #fff;
       -webkit-appearance: none;
-      appearance: none;
     }
     input:focus, select:focus {
-      border-color: #2196F3;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(33,150,243,0.2);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(33,150,243,0.1);
     }
     .row {
       display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     .row > div {
       flex: 1;
     }
     .btn-group {
       display: flex;
-      gap: 12px;
-      margin-top: 25px;
+      gap: 10px;
+      margin-top: 20px;
     }
     button {
       flex: 1;
       padding: 14px;
-      font-size: 1rem;
-      font-weight: 500;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: #2196F3;
+      background: var(--primary);
       color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      touch-action: manipulation;
     }
     button:active {
-      transform: scale(0.98);
-      background: #1e88e5;
-    }
-    button[disabled] {
-      background: #b0bec5;
-      cursor: not-allowed;
-      transform: none;
+      opacity: 0.9;
     }
     .error-msg {
-      color: #f44336;
+      color: var(--error);
       font-size: 0.85rem;
-      margin-top: 5px;
+      margin-top: 4px;
       display: none;
     }
     .amount-summary {
@@ -118,10 +108,10 @@
     .total-amount {
       font-size: 1.1rem;
       text-align: right;
-      font-weight: 600;
+      font-weight: 500;
     }
     .total-amount span {
-      color: #f44336;
+      color: var(--error);
     }
     #code-field {
       max-height: 0;
@@ -133,82 +123,59 @@
       max-height: 100px;
       opacity: 1;
     }
-    .special-item {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-    }
-    
-    /* 移动端优化 */
     @media (max-width: 480px) {
-      body {
-        padding: 12px;
-      }
-      .form-page {
-        padding: 15px;
-      }
-      input, select {
-        padding: 10px 12px;
-      }
-      button {
-        padding: 12px;
-      }
       .row {
         flex-direction: column;
         gap: 8px;
+      }
+      button {
+        padding: 12px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- 第一页：基本信息 -->
+  <!-- 第一页 -->
   <div class="form-page active" id="page1">
     <h2>基本信息</h2>
-    
     <div class="form-group">
       <label class="required">联系方式</label>
       <input type="tel" id="phone" required placeholder="请输入手机号码">
-      <div class="error-msg" id="phone-error">请填写有效的联系方式</div>
+      <div class="error-msg" id="phone-error">请填写有效联系方式</div>
     </div>
-
     <div class="form-group">
       <label class="required">阳上报恩人</label>
       <input type="text" id="applicant" required placeholder="请输入姓名">
       <div class="error-msg" id="applicant-error">请填写报恩人姓名</div>
     </div>
-
     <div class="form-group">
       <label class="required">阳上地址</label>
       <input type="text" id="address" required placeholder="请输入详细地址">
       <div class="error-msg" id="address-error">请填写有效地址</div>
     </div>
-
     <div class="btn-group">
       <button onclick="nextPage()">下一页</button>
     </div>
   </div>
 
-  <!-- 第二页：超度信息 -->
+  <!-- 第二页 -->
   <div class="form-page" id="page2">
     <h2>超度信息</h2>
-
     <div class="form-group">
-      <label class="required">祖先 / 亡靈 姓名</label>
+      <label class="required">祖先姓名</label>
       <input type="text" id="deceased-name" required placeholder="请输入祖先姓名">
       <div class="error-msg" id="name-error">请填写祖先姓名</div>
     </div>
-
     <div class="form-group">
       <label class="required">分類</label>
       <select id="ceremony-type" required>
-        <option value="">請選擇</option>
+        <option value="">请选择分类</option>
         <option value="地藏殿牌位">地藏殿牌位</option>
         <option value="靈骨殿福位">靈骨殿福位</option>
         <option value="墓園">墓園</option>
         <option value="牌位">牌位</option>
       </select>
     </div>
-
     <div class="form-group" id="code-field">
       <label id="code-label" class="required">编号</label>
       <input type="text" id="location-code" required placeholder="请输入编号">
@@ -218,37 +185,37 @@
     <div class="row">
       <div class="form-group">
         <label>超度令牌 (5元)</label>
-        <input type="number" class="amount-item" id="item1" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item1" min="0" value="0">
       </div>
       <div class="form-group">
         <label>法船配套 (30元)</label>
-        <input type="number" class="amount-item" id="item2" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item2" min="0" value="0">
       </div>
     </div>
 
     <div class="row">
       <div class="form-group">
         <label>蓮花 (6元)</label>
-        <input type="number" class="amount-item" id="item3" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item3" min="0" value="0">
       </div>
       <div class="form-group">
         <label>紙金 (3元)</label>
-        <input type="number" class="amount-item" id="item4" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item4" min="0" value="0">
       </div>
     </div>
 
     <div class="row">
       <div class="form-group">
         <label>紙金 (6元)</label>
-        <input type="number" class="amount-item" id="item5" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item5" min="0" value="0">
       </div>
       <div class="form-group">
         <label>紙金 (27元)</label>
-        <input type="number" class="amount-item" id="item6" min="0" placeholder="0">
+        <input type="number" class="amount-item" id="item6" min="0" value="0">
       </div>
     </div>
 
-    <div class="form-group special-item">
+    <div class="form-group">
       <label>配套令牌备注</label>
       <input type="text" id="special-item" placeholder="可填写特殊要求">
     </div>
@@ -264,181 +231,159 @@
   </div>
 
   <script>
-    // 移动端优化脚本
-    document.addEventListener('DOMContentLoaded', function() {
-      // 修复页面高度计算
-      function adjustHeight() {
-        const activePage = document.querySelector('.form-page.active');
-        if (activePage) {
-          document.body.style.minHeight = activePage.offsetHeight + 'px';
-        }
-      }
-      window.addEventListener('resize', adjustHeight);
-      adjustHeight();
+    (() => {
+      const state = {
+        currentPage: 1,
+        priceMap: { item1:5, item2:30, item3:6, item4:3, item5:6, item6:27 }
+      };
 
-      // 分类选择处理
-      const typeSelect = document.getElementById('ceremony-type');
-      const codeField = document.getElementById('code-field');
-      
-      typeSelect.addEventListener('change', function() {
+      // DOM缓存
+      const dom = {
+        pages: [document.getElementById('page1'), document.getElementById('page2')],
+        codeField: document.getElementById('code-field'),
+        totalAmount: document.getElementById('total-amount'),
+        typeSelect: document.getElementById('ceremony-type'),
+        priceInputs: document.querySelectorAll('.amount-item')
+      };
+
+      // 初始化事件
+      function init() {
+        // 分类选择
+        dom.typeSelect.addEventListener('change', handleTypeChange);
+        
+        // 金额计算
+        dom.priceInputs.forEach(input => {
+          input.addEventListener('input', () => {
+            input.value = Math.max(0, parseInt(input.value) || 0);
+            calculateTotal();
+          });
+        });
+      }
+
+      // 分类处理
+      function handleTypeChange() {
         const typeMap = {
           '地藏殿牌位': '牌位编号',
-          '靈骨殿福位': '灵骨殿编号', 
+          '靈骨殿福位': '灵骨殿编号',
           '墓園': '墓园编号',
           '牌位': '牌位编号'
         };
         
         if (this.value && typeMap[this.value]) {
-          codeField.classList.add('show');
+          dom.codeField.classList.add('show');
           document.getElementById('code-label').textContent = typeMap[this.value];
           document.getElementById('location-code').placeholder = `请输入${typeMap[this.value]}`;
         } else {
-          codeField.classList.remove('show');
+          dom.codeField.classList.remove('show');
         }
-        adjustHeight();
-      });
+      }
 
       // 金额计算
-      const PRICE_MAP = { item1:5, item2:30, item3:6, item4:3, item5:6, item6:27 };
-      document.querySelectorAll('.amount-item').forEach(input => {
-        input.addEventListener('input', function() {
-          // 处理负数输入
-          if (this.value < 0) this.value = 0;
-          
-          // 计算总金额
-          let total = 0;
-          Object.keys(PRICE_MAP).forEach(id => {
-            total += (parseInt(document.getElementById(id).value) || 0 * PRICE_MAP[id];
-          });
-          document.getElementById('total-amount').textContent = total;
+      function calculateTotal() {
+        let total = 0;
+        dom.priceInputs.forEach(input => {
+          total += (parseInt(input.value) || 0) * state.priceMap[input.id];
         });
-      });
-    });
-
-    // 分页功能
-    function nextPage() {
-      if (validatePage1()) {
-        document.getElementById('page1').classList.remove('active');
-        document.getElementById('page2').classList.add('active');
-        window.scrollTo(0, 0);
+        dom.totalAmount.textContent = total;
       }
-    }
 
-    function prevPage() {
-      document.getElementById('page2').classList.remove('active');
-      document.getElementById('page1').classList.add('active');
-      window.scrollTo(0, 0);
-    }
-
-    // 验证函数
-    function validatePage1() {
-      let isValid = true;
-      
-      // 验证必填字段
-      const requiredFields = [
-        { id: 'phone', error: 'phone-error' },
-        { id: 'applicant', error: 'applicant-error' },
-        { id: 'address', error: 'address-error' }
-      ];
-
-      requiredFields.forEach(field => {
-        const input = document.getElementById(field.id);
-        const error = document.getElementById(field.error);
-        
-        if (!input.value.trim()) {
-          error.style.display = 'block';
-          isValid = false;
-          // 滚动到第一个错误字段
-          if (isValid === false) {
-            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            input.focus();
-          }
-        } else {
-          error.style.display = 'none';
+      // 分页控制
+      window.nextPage = () => {
+        if (validatePage1()) {
+          dom.pages[0].classList.remove('active');
+          dom.pages[1].classList.add('active');
+          state.currentPage = 2;
+          window.scrollTo(0,0);
         }
-      });
+      };
 
-      return isValid;
-    }
+      window.prevPage = () => {
+        dom.pages[1].classList.remove('active');
+        dom.pages[0].classList.add('active');
+        state.currentPage = 1;
+        window.scrollTo(0,0);
+      };
 
-    // 提交表单
-    async function submitForm() {
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true;
-      btn.textContent = '提交中...';
-      
-      try {
-        // 验证第二页数据
-        const requiredFields = [
-          { id: 'deceased-name', error: 'name-error' },
-          { id: 'ceremony-type', error: 'type-error' },
-          { id: 'location-code', error: 'code-error' }
-        ];
-        
+      // 表单验证
+      function validatePage1() {
         let isValid = true;
-        requiredFields.forEach(field => {
-          const input = document.getElementById(field.id);
-          const error = document.getElementById(field.error);
-          
-          if (!input.value.trim()) {
+        ['phone','applicant','address'].forEach(id => {
+          const field = document.getElementById(id);
+          const error = document.getElementById(`${id}-error`);
+          if (!field.value.trim()) {
             error.style.display = 'block';
             isValid = false;
-            // 滚动到第一个错误字段
-            if (isValid === false) {
-              input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              input.focus();
-            }
+            if(isValid === false) field.focus();
           } else {
             error.style.display = 'none';
           }
         });
-        
-        if (!isValid) {
-          throw new Error('请填写所有必填字段');
-        }
-        
-        // 收集表单数据
-        const formData = {
-          contact: {
-            phone: document.getElementById('phone').value.trim(),
-            applicant: document.getElementById('applicant').value.trim(),
-            address: document.getElementById('address').value.trim()
-          },
-          ceremony: {
-            name: document.getElementById('deceased-name').value.trim(),
-            type: document.getElementById('ceremony-type').value,
-            code: document.getElementById('location-code').value.trim(),
-            items: {
-              item1: parseInt(document.getElementById('item1').value) || 0,
-              item2: parseInt(document.getElementById('item2').value) || 0,
-              item3: parseInt(document.getElementById('item3').value) || 0,
-              item4: parseInt(document.getElementById('item4').value) || 0,
-              item5: parseInt(document.getElementById('item5').value) || 0,
-              item6: parseInt(document.getElementById('item6').value) || 0
-            },
-            special: document.getElementById('special-item').value.trim(),
-            total: parseInt(document.getElementById('total-amount').textContent)
-          }
-        };
-        
-        console.log('提交数据:', formData);
-        alert('提交成功！感谢您的参与');
-        
-        // 重置表单
-        document.querySelectorAll('input, select').forEach(field => {
-          if (field.type !== 'button') field.value = '';
-        });
-        document.getElementById('total-amount').textContent = '0';
-        document.getElementById('code-field').classList.remove('show');
-        prevPage();
-        
-      } catch (error) {
-        alert(error.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '提交申请';
+        return isValid;
       }
-    }
+
+      // 提交表单
+      window.submitForm = async () => {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        
+        try {
+          // 验证第二页
+          let isValid = true;
+          ['deceased-name','ceremony-type','location-code'].forEach(id => {
+            const field = document.getElementById(id);
+            const error = document.getElementById(`${id}-error`);
+            if (!field.value.trim()) {
+              error.style.display = 'block';
+              isValid = false;
+              if(isValid === false) field.focus();
+            } else {
+              error.style.display = 'none';
+            }
+          });
+          
+          if (!isValid) throw new Error('请填写所有必填字段');
+
+          // 收集数据
+          const formData = {
+            contact: {
+              phone: document.getElementById('phone').value.trim(),
+              applicant: document.getElementById('applicant').value.trim(),
+              address: document.getElementById('address').value.trim()
+            },
+            ceremony: {
+              name: document.getElementById('deceased-name').value.trim(),
+              type: dom.typeSelect.value,
+              code: document.getElementById('location-code').value.trim(),
+              items: Array.from(dom.priceInputs).reduce((acc, input) => {
+                acc[input.id] = parseInt(input.value) || 0;
+                return acc;
+              }, {}),
+              special: document.getElementById('special-item').value.trim(),
+              total: parseInt(dom.totalAmount.textContent)
+            }
+          };
+          
+          console.log('提交数据:', formData);
+          alert('提交成功！');
+          
+          // 重置表单
+          document.querySelectorAll('input').forEach(input => {
+            if (!['button','submit'].includes(input.type)) input.value = '';
+          });
+          dom.typeSelect.value = '';
+          dom.codeField.classList.remove('show');
+          prevPage();
+          
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      // 启动
+      init();
+    })();
   </script>
 </body>
 </html>
