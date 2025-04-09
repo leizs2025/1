@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>超度報名表單</title>
+  <title>多人超度報名系統</title>
   <style>
     :root {
       --primary: #2196F3;
+      --success: #4CAF50;
       --error: #f44336;
       --text: #333;
     }
@@ -21,6 +22,7 @@
       padding: 12px;
       background: #f5f5f5;
       line-height: 1.5;
+      color: var(--text);
     }
     .form-page {
       background: white;
@@ -28,10 +30,6 @@
       padding: 20px;
       margin-bottom: 15px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      display: none;
-    }
-    .form-page.active {
-      display: block;
     }
     h2 {
       font-size: 1.4rem;
@@ -41,6 +39,7 @@
     }
     .form-group {
       margin-bottom: 16px;
+      position: relative;
     }
     label {
       display: block;
@@ -69,8 +68,8 @@
     }
     .row {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
     .row > div {
       flex: 1;
@@ -83,15 +82,26 @@
     button {
       flex: 1;
       padding: 14px;
-      background: var(--primary);
-      color: white;
       border: none;
       border-radius: 6px;
       font-size: 1rem;
       touch-action: manipulation;
+      transition: opacity 0.2s;
+    }
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+    .success-btn {
+      background: var(--success);
+      color: white;
+    }
+    .error-btn {
+      background: var(--error);
+      color: white;
     }
     button:active {
-      opacity: 0.9;
+      opacity: 0.8;
     }
     .error-msg {
       color: var(--error);
@@ -113,20 +123,35 @@
     .total-amount span {
       color: var(--error);
     }
-    #code-field {
-      max-height: 0;
-      opacity: 0;
-      overflow: hidden;
+    .ancestor-group {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
       transition: all 0.3s ease;
     }
-    #code-field.show {
-      max-height: 100px;
-      opacity: 1;
+    .remove-ancestor-btn {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      border-radius: 20px;
+    }
+    .fixed-submit-btn {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 10px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 100;
     }
     @media (max-width: 480px) {
       .row {
         flex-direction: column;
-        gap: 8px;
       }
       button {
         padding: 12px;
@@ -135,182 +160,226 @@
   </style>
 </head>
 <body>
-  <!-- 第一页 -->
-  <div class="form-page active" id="page1">
-    <h2>基本信息</h2>
+  <div class="form-page">
+    <h2>報名信息</h2>
+    
+    <!-- 基本信息 -->
     <div class="form-group">
-      <label class="required">联系方式</label>
-      <input type="tel" id="phone" required placeholder="请输入手机号码">
-      <div class="error-msg" id="phone-error">请填写有效联系方式</div>
+      <label class="required">聯繫方式</label>
+      <input type="tel" id="phone" required placeholder="請輸入手機號碼">
+      <div class="error-msg" id="phone-error">此為必填項</div>
     </div>
+    
     <div class="form-group">
-      <label class="required">阳上报恩人</label>
-      <input type="text" id="applicant" required placeholder="请输入姓名">
-      <div class="error-msg" id="applicant-error">请填写报恩人姓名</div>
+      <label class="required">陽上報恩人</label>
+      <input type="text" id="applicant" required placeholder="請輸入姓名">
+      <div class="error-msg" id="applicant-error">此為必填項</div>
     </div>
+    
     <div class="form-group">
-      <label class="required">阳上地址</label>
-      <input type="text" id="address" required placeholder="请输入详细地址">
-      <div class="error-msg" id="address-error">请填写有效地址</div>
+      <label class="required">聯繫地址</label>
+      <input type="text" id="address" required placeholder="請輸入詳細地址">
+      <div class="error-msg" id="address-error">此為必填項</div>
     </div>
+
+    <!-- 祖先信息容器 -->
+    <h2 style="margin-top:30px;">超度祖先信息</h2>
+    <div id="ancestor-container">
+      <!-- 初始祖先区块 -->
+      <div class="ancestor-group">
+        <button class="remove-ancestor-btn error-btn" onclick="removeAncestor(this)" style="display:none;">× 刪除</button>
+        <div class="ancestor-header">祖先 1</div>
+        
+        <div class="form-group">
+          <label class="required">祖先姓名</label>
+          <input type="text" class="ancestor-name" required>
+          <div class="error-msg">此為必填項</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="required">超度類別</label>
+          <select class="ceremony-type" required>
+            <option value="">請選擇類別</option>
+            <option value="地藏殿牌位">地藏殿牌位</option>
+            <option value="靈骨殿福位">靈骨殿福位</option>
+            <option value="墓園">墓園</option>
+            <option value="牌位">牌位</option>
+          </select>
+          <div class="error-msg">此為必填項</div>
+        </div>
+        
+        <div class="code-field" style="display:none;">
+          <label class="required">專屬編號</label>
+          <input type="text" class="location-code" required>
+          <div class="error-msg">此為必填項</div>
+        </div>
+        
+        <div class="row">
+          <div class="form-group">
+            <label>超度令牌 (5元)</label>
+            <input type="number" class="amount-item" data-price="5" placeholder="數量">
+          </div>
+          <div class="form-group">
+            <label>法船配套 (30元)</label>
+            <input type="number" class="amount-item" data-price="30" placeholder="數量">
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="form-group">
+            <label>蓮花 (6元)</label>
+            <input type="number" class="amount-item" data-price="6" placeholder="數量">
+          </div>
+          <div class="form-group">
+            <label>紙金 (3元)</label>
+            <input type="number" class="amount-item" data-price="3" placeholder="數量">
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="form-group">
+            <label>紙金 (6元)</label>
+            <input type="number" class="amount-item" data-price="6" placeholder="數量">
+          </div>
+          <div class="form-group">
+            <label>紙金 (27元)</label>
+            <input type="number" class="amount-item" data-price="27" placeholder="數量">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>配套令牌備註</label>
+          <input type="text" class="special-item" placeholder="特殊要求">
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加按钮 -->
     <div class="btn-group">
-      <button onclick="nextPage()">下一页</button>
+      <button class="success-btn" onclick="addAncestor()" id="add-ancestor-btn">+ 添加祖先（還可添加7位）</button>
+    </div>
+
+    <!-- 金额汇总 -->
+    <div class="amount-summary">
+      <div class="total-amount">總計金額：<span id="total-amount">0</span> 元</div>
     </div>
   </div>
 
-  <!-- 第二页 -->
-  <div class="form-page" id="page2">
-    <h2>超度信息</h2>
-    <div class="form-group">
-      <label class="required">祖先姓名</label>
-      <input type="text" id="deceased-name" required placeholder="请输入祖先姓名">
-      <div class="error-msg" id="name-error">请填写祖先姓名</div>
-    </div>
-    <div class="form-group">
-      <label class="required">分類</label>
-      <select id="ceremony-type" required>
-        <option value="">请选择分类</option>
-        <option value="地藏殿牌位">地藏殿牌位</option>
-        <option value="靈骨殿福位">靈骨殿福位</option>
-        <option value="墓園">墓園</option>
-        <option value="牌位">牌位</option>
-      </select>
-    </div>
-    <div class="form-group" id="code-field">
-      <label id="code-label" class="required">编号</label>
-      <input type="text" id="location-code" required placeholder="请输入编号">
-      <div class="error-msg" id="code-error">请填写有效编号</div>
-    </div>
-
-    <div class="row">
-      <div class="form-group">
-        <label>超度令牌 (5元)</label>
-        <input type="number" class="amount-item" id="item1" min="0" value="0">
-      </div>
-      <div class="form-group">
-        <label>法船配套 (30元)</label>
-        <input type="number" class="amount-item" id="item2" min="0" value="0">
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="form-group">
-        <label>蓮花 (6元)</label>
-        <input type="number" class="amount-item" id="item3" min="0" value="0">
-      </div>
-      <div class="form-group">
-        <label>紙金 (3元)</label>
-        <input type="number" class="amount-item" id="item4" min="0" value="0">
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="form-group">
-        <label>紙金 (6元)</label>
-        <input type="number" class="amount-item" id="item5" min="0" value="0">
-      </div>
-      <div class="form-group">
-        <label>紙金 (27元)</label>
-        <input type="number" class="amount-item" id="item6" min="0" value="0">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>配套令牌备注</label>
-      <input type="text" id="special-item" placeholder="可填写特殊要求">
-    </div>
-
-    <div class="amount-summary">
-      <div class="total-amount">总计金额：<span id="total-amount">0</span> 元</div>
-    </div>
-
-    <div class="btn-group">
-      <button onclick="prevPage()">上一頁</button>
-      <button onclick="submitForm()" id="submit-btn">提交申请</button>
-    </div>
+  <!-- 固定提交按钮 -->
+  <div class="fixed-submit-btn">
+    <button class="primary-btn" onclick="submitForm()" id="submit-btn">提交申請</button>
   </div>
 
   <script>
     (() => {
-      const state = {
-        currentPage: 1,
-        priceMap: { item1:5, item2:30, item3:6, item4:3, item5:6, item6:27 }
-      };
+      const MAX_ANCESTORS = 8;
+      let ancestorCount = 1;
+      const priceMap = {5:5, 30:30, 6:6, 3:3, 27:27}; // price:value
 
-      // DOM缓存
-      const dom = {
-        pages: [document.getElementById('page1'), document.getElementById('page2')],
-        codeField: document.getElementById('code-field'),
-        totalAmount: document.getElementById('total-amount'),
-        typeSelect: document.getElementById('ceremony-type'),
-        priceInputs: document.querySelectorAll('.amount-item')
-      };
-
-      // 初始化事件
+      // 初始化事件監聽
       function init() {
-        // 分类选择
-        dom.typeSelect.addEventListener('change', handleTypeChange);
-        
-        // 金额计算
-        dom.priceInputs.forEach(input => {
-          input.addEventListener('input', () => {
-            input.value = Math.max(0, parseInt(input.value) || 0);
-            calculateTotal();
-          });
+        // 類別選擇事件
+        document.addEventListener('change', e => {
+          if(e.target.classList.contains('ceremony-type')) {
+            handleTypeChange(e.target);
+          }
+        });
+
+        // 金額輸入事件
+        document.addEventListener('input', e => {
+          if(e.target.classList.contains('amount-item')) {
+            handleAmountInput(e.target);
+          }
         });
       }
 
-      // 分类处理
-      function handleTypeChange() {
+      // 處理類別選擇
+      function handleTypeChange(select) {
+        const codeField = select.closest('.ancestor-group').querySelector('.code-field');
         const typeMap = {
-          '地藏殿牌位': '牌位编号',
-          '靈骨殿福位': '灵骨殿编号',
-          '墓園': '墓园编号',
-          '牌位': '牌位编号'
+          '地藏殿牌位': '牌位編號',
+          '靈骨殿福位': '靈骨殿編號',
+          '墓園': '墓園編號',
+          '牌位': '牌位編號'
         };
         
-        if (this.value && typeMap[this.value]) {
-          dom.codeField.classList.add('show');
-          document.getElementById('code-label').textContent = typeMap[this.value];
-          document.getElementById('location-code').placeholder = `请输入${typeMap[this.value]}`;
+        if(select.value && typeMap[select.value]) {
+          codeField.style.display = 'block';
+          codeField.querySelector('label').textContent = typeMap[select.value];
+          codeField.querySelector('input').placeholder = `請輸入${typeMap[select.value]}`;
         } else {
-          dom.codeField.classList.remove('show');
+          codeField.style.display = 'none';
         }
       }
 
-      // 金额计算
+      // 處理金額輸入
+      function handleAmountInput(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+        calculateTotal();
+      }
+
+      // 添加祖先
+      window.addAncestor = () => {
+        if(ancestorCount >= MAX_ANCESTORS) return;
+        
+        const template = document.querySelector('.ancestor-group').cloneNode(true);
+        ancestorCount++;
+        template.querySelector('.ancestor-header').textContent = `祖先 ${ancestorCount}`;
+        template.querySelector('.remove-ancestor-btn').style.display = 'block';
+        template.querySelectorAll('input').forEach(i => i.value = '');
+        template.querySelector('select').selectedIndex = 0;
+        template.querySelector('.code-field').style.display = 'none';
+        
+        document.getElementById('ancestor-container').appendChild(template);
+        updateAddButton();
+        calculateTotal();
+      };
+
+      // 刪除祖先
+      window.removeAncestor = btn => {
+        if(ancestorCount <= 1) return;
+        btn.closest('.ancestor-group').remove();
+        ancestorCount--;
+        updateAddButton();
+        updateAncestorNumbers();
+        calculateTotal();
+      };
+
+      // 更新添加按鈕狀態
+      function updateAddButton() {
+        const btn = document.getElementById('add-ancestor-btn');
+        const remaining = MAX_ANCESTORS - ancestorCount;
+        btn.textContent = `+ 添加祖先（還可添加${remaining}位）`;
+        btn.disabled = remaining <= 0;
+      }
+
+      // 更新祖先編號
+      function updateAncestorNumbers() {
+        document.querySelectorAll('.ancestor-group').forEach((group, index) => {
+          group.querySelector('.ancestor-header').textContent = `祖先 ${index + 1}`;
+        });
+      }
+
+      // 計算總金額
       function calculateTotal() {
         let total = 0;
-        dom.priceInputs.forEach(input => {
-          total += (parseInt(input.value) || 0) * state.priceMap[input.id];
+        document.querySelectorAll('.amount-item').forEach(input => {
+          const price = parseInt(input.dataset.price);
+          const quantity = parseInt(input.value) || 0;
+          total += price * quantity;
         });
-        dom.totalAmount.textContent = total;
+        document.getElementById('total-amount').textContent = total;
       }
 
-      // 分页控制
-      window.nextPage = () => {
-        if (validatePage1()) {
-          dom.pages[0].classList.remove('active');
-          dom.pages[1].classList.add('active');
-          state.currentPage = 2;
-          window.scrollTo(0,0);
-        }
-      };
-
-      window.prevPage = () => {
-        dom.pages[1].classList.remove('active');
-        dom.pages[0].classList.add('active');
-        state.currentPage = 1;
-        window.scrollTo(0,0);
-      };
-
-      // 表单验证
-      function validatePage1() {
+      // 驗證表單
+      function validateForm() {
         let isValid = true;
-        ['phone','applicant','address'].forEach(id => {
+
+        // 驗證基本信息
+        ['phone', 'applicant', 'address'].forEach(id => {
           const field = document.getElementById(id);
           const error = document.getElementById(`${id}-error`);
-          if (!field.value.trim()) {
+          if(!field.value.trim()) {
             error.style.display = 'block';
             isValid = false;
             if(isValid === false) field.focus();
@@ -318,70 +387,115 @@
             error.style.display = 'none';
           }
         });
+
+        // 驗證祖先信息
+        document.querySelectorAll('.ancestor-group').forEach(group => {
+          const name = group.querySelector('.ancestor-name');
+          const type = group.querySelector('.ceremony-type');
+          const code = group.querySelector('.location-code');
+          const errors = group.querySelectorAll('.error-msg');
+
+          if(!name.value.trim()) {
+            errors[0].style.display = 'block';
+            isValid = false;
+          } else {
+            errors[0].style.display = 'none';
+          }
+
+          if(!type.value) {
+            errors[1].style.display = 'block';
+            isValid = false;
+          } else {
+            errors[1].style.display = 'none';
+          }
+
+          if(type.value && !code.value.trim()) {
+            errors[2].style.display = 'block';
+            isValid = false;
+          } else {
+            errors[2].style.display = 'none';
+          }
+        });
+
         return isValid;
       }
 
-      // 提交表单
+      // 提交表單
       window.submitForm = async () => {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
         
         try {
-          // 验证第二页
-          let isValid = true;
-          ['deceased-name','ceremony-type','location-code'].forEach(id => {
-            const field = document.getElementById(id);
-            const error = document.getElementById(`${id}-error`);
-            if (!field.value.trim()) {
-              error.style.display = 'block';
-              isValid = false;
-              if(isValid === false) field.focus();
-            } else {
-              error.style.display = 'none';
-            }
-          });
-          
-          if (!isValid) throw new Error('请填写所有必填字段');
+          if(!validateForm()) throw new Error('請填寫所有必填欄位');
 
-          // 收集数据
           const formData = {
             contact: {
               phone: document.getElementById('phone').value.trim(),
               applicant: document.getElementById('applicant').value.trim(),
               address: document.getElementById('address').value.trim()
             },
-            ceremony: {
-              name: document.getElementById('deceased-name').value.trim(),
-              type: dom.typeSelect.value,
-              code: document.getElementById('location-code').value.trim(),
-              items: Array.from(dom.priceInputs).reduce((acc, input) => {
-                acc[input.id] = parseInt(input.value) || 0;
-                return acc;
-              }, {}),
-              special: document.getElementById('special-item').value.trim(),
-              total: parseInt(dom.totalAmount.textContent)
-            }
+            ancestors: [],
+            total: parseInt(document.getElementById('total-amount').textContent)
           };
-          
-          console.log('提交数据:', formData);
-          alert('提交成功！');
-          
-          // 重置表单
-          document.querySelectorAll('input').forEach(input => {
-            if (!['button','submit'].includes(input.type)) input.value = '';
-          });
-          dom.typeSelect.value = '';
-          dom.codeField.classList.remove('show');
-          prevPage();
-          
-        } catch (error) {
+
+          // 收集已填寫的祖先數據
+          const filledAncestors = Array.from(document.querySelectorAll('.ancestor-group')).map(group => ({
+            name: group.querySelector('.ancestor-name').value.trim(),
+            type: group.querySelector('.ceremony-type').value.trim(),
+            code: group.querySelector('.location-code').value.trim(),
+            items: {
+              item1: parseInt(group.querySelector('[data-price="5"]').value) || 0,
+              item2: parseInt(group.querySelector('[data-price="30"]').value) || 0,
+              item3: parseInt(group.querySelector('[data-price="6"]').value) || 0,
+              item4: parseInt(group.querySelector('[data-price="3"]').value) || 0,
+              item5: parseInt(group.querySelector('[data-price="6"]').value) || 0,
+              item6: parseInt(group.querySelector('[data-price="27"]').value) || 0
+            },
+            special: group.querySelector('.special-item').value.trim()
+          }));
+
+          // 補足8位空數據
+          while(filledAncestors.length < MAX_ANCESTORS) {
+            filledAncestors.push({
+              name: '',
+              type: '',
+              code: '',
+              items: { item1:0, item2:0, item3:0, item4:0, item5:0, item6:0 },
+              special: ''
+            });
+          }
+
+          formData.ancestors = filledAncestors;
+
+          console.log('提交數據:', formData);
+          alert('提交成功！共提交' + ancestorCount + '位祖先資料');
+          resetForm();
+
+        } catch(error) {
           alert(error.message);
         } finally {
           btn.disabled = false;
         }
       };
 
-      // 启动
+      // 重置表單
+      function resetForm() {
+        document.querySelectorAll('input').forEach(i => i.value = '');
+        document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        document.querySelectorAll('.code-field').forEach(c => c.style.display = 'none');
+        document.getElementById('total-amount').textContent = '0';
+        
+        // 重置祖先數量
+        const container = document.getElementById('ancestor-container');
+        while(container.children.length > 1) {
+          container.lastChild.remove();
+        }
+        ancestorCount = 1;
+        updateAddButton();
+        updateAncestorNumbers();
+      }
+
+      // 啟動初始化
       init();
     })();
   </script>
