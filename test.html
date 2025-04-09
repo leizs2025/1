@@ -5,161 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>多人超度報名系統</title>
   <style>
-    :root {
-      --primary: #2196F3;
-      --success: #4CAF50;
-      --error: #f44336;
-      --text: #333;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      padding: 12px;
-      background: #f5f5f5;
-      line-height: 1.5;
-      color: var(--text);
-    }
-    .form-page {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    h2 {
-      font-size: 1.4rem;
-      color: #222;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .form-group {
-      margin-bottom: 16px;
-      position: relative;
-    }
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #444;
-    }
-    .required::after {
-      content: "*";
-      color: var(--error);
-      margin-left: 3px;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 1rem;
-      background: #fff;
-      -webkit-appearance: none;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(33,150,243,0.1);
-    }
-    .row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .row > div {
-      flex: 1;
-    }
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      touch-action: manipulation;
-      transition: opacity 0.2s;
-    }
-    .primary-btn {
-      background: var(--primary);
-      color: white;
-    }
-    .success-btn {
-      background: var(--success);
-      color: white;
-    }
-    .error-btn {
-      background: var(--error);
-      color: white;
-    }
-    button:active {
-      opacity: 0.8;
-    }
-    .error-msg {
-      color: var(--error);
-      font-size: 0.85rem;
-      margin-top: 4px;
-      display: none;
-    }
-    .amount-summary {
-      margin: 20px 0;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-    .total-amount {
-      font-size: 1.1rem;
-      text-align: right;
-      font-weight: 500;
-    }
-    .total-amount span {
-      color: var(--error);
-    }
-    .ancestor-group {
-      border: 1px solid #eee;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-    .remove-ancestor-btn {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      padding: 6px 12px;
-      font-size: 0.9rem;
-      border-radius: 20px;
-    }
-    .fixed-submit-btn {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      padding: 10px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      z-index: 100;
-    }
-    @media (max-width: 480px) {
-      .row {
-        flex-direction: column;
-      }
-      button {
-        padding: 12px;
-      }
-    }
+    /* 原有CSS樣式保持不變 */
+    :root { --primary: #2196F3; --success: #4CAF50; --error: #f44336; --text: #333; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 12px; background: #f5f5f5; line-height: 1.5; color: var(--text); }
+    .form-page { background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h2 { font-size: 1.4rem; color: #222; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 16px; position: relative; }
+    label { display: block; font-weight: 500; margin-bottom: 6px; color: #444; }
+    .required::after { content: "*"; color: var(--error); margin-left: 3px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; background: #fff; -webkit-appearance: none; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(33,150,243,0.1); }
+    .row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .row > div { flex: 1; }
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    button { flex: 1; padding: 14px; border: none; border-radius: 6px; font-size: 1rem; touch-action: manipulation; transition: opacity 0.2s; }
+    .primary-btn { background: var(--primary); color: white; }
+    .success-btn { background: var(--success); color: white; }
+    .error-btn { background: var(--error); color: white; }
+    button:active { opacity: 0.8; }
+    .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 4px; display: none; }
+    .amount-summary { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+    .total-amount { font-size: 1.1rem; text-align: right; font-weight: 500; }
+    .total-amount span { color: var(--error); }
+    .ancestor-group { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; transition: all 0.3s ease; }
+    .remove-ancestor-btn { position: absolute; right: 10px; top: 10px; padding: 6px 12px; font-size: 0.9rem; border-radius: 20px; }
+    .fixed-submit-btn { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
+    @media (max-width: 480px) { .row { flex-direction: column; } button { padding: 12px; } }
   </style>
 </head>
 <body>
+  <!-- 時間戳隱藏字段 -->
+  <input type="hidden" id="timestamp">
+
   <div class="form-page">
     <h2>報名信息</h2>
     
@@ -273,27 +151,28 @@
   <script>
     (() => {
       const MAX_ANCESTORS = 8;
+      const ITEM_MAP = [
+        { price: 5,  name: '超度令牌' },
+        { price: 30, name: '法船配套' },
+        { price: 6,  name: '蓮花' },
+        { price: 3,  name: '紙金(3元)' },
+        { price: 6,  name: '紙金(6元)' },
+        { price: 27, name: '紙金(27元)' }
+      ];
+      
       let ancestorCount = 1;
-      const priceMap = {5:5, 30:30, 6:6, 3:3, 27:27}; // price:value
 
       // 初始化事件監聽
       function init() {
-        // 類別選擇事件
         document.addEventListener('change', e => {
-          if(e.target.classList.contains('ceremony-type')) {
-            handleTypeChange(e.target);
-          }
+          if(e.target.classList.contains('ceremony-type')) handleTypeChange(e.target);
         });
-
-        // 金額輸入事件
         document.addEventListener('input', e => {
-          if(e.target.classList.contains('amount-item')) {
-            handleAmountInput(e.target);
-          }
+          if(e.target.classList.contains('amount-item')) handleAmountInput(e.target);
         });
       }
 
-      // 處理類別選擇
+      // 類別選擇處理
       function handleTypeChange(select) {
         const codeField = select.closest('.ancestor-group').querySelector('.code-field');
         const typeMap = {
@@ -302,26 +181,22 @@
           '墓園': '墓園編號',
           '牌位': '牌位編號'
         };
-        
-        if(select.value && typeMap[select.value]) {
-          codeField.style.display = 'block';
+        codeField.style.display = typeMap[select.value] ? 'block' : 'none';
+        if(typeMap[select.value]) {
           codeField.querySelector('label').textContent = typeMap[select.value];
           codeField.querySelector('input').placeholder = `請輸入${typeMap[select.value]}`;
-        } else {
-          codeField.style.display = 'none';
         }
       }
 
-      // 處理金額輸入
+      // 金額計算
       function handleAmountInput(input) {
         input.value = input.value.replace(/[^0-9]/g, '');
         calculateTotal();
       }
 
-      // 添加祖先
+      // 祖先操作函數
       window.addAncestor = () => {
         if(ancestorCount >= MAX_ANCESTORS) return;
-        
         const template = document.querySelector('.ancestor-group').cloneNode(true);
         ancestorCount++;
         template.querySelector('.ancestor-header').textContent = `祖先 ${ancestorCount}`;
@@ -329,13 +204,11 @@
         template.querySelectorAll('input').forEach(i => i.value = '');
         template.querySelector('select').selectedIndex = 0;
         template.querySelector('.code-field').style.display = 'none';
-        
         document.getElementById('ancestor-container').appendChild(template);
         updateAddButton();
         calculateTotal();
       };
 
-      // 刪除祖先
       window.removeAncestor = btn => {
         if(ancestorCount <= 1) return;
         btn.closest('.ancestor-group').remove();
@@ -345,7 +218,6 @@
         calculateTotal();
       };
 
-      // 更新添加按鈕狀態
       function updateAddButton() {
         const btn = document.getElementById('add-ancestor-btn');
         const remaining = MAX_ANCESTORS - ancestorCount;
@@ -353,74 +225,51 @@
         btn.disabled = remaining <= 0;
       }
 
-      // 更新祖先編號
       function updateAncestorNumbers() {
         document.querySelectorAll('.ancestor-group').forEach((group, index) => {
           group.querySelector('.ancestor-header').textContent = `祖先 ${index + 1}`;
         });
       }
 
-      // 計算總金額
+      // 金額總計
       function calculateTotal() {
         let total = 0;
         document.querySelectorAll('.amount-item').forEach(input => {
-          const price = parseInt(input.dataset.price);
-          const quantity = parseInt(input.value) || 0;
-          total += price * quantity;
+          total += parseInt(input.dataset.price) * (parseInt(input.value) || 0);
         });
         document.getElementById('total-amount').textContent = total;
       }
 
-      // 驗證表單
+      // 表單驗證
       function validateForm() {
         let isValid = true;
-
-        // 驗證基本信息
         ['phone', 'applicant', 'address'].forEach(id => {
           const field = document.getElementById(id);
           const error = document.getElementById(`${id}-error`);
           if(!field.value.trim()) {
             error.style.display = 'block';
             isValid = false;
-            if(isValid === false) field.focus();
-          } else {
-            error.style.display = 'none';
-          }
+          } else error.style.display = 'none';
         });
 
-        // 驗證祖先信息
         document.querySelectorAll('.ancestor-group').forEach(group => {
           const name = group.querySelector('.ancestor-name');
           const type = group.querySelector('.ceremony-type');
           const code = group.querySelector('.location-code');
           const errors = group.querySelectorAll('.error-msg');
 
-          if(!name.value.trim()) {
-            errors[0].style.display = 'block';
-            isValid = false;
-          } else {
-            errors[0].style.display = 'none';
-          }
-
-          if(!type.value) {
-            errors[1].style.display = 'block';
-            isValid = false;
-          } else {
-            errors[1].style.display = 'none';
-          }
-
-          if(type.value && !code.value.trim()) {
-            errors[2].style.display = 'block';
-            isValid = false;
-          } else {
-            errors[2].style.display = 'none';
-          }
+          [name, type, code].forEach((field, i) => {
+            if((i < 2 && !field.value) || (i === 2 && type.value && !code.value)) {
+              errors[i].style.display = 'block';
+              isValid = false;
+            } else errors[i].style.display = 'none';
+          });
         });
 
         return isValid;
       }
 
-      // 提交表單
+      // 提交處理
       window.submitForm = async () => {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
@@ -428,30 +277,27 @@
         try {
           if(!validateForm()) throw new Error('請填寫所有必填欄位');
 
+          // 組裝數據
           const formData = {
+            timestamp: new Date().toISOString(), // 第一列
             contact: {
-              phone: document.getElementById('phone').value.trim(),
-              applicant: document.getElementById('applicant').value.trim(),
-              address: document.getElementById('address').value.trim()
+              phone: document.getElementById('phone').value.trim(),    // 第二列
+              applicant: document.getElementById('applicant').value.trim(), // 第三列
+              address: document.getElementById('address').value.trim() // 第四列
             },
-            ancestors: [],
-            total: parseInt(document.getElementById('total-amount').textContent)
+            ancestors: []
           };
 
-          // 收集已填寫的祖先數據
+          // 收集祖先數據
           const filledAncestors = Array.from(document.querySelectorAll('.ancestor-group')).map(group => ({
-            name: group.querySelector('.ancestor-name').value.trim(),
-            type: group.querySelector('.ceremony-type').value.trim(),
-            code: group.querySelector('.location-code').value.trim(),
-            items: {
-              item1: parseInt(group.querySelector('[data-price="5"]').value) || 0,
-              item2: parseInt(group.querySelector('[data-price="30"]').value) || 0,
-              item3: parseInt(group.querySelector('[data-price="6"]').value) || 0,
-              item4: parseInt(group.querySelector('[data-price="3"]').value) || 0,
-              item5: parseInt(group.querySelector('[data-price="6"]').value) || 0,
-              item6: parseInt(group.querySelector('[data-price="27"]').value) || 0
-            },
-            special: group.querySelector('.special-item').value.trim()
+            name: group.querySelector('.ancestor-name').value.trim() || '', // 第五列
+            type: group.querySelector('.ceremony-type').value.trim() || '', // 第六列
+            code: group.querySelector('.location-code').value.trim() || '', // 第七列
+            items: ITEM_MAP.map(({price}) => { // 第八到十三列
+              const input = group.querySelector(`[data-price="${price}"]`);
+              return parseInt(input.value) || 0;
+            }),
+            special: group.querySelector('.special-item').value.trim() || '' // 第十四列
           }));
 
           // 補足8位空數據
@@ -460,15 +306,30 @@
               name: '',
               type: '',
               code: '',
-              items: { item1:0, item2:0, item3:0, item4:0, item5:0, item6:0 },
+              items: ITEM_MAP.map(() => 0),
               special: ''
             });
           }
 
           formData.ancestors = filledAncestors;
 
-          console.log('提交數據:', formData);
-          alert('提交成功！共提交' + ancestorCount + '位祖先資料');
+          // 轉換為84列數組
+          const csvData = [
+            formData.timestamp,
+            formData.contact.phone,
+            formData.contact.applicant,
+            formData.contact.address,
+            ...formData.ancestors.flatMap(ancestor => [
+              ancestor.name,
+              ancestor.type,
+              ancestor.code,
+              ...ancestor.items,
+              ancestor.special
+            ])
+          ];
+
+          console.log('完整數據結構:', csvData);
+          alert(`提交成功！共${csvData.length}列數據\n總金額：${document.getElementById('total-amount').textContent}元`);
           resetForm();
 
         } catch(error) {
@@ -478,24 +339,20 @@
         }
       };
 
-      // 重置表單
+      // 表單重置
       function resetForm() {
         document.querySelectorAll('input').forEach(i => i.value = '');
         document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
         document.querySelectorAll('.code-field').forEach(c => c.style.display = 'none');
         document.getElementById('total-amount').textContent = '0';
         
-        // 重置祖先數量
         const container = document.getElementById('ancestor-container');
-        while(container.children.length > 1) {
-          container.lastChild.remove();
-        }
+        while(container.children.length > 1) container.lastChild.remove();
         ancestorCount = 1;
         updateAddButton();
         updateAncestorNumbers();
       }
 
-      // 啟動初始化
       init();
     })();
   </script>
