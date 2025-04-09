@@ -3,176 +3,192 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>水子灵超度报名</title>
+  <title>水子灵超度表單</title>
   <style>
     body {
       font-family: sans-serif;
       padding: 1rem;
-      background: #f2f2f2;
-      color: #333;
+      background: #f8f8f8;
     }
     h1, h2 {
       text-align: center;
+      margin-bottom: 0.5rem;
     }
-    .form-section {
-      background: #fff;
+    .entry {
+      background: white;
+      border-radius: 1rem;
       padding: 1rem;
       margin-bottom: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .form-section input[type="text"],
-    .form-section input[type="number"] {
+    label {
+      display: block;
+      margin-top: 0.5rem;
+    }
+    input {
       width: 100%;
-      margin: 0.25rem 0 1rem;
       padding: 0.5rem;
       font-size: 1rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 0.5rem;
       box-sizing: border-box;
     }
-    .actions {
-      text-align: center;
-      margin-top: 1rem;
-    }
-    .actions button {
-      margin: 0.5rem;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      background-color: #007bff;
+    button {
+      background: #4CAF50;
       color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      margin: 0.5rem;
+      border-radius: 1rem;
     }
-    .actions button:hover {
-      background-color: #0056b3;
+    .danger {
+      background: #f44336;
     }
-    .total {
-      text-align: right;
-      font-weight: bold;
-      margin-top: -0.5rem;
-      color: #d40000;
+    .preview {
+      white-space: pre-wrap;
+      background: #eee;
+      padding: 1rem;
+      border-radius: 1rem;
     }
   </style>
 </head>
 <body>
 
-<h1>水子灵超度报名</h1>
+<h1>水子灵超度表單</h1>
+<h2>報名資料填寫</h2>
 
-<div id="formContainer"></div>
+<div id="entries"></div>
 
-<div class="actions">
+<div style="text-align:center;">
   <button onclick="addEntry()">➕ 新增一位水子灵</button>
-  <button onclick="previewData()">📋 預覽資料</button>
+  <button onclick="showPreview()">📋 預覽資料</button>
 </div>
 
+<h2 id="totalDisplay">總金額：0 元</h2>
+<div id="preview" class="preview" style="display:none;"></div>
+
 <script>
-const MAX_ENTRIES = 5;
 let entries = [];
+let ancestorTotal = 0; // 預留祖先金額跨頁
 
-function createEntry(index) {
-  const div = document.createElement("div");
-  div.className = "form-section";
-  div.setAttribute("data-index", index);
-  div.innerHTML = `
-    <h2>第 ${index + 1} 位</h2>
-    <label>陽上姓名：</label>
-    <input type="text" name="yangshang_${index}" required>
-    
-    <label>水子灵、莲位 安奉地点：</label>
-    <input type="text" name="anfun_${index}" required>
-    
-    <label>超度令牌 (5元/份)：</label>
-    <input type="number" name="token_${index}" min="0" oninput="updateTotal()">
-    
-    <label>法船配套 (30元/份)：</label>
-    <input type="number" name="boat_${index}" min="0" oninput="updateTotal()">
-    
-    <label>莲花 (6元/份)：</label>
-    <input type="number" name="lotus_${index}" min="0" oninput="updateTotal()">
-    
-    <label>纸金3 (3元/份)：</label>
-    <input type="number" name="paper3_${index}" min="0" oninput="updateTotal()">
-    
-    <label>纸金6 (6元/份)：</label>
-    <input type="number" name="paper6_${index}" min="0" oninput="updateTotal()">
-    
-    <label>纸金27 (27元/份)：</label>
-    <input type="number" name="paper27_${index}" min="0" oninput="updateTotal()">
-    
-    <label>配套令牌：</label>
-    <input type="text" name="extra_${index}">
-    
-    ${index > 0 ? `<div class="actions"><button onclick="removeEntry(${index})">❌ 刪除</button></div>` : ""}
-    <div class="total" id="total_${index}">本頁金額：0 元</div>
-  `;
-  return div;
-}
-
-function renderEntries() {
-  const container = document.getElementById("formContainer");
-  container.innerHTML = "";
-  entries.forEach((_, index) => {
-    container.appendChild(createEntry(index));
-  });
+function setAncestorTotal(total) {
+  ancestorTotal = total; // 外部頁面可設置
   updateTotal();
 }
 
-function addEntry() {
-  if (entries.length >= MAX_ENTRIES) {
-    alert("最多只能新增 5 位水子灵！");
-    return;
-  }
-  entries.push({});
-  renderEntries();
+function addEntry(data = {}) {
+  if (entries.length >= 5) return alert("最多可填寫 5 位");
+
+  const index = entries.length;
+  const container = document.createElement("div");
+  container.className = "entry";
+  container.dataset.index = index;
+
+  container.innerHTML = `
+    <label>陽上：</label>
+    <input type="text" class="yang-input" value="${data.yang || ''}" />
+
+    <label>水子灵 莲位 / 安奉地點：</label>
+    <input type="text" class="location-input" value="${data.location || ''}" />
+
+    <label>超度令牌 (5元/份)：</label>
+    <input type="number" class="token-input" min="0" value="${data.token || ''}" oninput="updateTotal()" />
+
+    <label>法船配套 (30元/份)：</label>
+    <input type="number" class="boat-input" min="0" value="${data.boat || ''}" oninput="updateTotal()" />
+
+    <label>蓮花 (6元/份)：</label>
+    <input type="number" class="lotus-input" min="0" value="${data.lotus || ''}" oninput="updateTotal()" />
+
+    <label>紙金3 (3元/份)：</label>
+    <input type="number" class="paper3-input" min="0" value="${data.paper3 || ''}" oninput="updateTotal()" />
+
+    <label>紙金6 (6元/份)：</label>
+    <input type="number" class="paper6-input" min="0" value="${data.paper6 || ''}" oninput="updateTotal()" />
+
+    <label>紙金27 (27元/份)：</label>
+    <input type="number" class="paper27-input" min="0" value="${data.paper27 || ''}" oninput="updateTotal()" />
+
+    <label>配套令牌：</label>
+    <input type="text" class="extra-input" value="${data.extra || ''}" />
+
+    ${index > 0 ? `<button class="danger" onclick="removeEntry(${index})">🗑️ 刪除此位</button>` : ''}
+  `;
+
+  document.getElementById("entries").appendChild(container);
+  entries.push(container);
+  updateTotal();
 }
 
 function removeEntry(index) {
+  entries[index].remove();
   entries.splice(index, 1);
-  renderEntries();
+  updateTotal();
 }
 
 function updateTotal() {
-  let grandTotal = 0;
-  entries.forEach((_, index) => {
-    const getVal = (name) => Number(document.querySelector(`[name="${name}_${index}"]`)?.value || 0);
-    const token = getVal("token") * 5;
-    const boat = getVal("boat") * 30;
-    const lotus = getVal("lotus") * 6;
-    const paper3 = getVal("paper3") * 3;
-    const paper6 = getVal("paper6") * 6;
-    const paper27 = getVal("paper27") * 27;
-    const total = token + boat + lotus + paper3 + paper6 + paper27;
-    grandTotal += total;
-    const totalEl = document.getElementById(`total_${index}`);
-    if (totalEl) {
-      totalEl.textContent = `${index === 0 ? "本頁" : "總金額"}：${total} 元`;
-    }
-  });
-}
-
-function previewData() {
-  const data = entries.map((_, index) => {
-    const getVal = (name) => document.querySelector(`[name="${name}_${index}"]`)?.value || "";
-    return {
-      陽上: getVal("yangshang"),
-      安奉地點: getVal("anfun"),
-      超度令牌: getVal("token"),
-      法船配套: getVal("boat"),
-      蓮花: getVal("lotus"),
-      紙金3: getVal("paper3"),
-      紙金6: getVal("paper6"),
-      紙金27: getVal("paper27"),
-      配套令牌: getVal("extra")
+  let subtotal = 0;
+  for (let container of entries) {
+    const getValue = (cls, unit) => {
+      const val = Number(container.querySelector(`.${cls}`).value || 0);
+      return val * unit;
     };
-  });
-  alert("預覽資料：\n\n" + JSON.stringify(data, null, 2));
+    subtotal += getValue("token-input", 5);
+    subtotal += getValue("boat-input", 30);
+    subtotal += getValue("lotus-input", 6);
+    subtotal += getValue("paper3-input", 3);
+    subtotal += getValue("paper6-input", 6);
+    subtotal += getValue("paper27-input", 27);
+  }
+  const total = ancestorTotal + subtotal;
+  document.getElementById("totalDisplay").innerText =
+    ancestorTotal > 0
+      ? `本頁：${subtotal} 元（加上祖先共 ${total} 元）`
+      : `總金額：${subtotal} 元`;
 }
 
-window.onload = () => {
-  entries.push({});
-  renderEntries();
-};
+function showPreview() {
+  let text = "";
+  let all = [];
+
+  entries.forEach((container, i) => {
+    const yang = container.querySelector(".yang-input").value;
+    const location = container.querySelector(".location-input").value;
+    const token = container.querySelector(".token-input").value || 0;
+    const boat = container.querySelector(".boat-input").value || 0;
+    const lotus = container.querySelector(".lotus-input").value || 0;
+    const paper3 = container.querySelector(".paper3-input").value || 0;
+    const paper6 = container.querySelector(".paper6-input").value || 0;
+    const paper27 = container.querySelector(".paper27-input").value || 0;
+    const extra = container.querySelector(".extra-input").value;
+
+    text += `第 ${i + 1} 位：\n`;
+    text += `陽上：${yang}\n`;
+    text += `安奉地點：${location}\n`;
+    text += `超度令牌：${token}，法船配套：${boat}，蓮花：${lotus}\n`;
+    text += `紙金3：${paper3}，紙金6：${paper6}，紙金27：${paper27}\n`;
+    text += `配套令牌：${extra}\n\n`;
+
+    all.push({ token, boat, lotus, paper3, paper6, paper27 });
+  });
+
+  // 加總所有項目選購數量
+  const sum = (field) =>
+    all.reduce((acc, obj) => acc + Number(obj[field] || 0), 0);
+
+  text += `總結：\n`;
+  text += `超度令牌：${sum("token")}，法船配套：${sum("boat")}，蓮花：${sum("lotus")}\n`;
+  text += `紙金3：${sum("paper3")}，紙金6：${sum("paper6")}，紙金27：${sum("paper27")}\n`;
+
+  document.getElementById("preview").style.display = "block";
+  document.getElementById("preview").innerText = text;
+}
+</script>
+
+<script>
+// 頁面載入直接顯示第一筆
+addEntry();
 </script>
 
 </body>
