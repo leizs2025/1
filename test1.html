@@ -1,194 +1,65 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>缠身灵/冤亲债主超度</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超度報名主表單</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f8f9fa;
-      padding: 1rem;
-      margin: 0;
-    }
-    h1 {
-      font-size: 1.5rem;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .form-container {
-      background: white;
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .field-group {
-      margin-bottom: 1rem;
-    }
-    .field-group label {
-      display: block;
-      margin-bottom: 0.25rem;
-    }
-    .field-group input {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    .btn {
-      padding: 0.5rem 1rem;
-      margin: 0.25rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 0.5rem;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    .btn.red {
-      background-color: #dc3545;
-    }
-    .btn.gray {
-      background-color: #6c757d;
-    }
-    .amount {
-      font-weight: bold;
-      margin-top: 0.5rem;
-    }
-    .preview {
-      background-color: #f1f3f5;
-      border-radius: 1rem;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
+    .form-page { display: none; }
+    .form-page.active { display: block; }
+    .form-section-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .total-amount { font-size: 1.125rem; color: #1f2937; font-weight: 600; }
+    input, select { width: 100%; }
   </style>
 </head>
-<body>
-  <h1>缠身灵/冤亲债主超度</h1>
-  <div class="form-container">
-    <div id="form-list"></div>
-    <div style="text-align: center; margin-top: 1rem;">
-      <button class="btn" onclick="addForm()">➕ 新增一位缠身灵</button>
-      <button class="btn gray" onclick="showPreview()">📋 預覽資料</button>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-3xl mx-auto py-6 px-4">
+    <h1 class="text-2xl font-bold text-center mb-6">超度報名表單（總表）</h1>
+
+    <!-- 陽上報恩人頁面 -->
+    <div class="form-page active" id="page-0">
+      <!-- 陽上表單填寫區塊將插入於此 -->
     </div>
-    <div class="amount" id="totalAmount"></div>
-    <div id="preview" class="preview" style="display:none;"></div>
+
+    <!-- 祖先超度頁面 -->
+    <div class="form-page" id="page-1">
+      <!-- 祖先表單填寫區塊將插入於此 -->
+    </div>
+
+    <!-- 水子靈頁面 -->
+    <div class="form-page" id="page-2">
+      <!-- 水子靈表單填寫區塊將插入於此 -->
+    </div>
+
+    <!-- 冤親債主頁面 -->
+    <div class="form-page" id="page-3">
+      <!-- 冤親債主表單填寫區塊將插入於此 -->
+    </div>
+
+    <!-- 前世今生所殺生靈頁面 -->
+    <div class="form-page" id="page-4">
+      <!-- 所殺生靈表單填寫區塊將插入於此 -->
+    </div>
+
+    <!-- 地基主 / 土地公頁面 -->
+    <div class="form-page" id="page-5">
+      <!-- 地基主 / 土地公表單填寫區塊將插入於此 -->
+    </div>
+
+    <!-- 預覽頁面 -->
+    <div class="form-page" id="page-6">
+      <!-- 預覽資料區塊將插入於此 -->
+    </div>
+
+    <!-- 按鈕列 -->
+    <div class="mt-6 flex justify-between">
+      <button id="prevBtn" class="bg-gray-400 text-white px-4 py-2 rounded disabled:opacity-50" disabled>上一頁</button>
+      <button id="nextBtn" class="bg-blue-600 text-white px-4 py-2 rounded">下一頁</button>
+      <button id="submitBtn" class="bg-green-600 text-white px-4 py-2 rounded hidden">提交表單</button>
+    </div>
   </div>
 
-  <script>
-    const maxForms = 5;
-    const formList = document.getElementById('form-list');
-    const totalAmountDisplay = document.getElementById('totalAmount');
-    const previewBox = document.getElementById('preview');
-
-    let forms = [];
-
-    const prices = {
-      令牌: 5,
-      法船配套: 30,
-      蓮花: 6,
-      紙金3: 3,
-      紙金6: 6,
-      紙金27: 27
-    };
-
-    function addForm() {
-      if (forms.length >= maxForms) return alert("最多可新增 5 位");
-
-      const index = forms.length;
-      const wrapper = document.createElement('div');
-      wrapper.className = "single-form";
-      wrapper.style.borderBottom = "1px solid #ccc";
-      wrapper.style.paddingBottom = "1rem";
-      wrapper.style.marginBottom = "1rem";
-
-      wrapper.innerHTML = `
-        <div class="field-group">
-          <label>姓名</label>
-          <input type="text" name="name${index}" />
-        </div>
-        <div class="field-group">
-          <label>水子灵 莲位 / 安奉地点</label>
-          <input type="text" name="location${index}" />
-        </div>
-        ${Object.entries(prices).map(([item, price], i) => `
-          <div class="field-group">
-            <label>${item}（${price}元）</label>
-            <input type="number" name="${item}${index}" value="0" min="0" />
-            <input type="text" name="${item}備註${index}" placeholder="備註/配套令牌" />
-          </div>
-        `).join('')}
-        <div class="amount" id="amount${index}">金額：0 元</div>
-        ${index > 0 ? `<button class="btn red" onclick="removeForm(${index})">❌ 刪除此位</button>` : ''}
-      `;
-      formList.appendChild(wrapper);
-      forms.push({ wrapper, index });
-      updateAmount(index);
-      wrapper.querySelectorAll("input").forEach(input => {
-        input.addEventListener("input", () => updateAmount(index));
-      });
-      updateTotal();
-    }
-
-    function removeForm(index) {
-      const form = forms[index];
-      if (!form) return;
-      form.wrapper.remove();
-      forms[index] = null;
-      updateTotal();
-    }
-
-    function updateAmount(index) {
-      const form = forms[index];
-      if (!form) return;
-
-      const inputs = form.wrapper.querySelectorAll("input");
-      let sum = 0;
-      inputs.forEach(input => {
-        const name = input.name;
-        Object.entries(prices).forEach(([key, price]) => {
-          if (name.startsWith(key)) {
-            const val = parseInt(input.value || 0);
-            if (!isNaN(val)) sum += val * price;
-          }
-        });
-      });
-
-      form.wrapper.querySelector(`#amount${index}`).innerText = `金額：${sum} 元`;
-      form.amount = sum;
-      updateTotal();
-    }
-
-    function updateTotal() {
-      const total = forms.reduce((sum, form) => sum + (form?.amount || 0), 0);
-      totalAmountDisplay.innerText = `總金額：${total} 元`;
-    }
-
-    function showPreview() {
-      previewBox.innerHTML = '';
-      const list = forms.filter(Boolean).map((form, idx) => {
-        const inputs = form.wrapper.querySelectorAll("input");
-        let html = `<strong>第 ${idx + 1} 位：</strong><ul>`;
-        inputs.forEach(input => {
-          if (input.value && input.type !== 'hidden') {
-            html += `<li>${input.previousElementSibling?.innerText || ''} ${input.value}</li>`;
-          }
-        });
-        html += `</ul><hr/>`;
-        return html;
-      }).join('');
-      previewBox.innerHTML = list || "尚無資料";
-      previewBox.style.display = 'block';
-    }
-
-    // 初始化第一位
-    window.onload = () => {
-      addForm();
-    };
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>
