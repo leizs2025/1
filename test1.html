@@ -1,81 +1,89 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>祖先超度報名表</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祖先超度報名</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      padding: 20px;
-      background: #fffbe9;
-      color: #333;
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      padding: 1rem;
+      margin: 0;
     }
     h1 {
       text-align: center;
-      font-size: 24px;
-      margin-bottom: 10px;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
     }
-    .ancestor-group {
-      border: 2px dashed #aaa;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    .section {
       background: #fff;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     label {
       display: block;
-      margin-top: 8px;
       font-weight: bold;
+      margin-top: 0.5rem;
     }
     input, select {
       width: 100%;
-      padding: 6px 10px;
-      margin-top: 4px;
+      padding: 0.5rem;
+      margin-top: 0.2rem;
+      margin-bottom: 0.5rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 16px;
+      border-radius: 0.5rem;
+      font-size: 1rem;
       box-sizing: border-box;
     }
-    .flex-row {
-      display: flex;
-      gap: 10px;
+    .ancestor-block {
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 1rem;
+      background-color: #fdfdfd;
     }
-    .flex-row > div {
-      flex: 1;
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
     }
     button {
-      padding: 10px 20px;
-      background: #ffd369;
+      background-color: #007BFF;
+      color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      margin: 10px 5px 0 0;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
       cursor: pointer;
     }
     button:hover {
-      background: #fcbf49;
+      background-color: #0056b3;
     }
-    .total {
-      margin-top: 10px;
+    .amount-display {
+      text-align: right;
       font-weight: bold;
-      color: #c92c2c;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>祖先超度報名表</h1>
-  <div id="ancestorList"></div>
-
-  <button onclick="addAncestor()">➕ 新增一位祖先</button>
-  <button onclick="previewData()">📋 預覽資料</button>
-
-  <div class="total" id="amountDisplay">本頁合計：0 元</div>
+  <div id="ancestor-container" class="section"></div>
+  <div class="button-group">
+    <button onclick="addAncestor()">➕ 新增一位祖先</button>
+    <button onclick="previewData()">📋 預覽資料</button>
+  </div>
+  <div class="amount-display" id="pageAmount">單頁金額：0 元</div>
+  <div class="amount-display" id="totalAmount">總金額：0 元</div>
 
   <script>
     let ancestorData = [];
-
-    const ITEM_PRICES = {
+    const priceMap = {
       token: 5,
       boat: 30,
       lotus: 6,
@@ -84,103 +92,103 @@
       paper27: 27
     };
 
-    function createAncestorForm(index) {
-      const ancestor = ancestorData[index];
-      const container = document.createElement('div');
-      container.className = 'ancestor-group';
-      container.innerHTML = `
+    function createAncestorBlock(index) {
+      const div = document.createElement('div');
+      div.className = 'ancestor-block';
+      div.dataset.index = index;
+      div.innerHTML = `
         <label>祖先/亡靈 姓名：</label>
-        <input type="text" value="${ancestor.name || ''}" oninput="ancestorData[${index}].name = this.value; updateAmount();"/>
+        <input type="text" name="name${index}" />
 
-        <label>安奉地點：</label>
-        <select onchange="ancestorData[${index}].placeType = this.value; renderAncestorList();">
-          <option value="">-- 請選擇地點類型 --</option>
-          <option value="地藏殿牌位" ${ancestor.placeType === '地藏殿牌位' ? 'selected' : ''}>地藏殿牌位</option>
-          <option value="靈骨殿福位" ${ancestor.placeType === '靈骨殿福位' ? 'selected' : ''}>靈骨殿福位</option>
-          <option value="墓園" ${ancestor.placeType === '墓園' ? 'selected' : ''}>墓園</option>
-          <option value="牌位" ${ancestor.placeType === '牌位' ? 'selected' : ''}>牌位</option>
+        <label>安葬/安奉地點：</label>
+        <select name="placeType${index}" onchange="toggleCustomInput(this, ${index})">
+          <option value="">請選擇</option>
+          <option value="地藏殿牌位">地藏殿牌位</option>
+          <option value="靈骨殿福位">靈骨殿福位</option>
+          <option value="墓園">墓園</option>
+          <option value="牌位">牌位</option>
         </select>
+        <input type="text" name="placeDetail${index}" placeholder="請填寫詳細地點" style="display:none" />
 
-        ${ancestor.placeType ? `
-        <label>${ancestor.placeType}：</label>
-        <input type="text" value="${ancestor.placeName || ''}" oninput="ancestorData[${index}].placeName = this.value;"/>` : ''}
+        <label>超度令牌 (5元)</label>
+        <input type="number" name="token${index}" min="0" oninput="updateAmount()" />
 
-        <div class="flex-row">
-          <div><label>令牌</label><input type="number" min="0" value="${ancestor.token || ''}" oninput="ancestorData[${index}].token = this.value; updateAmount();"/></div>
-          <div><label>配套</label><input type="number" min="0" value="${ancestor.boat || ''}" oninput="ancestorData[${index}].boat = this.value; updateAmount();"/></div>
-          <div><label>蓮花</label><input type="number" min="0" value="${ancestor.lotus || ''}" oninput="ancestorData[${index}].lotus = this.value; updateAmount();"/></div>
-        </div>
-        <div class="flex-row">
-          <div><label>紙金3</label><input type="number" min="0" value="${ancestor.paper3 || ''}" oninput="ancestorData[${index}].paper3 = this.value; updateAmount();"/></div>
-          <div><label>紙金6</label><input type="number" min="0" value="${ancestor.paper6 || ''}" oninput="ancestorData[${index}].paper6 = this.value; updateAmount();"/></div>
-          <div><label>紙金27</label><input type="number" min="0" value="${ancestor.paper27 || ''}" oninput="ancestorData[${index}].paper27 = this.value; updateAmount();"/></div>
-        </div>
+        <label>法船配套 (30元)</label>
+        <input type="number" name="boat${index}" min="0" oninput="updateAmount()" />
 
-        ${index > 0 ? `<button onclick="removeAncestor(${index})">❌ 刪除此筆</button>` : ''}
+        <label>蓮花 (6元)</label>
+        <input type="number" name="lotus${index}" min="0" oninput="updateAmount()" />
+
+        <label>紙金3 (3元)</label>
+        <input type="number" name="paper3_${index}" min="0" oninput="updateAmount()" />
+
+        <label>紙金6 (6元)</label>
+        <input type="number" name="paper6_${index}" min="0" oninput="updateAmount()" />
+
+        <label>紙金27 (27元)</label>
+        <input type="number" name="paper27_${index}" min="0" oninput="updateAmount()" />
+
+        <label>配套令牌</label>
+        <input type="text" name="extra${index}" />
+
+        ${index > 0 ? `<button onclick="removeAncestor(${index})" style="margin-top:10px;background:#dc3545">❌ 刪除</button>` : ''}
       `;
-      return container;
-    }
-
-    function renderAncestorList() {
-      const list = document.getElementById('ancestorList');
-      list.innerHTML = '';
-      ancestorData.forEach((_, index) => {
-        list.appendChild(createAncestorForm(index));
-      });
-      updateAmount();
+      return div;
     }
 
     function addAncestor() {
-      if (ancestorData.length >= 8) return alert("最多只能填寫 8 位祖先！");
-      ancestorData.push({});
-      renderAncestorList();
+      const index = ancestorData.length;
+      const block = createAncestorBlock(index);
+      document.getElementById('ancestor-container').appendChild(block);
+      ancestorData.push(block);
+      updateAmount();
     }
 
     function removeAncestor(index) {
-      ancestorData.splice(index, 1);
-      renderAncestorList();
+      ancestorData[index].remove();
+      ancestorData[index] = null;
+      updateAmount();
+    }
+
+    function toggleCustomInput(select, index) {
+      const input = document.querySelector(`input[name=placeDetail${index}]`);
+      input.style.display = select.value ? 'block' : 'none';
     }
 
     function updateAmount() {
-      const currentPageIndex = ancestorData.length - 1;
-      const amounts = ancestorData.map(data => {
-        return (parseInt(data.token) || 0) * ITEM_PRICES.token +
-               (parseInt(data.boat) || 0) * ITEM_PRICES.boat +
-               (parseInt(data.lotus) || 0) * ITEM_PRICES.lotus +
-               (parseInt(data.paper3) || 0) * ITEM_PRICES.paper3 +
-               (parseInt(data.paper6) || 0) * ITEM_PRICES.paper6 +
-               (parseInt(data.paper27) || 0) * ITEM_PRICES.paper27;
+      let pageTotal = 0;
+      let grandTotal = 0;
+      ancestorData.forEach((block, idx) => {
+        if (!block) return;
+        const token = +block.querySelector(`[name=token${idx}]`)?.value || 0;
+        const boat = +block.querySelector(`[name=boat${idx}]`)?.value || 0;
+        const lotus = +block.querySelector(`[name=lotus${idx}]`)?.value || 0;
+        const paper3 = +block.querySelector(`[name=paper3_${idx}]`)?.value || 0;
+        const paper6 = +block.querySelector(`[name=paper6_${idx}]`)?.value || 0;
+        const paper27 = +block.querySelector(`[name=paper27_${idx}]`)?.value || 0;
+
+        const total = 
+          token * priceMap.token +
+          boat * priceMap.boat +
+          lotus * priceMap.lotus +
+          paper3 * priceMap.paper3 +
+          paper6 * priceMap.paper6 +
+          paper27 * priceMap.paper27;
+
+        if (idx === 0) pageTotal = total;
+        grandTotal += total;
       });
-      const currentAmount = amounts[currentPageIndex] || 0;
-      const totalAmount = amounts.reduce((a, b) => a + b, 0);
-      document.getElementById('amountDisplay').innerText =
-        ancestorData.length <= 1
-          ? `本頁合計：${currentAmount} 元`
-          : `目前總金額：${totalAmount} 元`;
+
+      document.getElementById('pageAmount').innerText = `單頁金額：${pageTotal} 元`;
+      document.getElementById('totalAmount').innerText = `總金額：${grandTotal} 元`;
     }
 
     function previewData() {
-      let preview = ancestorData.map((data, i) =>
-        `第 ${i + 1} 位祖先：${data.name || '未填'}\n` +
-        `地點：${data.placeType || ''} - ${data.placeName || ''}\n` +
-        `金額：${calculateSingleAmount(data)} 元`
-      ).join('\n\n');
-      const total = ancestorData.reduce((sum, d) => sum + calculateSingleAmount(d), 0);
-      alert(preview + `\n\n總金額：${total} 元`);
+      alert("預覽功能開發中，敬請期待。");
     }
 
-    function calculateSingleAmount(data) {
-      return (parseInt(data.token) || 0) * ITEM_PRICES.token +
-             (parseInt(data.boat) || 0) * ITEM_PRICES.boat +
-             (parseInt(data.lotus) || 0) * ITEM_PRICES.lotus +
-             (parseInt(data.paper3) || 0) * ITEM_PRICES.paper3 +
-             (parseInt(data.paper6) || 0) * ITEM_PRICES.paper6 +
-             (parseInt(data.paper27) || 0) * ITEM_PRICES.paper27;
-    }
-
-    // 初始化顯示第一位
-    ancestorData.push({});
-    renderAncestorList();
+    // 初始化第一位
+    addAncestor();
   </script>
 </body>
 </html>
