@@ -1,229 +1,195 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超度法会报名系统</title>
-    <style>
-        /* 保持之前的样式不变 */
-        .project-form { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-        .project-title { color: #2c3e50; border-left: 4px solid #4CAF50; padding-left: 10px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 基础信息表單保持不變 -->
-
-        <!-- ===== 所有项目模板 ===== -->
-        <!-- 祖先超度模板（已包含） -->
-        
-        <!-- 水子灵超度模板 -->
-        <template id="infant-template">
-            <div class="entry">
-                <div class="entry-header">
-                    <h3>水子灵 #<span class="entry-number">1</span></h3>
-                    <button class="btn btn-danger" onclick="removeEntry(this)">×</button>
-                </div>
-                <div class="input-group">
-                    <label>阳上姓名：</label>
-                    <input type="text" class="applicant-name" required>
-                </div>
-                <div class="input-group">
-                    <label>莲位安奉类型：</label>
-                    <select class="location-type" onchange="toggleLocationDetail(this)">
-                        <option value="往生莲位">往生莲位</option>
-                        <option value="水子灵牌位">水子灵牌位</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                <div class="input-group location-detail" style="display:none;">
-                    <label>详细说明：</label>
-                    <input type="text" class="location-input">
-                </div>
-                <!-- 相同的供品字段 -->
-            </div>
-        </template>
-
-        <!-- 冤亲债主模板 -->
-        <template id="debt-template">
-            <div class="entry">
-                <div class="entry-header">
-                    <h3>冤亲债主 #<span class="entry-number">1</span></h3>
-                    <button class="btn btn-danger" onclick="removeEntry(this)">×</button>
-                </div>
-                <div class="input-group">
-                    <label>阳上姓名：</label>
-                    <input type="text" class="applicant-name" required>
-                </div>
-                <div class="input-group">
-                    <label>供奉方式：</label>
-                    <select class="location-type" onchange="toggleLocationDetail(this)">
-                        <option value="解冤牌位">解冤牌位</option>
-                        <option value="超度专场">超度专场</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                <div class="input-group location-detail" style="display:none;">
-                    <label>详细说明：</label>
-                    <input type="text" class="location-input">
-                </div>
-                <!-- 相同的供品字段 -->
-            </div>
-        </template>
-
-        <!-- 所杀生灵模板 -->
-        <template id="karma-template">
-            <div class="entry">
-                <div class="entry-header">
-                    <h3>生灵超度 #<span class="entry-number">1</span></h3>
-                    <button class="btn btn-danger" onclick="removeEntry(this)">×</button>
-                </div>
-                <div class="input-group">
-                    <label>阳上姓名：</label>
-                    <input type="text" class="applicant-name" required>
-                </div>
-                <div class="input-group">
-                    <label>生灵类型：</label>
-                    <select class="location-type" onchange="toggleLocationDetail(this)">
-                        <option value="陆生动物">陆生动物</option>
-                        <option value="水生动物">水生动物</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                <div class="input-group location-detail" style="display:none;">
-                    <label>详细说明：</label>
-                    <input type="text" class="location-input">
-                </div>
-                <!-- 相同的供品字段 -->
-            </div>
-        </template>
-
-        <!-- 地基主模板 -->
-        <template id="land-template">
-            <div class="entry">
-                <div class="entry-header">
-                    <h3>地基主 #<span class="entry-number">1</span></h3>
-                    <button class="btn btn-danger" onclick="removeEntry(this)">×</button>
-                </div>
-                <div class="input-group">
-                    <label>祭祀地址：</label>
-                    <input type="text" class="location-input" required>
-                </div>
-                <!-- 相同的供品字段 -->
-            </div>
-        </template>
-
-        <!-- ===== 预览区 ===== -->
-        <div id="preview-section" class="form-section">
-            <!-- 保持之前的结算样式 -->
-        </div>
-    </div>
-
-    <script>
-        // 增强状态管理
-        const PROJECT_CONFIG = {
-            ancestor: { max: 8, title: '祖先超度', fields: ['亡灵姓名', '安奉类型'] },
-            infant:   { max: 5, title: '水子灵超度', fields: ['阳上姓名', '莲位类型'] },
-            debt:     { max: 5, title: '冤亲债主', fields: ['阳上姓名', '供奉方式'] },
-            karma:    { max: 4, title: '所杀生灵', fields: ['阳上姓名', '生灵类型'] },
-            land:     { max: 2, title: '地基主', fields: ['祭祀地址'] }
-        };
-
-        // 统一条目创建函数
-        function createEntry(type, index) {
-            const template = document.getElementById(`${type}-template`);
-            const clone = template.content.cloneNode(true);
-            clone.querySelector('.entry-number').textContent = index;
-            
-            // 初始化供品字段
-            clone.querySelectorAll('.item').forEach(input => {
-                input.addEventListener('input', () => updateCalculations());
-            });
-
-            return clone;
+<script>
+// 增强的状态管理
+const state = {
+    currentProject: null,
+    maxEntries: {
+        ancestor: 8,
+        infant: 5,
+        debt: 5,
+        karma: 4,
+        land: 2
+    },
+    prices: {
+        token5: 5,
+        ship30: 30,
+        lotus6: 6,
+        paper3: 3,
+        paper6: 6,
+        paper27: 27,
+        combo: 40
+    },
+    data: {
+        basic: {},
+        projects: {
+            ancestor: [],
+            infant: [],
+            debt: [],
+            karma: [],
+            land: []
         }
+    }
+};
 
-        // 统一数据收集
-        function collectProjectData(type) {
-            return Array.from(document.querySelectorAll(`#${type}-entries .entry`)).map(entry => {
-                const baseData = {
-                    items: {}
-                };
+// 增强的显示控制
+function showProjectNav() {
+    document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+    document.getElementById('project-nav').classList.add('active');
+}
 
-                // 收集公共字段
-                if(entry.querySelector('.applicant-name')) {
-                    baseData.applicant = entry.querySelector('.applicant-name').value;
-                }
-                if(entry.querySelector('.location-type')) {
-                    baseData.locationType = entry.querySelector('.location-type').value;
-                }
-                if(entry.querySelector('.location-input')) {
-                    baseData.locationDetail = entry.querySelector('.location-input').value;
-                }
+// 增强的预览功能
+function showPreview() {
+    collectAllData();
+    updateCalculations();
+    showSection('preview-section');
+}
 
-                // 收集供品数据
-                entry.querySelectorAll('.item').forEach(input => {
-                    const key = input.classList[1];
-                    baseData.items[key] = parseInt(input.value) || 0;
-                });
+// 完整的数据收集
+function collectAllData() {
+    Object.keys(state.maxEntries).forEach(projectType => {
+        state.data.projects[projectType] = [];
+        document.querySelectorAll(`#${projectType}-entries .entry`).forEach(entry => {
+            const entryData = {
+                items: {}
+            };
 
-                return baseData;
-            });
-        }
+            // 收集公共字段
+            if(entry.querySelector('.applicant-name')) {
+                entryData.applicant = entry.querySelector('.applicant-name').value;
+            }
+            if(entry.querySelector('.location-type')) {
+                entryData.locationType = entry.querySelector('.location-type').value;
+            }
+            if(entry.querySelector('.location-input')) {
+                entryData.locationDetail = entry.querySelector('.location-input').value;
+            }
 
-        // 增强金额计算
-        function updateCalculations() {
-            let total = 0;
-            const details = [];
-            const priceMap = new Map();
-
-            // 遍历所有项目
-            Object.keys(state.data.projects).forEach(projectType => {
-                state.data.projects[projectType].forEach(entry => {
-                    Object.entries(entry.items).forEach(([itemKey, quantity]) => {
-                        const price = PRICES[itemKey];
-                        const amount = quantity * price;
-                        
-                        if(priceMap.has(itemKey)) {
-                            priceMap.set(itemKey, priceMap.get(itemKey) + amount);
-                        } else {
-                            priceMap.set(itemKey, amount);
-                        }
-                        
-                        total += amount;
-                    });
-                });
+            // 收集所有供品数据
+            entry.querySelectorAll('.item').forEach(input => {
+                const key = input.classList[1];
+                entryData.items[key] = parseInt(input.value) || 0;
             });
 
-            // 生成明细
-            priceMap.forEach((amount, itemKey) => {
-                details.push(`
-                    <div class="price-item">
-                        <span>${getItemName(itemKey)}</span>
-                        <span>${amount}元</span>
-                    </div>
-                `);
-            });
-
-            document.getElementById('price-details').innerHTML = details.join('');
-            document.getElementById('total-amount').textContent = total;
-        }
-
-        // 初始化所有项目
-        function initProjects() {
-            Object.keys(PROJECT_CONFIG).forEach(type => {
-                state.data.projects[type] = [];
-                if(!document.getElementById(`${type}-template`)) {
-                    console.error(`Missing template for ${type}`);
-                }
-            });
-        }
-
-        // 页面加载初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            initProjects();
-            initBaseForm();
+            state.data.projects[projectType].push(entryData);
         });
-    </script>
-</body>
-</html>
+    });
+}
+
+// 增强的金额计算
+function updateCalculations() {
+    let total = 0;
+    const details = [];
+    const categoryTotals = {};
+
+    // 遍历所有项目
+    Object.keys(state.data.projects).forEach(projectType => {
+        state.data.projects[projectType].forEach(entry => {
+            Object.entries(entry.items).forEach(([itemKey, quantity]) => {
+                const price = state.prices[itemKey];
+                const amount = quantity * price;
+                
+                // 按项目类型统计
+                if(!categoryTotals[projectType]) {
+                    categoryTotals[projectType] = {
+                        name: getProjectTitle(projectType),
+                        total: 0
+                    };
+                }
+                categoryTotals[projectType].total += amount;
+
+                total += amount;
+            });
+        });
+    });
+
+    // 生成明细
+    let detailsHTML = '';
+    Object.values(categoryTotals).forEach(category => {
+        if(category.total > 0) {
+            detailsHTML += `
+                <div class="price-category">
+                    <span>${category.name}：</span>
+                    <span>${category.total}元</span>
+                </div>
+            `;
+        }
+    });
+
+    document.getElementById('price-details').innerHTML = detailsHTML;
+    document.getElementById('total-amount').textContent = total;
+}
+
+// 增强的条目添加功能
+function addEntry(projectType) {
+    const entries = document.querySelectorAll(`#${projectType}-entries .entry`);
+    if(entries.length >= state.maxEntries[projectType]) {
+        alert(`最多可添加${state.maxEntries[projectType]}位`);
+        return;
+    }
+
+    const template = document.getElementById('ancestor-template');
+    const clone = template.content.cloneNode(true);
+    const entryNumber = entries.length + 1;
+    
+    // 更新条目编号
+    clone.querySelector('.entry-number').textContent = entryNumber;
+
+    // 绑定事件监听器
+    clone.querySelectorAll('.item').forEach(input => {
+        input.addEventListener('input', updateCalculations);
+    });
+    clone.querySelector('.location-type')?.addEventListener('change', function() {
+        toggleLocationDetail(this);
+    });
+
+    document.getElementById(`${projectType}-entries`).appendChild(clone);
+    updateCalculations();
+}
+
+// 增强的切换地点详情显示
+function toggleLocationDetail(select) {
+    const entry = select.closest('.entry');
+    const detailDiv = entry.querySelector('.location-detail');
+    detailDiv.style.display = select.value ? 'block' : 'none';
+    
+    if(select.value === '其他') {
+        detailDiv.innerHTML = `
+            <label>请说明具体地点：</label>
+            <input type="text" class="location-input" required>
+        `;
+    }
+}
+
+// 初始化事件绑定
+document.addEventListener('DOMContentLoaded', () => {
+    // 绑定数字输入验证
+    document.body.addEventListener('input', function(e) {
+        if(e.target.classList.contains('item')) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        }
+    });
+});
+</script>
+
+<style>
+/* 新增结算样式 */
+.price-category {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    padding: 10px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.price-category span:first-child {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+#total-amount {
+    color: var(--accent-color);
+    font-size: 1.5em;
+    margin-top: 15px;
+}
+</style>
