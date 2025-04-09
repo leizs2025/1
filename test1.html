@@ -1,153 +1,131 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>祖先超度報名表</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>超度報名表格</title>
   <style>
-    body { font-family: sans-serif; padding: 1em; background: #f5f5f5; }
-    h1, h2 { text-align: center; margin-bottom: 1em; }
-    .entry-card {
-      background: white; padding: 1em; border-radius: 12px; margin-bottom: 1em;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f7f7f7;
+      padding: 20px;
+      margin: 0;
     }
-    .form-group { margin-bottom: 0.7em; }
-    label { font-weight: bold; display: block; margin-bottom: 0.3em; }
-    input, select {
-      width: 100%; padding: 0.5em; font-size: 1em;
-      border-radius: 6px; border: 1px solid #ccc;
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    button {
-      padding: 0.6em 1.2em; font-size: 1em;
-      border: none; border-radius: 6px;
-      background: #007bff; color: white;
-      margin: 0.4em;
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
     }
-    button:hover { background: #0056b3; }
-    .delete-btn { background: #dc3545; }
-    .delete-btn:hover { background: #a71d2a; }
-    .amount { text-align: right; font-weight: bold; margin-top: 0.5em; }
+
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 1.1em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .link-buttons {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .link-buttons button {
+      background-color: #2196F3;
+      margin-bottom: 10px;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>超度報名表格</h1>
+    <h2>報名信息</h2>
 
-<h1>祖先超度報名表</h1>
-<h2>地藏法會專用</h2>
+    <label for="phone">手機號碼</label>
+    <input type="text" id="phone" />
 
-<div id="formContainer"></div>
+    <label for="mainPerson">陽上報恩人</label>
+    <input type="text" id="mainPerson" />
 
-<div id="amountDisplay" class="amount"></div>
+    <label for="address">陽上地址</label>
+    <input type="text" id="address" />
 
-<div style="text-align:center;">
-  <button onclick="addEntry()">➕ 新增一位祖先</button>
-  <button onclick="preview()">📋 預覽資料</button>
-</div>
+    <div id="error-msg" class="error"></div>
 
-<script>
-let entries = [];
+    <button class="btn" onclick="validateForm()">下一步</button>
 
-function calculateAmount(entry) {
-  const prices = { token5: 5, boat: 30, lotus: 6, paper3: 3, paper6: 6, paper27: 27 };
-  let total = 0;
-  for (let key in prices) {
-    total += (parseInt(entry[key]) || 0) * prices[key];
-  }
-  return total;
-}
+    <div class="link-buttons" id="project-links">
+      <button class="btn" onclick="gotoPage('ancestor')">1. 祖先超度</button>
+      <button class="btn" onclick="gotoPage('baby')">2. 水子靈(嬰靈)超度</button>
+      <button class="btn" onclick="gotoPage('ghost')">3. 冤親債主/纏身靈超度</button>
+      <button class="btn" onclick="gotoPage('killed')">4. 殺生靈超度</button>
+      <button class="btn" onclick="gotoPage('landgod')">5. 地基主/土地公超度</button>
+    </div>
+  </div>
 
-function saveInputs(index) {
-  const card = document.querySelectorAll('.entry-card')[index];
-  const inputs = card.querySelectorAll('input, select');
-  const map = {
-    '祖先/亡靈姓名': 'name',
-    '安奉地點 / 編號': 'location',
-    'TOKEN5': 'token5',
-    'BOAT': 'boat',
-    'LOTUS': 'lotus',
-    'PAPER3': 'paper3',
-    'PAPER6': 'paper6',
-    'PAPER27': 'paper27'
-  };
-  inputs.forEach(input => {
-    const label = input.previousElementSibling?.innerText.trim();
-    const key = map[label] || (label === '安奉類型' ? 'type' : '');
-    if (key) entries[index][key] = input.value;
-  });
-}
+  <script>
+    function validateForm() {
+      const phone = document.getElementById('phone').value.trim();
+      const mainPerson = document.getElementById('mainPerson').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const errorMsg = document.getElementById('error-msg');
 
-function saveAllInputs() {
-  entries.forEach((_, index) => saveInputs(index));
-}
+      if (!phone || !mainPerson || !address) {
+        errorMsg.textContent = '請填寫所有欄位才能進行下一步。';
+        return;
+      }
 
-function renderForm() {
-  const container = document.getElementById('formContainer');
-  container.innerHTML = '';
-  let total = 0;
+      // 儲存初始值，可用於後續頁面
+      localStorage.setItem('phone', phone);
+      localStorage.setItem('mainPerson', mainPerson);
+      localStorage.setItem('address', address);
 
-  entries.forEach((entry, index) => {
-    const div = document.createElement('div');
-    div.className = 'entry-card';
+      errorMsg.textContent = '';
+      document.getElementById('project-links').style.display = 'block';
+    }
 
-    div.innerHTML = `
-      <div class="form-group">
-        <label>祖先/亡靈姓名</label>
-        <input type="text" value="${entry.name || ''}" oninput="entries[${index}].name = this.value">
-      </div>
-      <div class="form-group">
-        <label>安奉類型</label>
-        <select onchange="entries[${index}].type = this.value; renderForm()">
-          <option value="">請選擇</option>
-          <option value="地藏殿牌位" ${entry.type === '地藏殿牌位' ? 'selected' : ''}>地藏殿牌位</option>
-          <option value="靈骨殿福位" ${entry.type === '靈骨殿福位' ? 'selected' : ''}>靈骨殿福位</option>
-          <option value="墓園" ${entry.type === '墓園' ? 'selected' : ''}>墓園</option>
-          <option value="牌位" ${entry.type === '牌位' ? 'selected' : ''}>牌位</option>
-        </select>
-      </div>
-      ${entry.type ? `
-      <div class="form-group">
-        <label>安奉地點 / 編號</label>
-        <input type="text" value="${entry.location || ''}" oninput="entries[${index}].location = this.value">
-      </div>` : ''}
-      ${['token5', 'boat', 'lotus', 'paper3', 'paper6', 'paper27'].map(key => `
-        <div class="form-group">
-          <label>${key.toUpperCase()}</label>
-          <input type="number" min="0" value="${entry[key] || ''}" oninput="entries[${index}]['${key}'] = this.value">
-        </div>
-      `).join('')}
-      <div class="amount">此位金額：${calculateAmount(entry)} 元</div>
-      ${index > 0 ? `<button class="delete-btn" onclick="deleteEntry(${index})">刪除</button>` : ''}
-    `;
-
-    container.appendChild(div);
-    total += calculateAmount(entry);
-  });
-
-  const amountDiv = document.getElementById('amountDisplay');
-  amountDiv.textContent = entries.length > 1 ? `目前總金額：${total} 元` : '';
-}
-
-function addEntry() {
-  saveAllInputs();
-  if (entries.length >= 8) return alert('最多填寫 8 位祖先');
-  entries.push({});
-  renderForm();
-}
-
-function deleteEntry(index) {
-  saveAllInputs();
-  entries.splice(index, 1);
-  renderForm();
-}
-
-function preview() {
-  saveAllInputs();
-  alert(JSON.stringify(entries, null, 2));
-}
-
-// ✅ 初始化第一筆
-entries.push({});
-renderForm();
-</script>
-
+    function gotoPage(project) {
+      // 根據 project 導向不同頁面
+      window.location.href = `${project}.html`;
+    }
+  </script>
 </body>
 </html>
