@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超度法会线上报名系统</title>
+    <style>
+        /* 全局样式 */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #4CAF50;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 表单区块 */
+        .form-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 动态条目样式 */
+        .entry {
+            position: relative;
+            border: 1px solid #eee;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .entry-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        /* 输入组 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 基础信息 -->
+        <div id="base-form" class="form-section active">
+            <h1>超度法会线上报名表</h1>
+            <div class="input-group">
+                <label>手机号码：</label>
+                <input type="tel" id="phone" required>
+            </div>
+            <div class="input-group">
+                <label>陽上報恩人：</label>
+                <input type="text" id="applicant" required>
+            </div>
+            <div class="input-group">
+                <label>现居地址：</label>
+                <input type="text" id="address" required>
+            </div>
+            <button class="btn btn-primary" onclick="validateBaseForm()">开始填写项目</button>
+        </div>
+
+        <!-- 项目导航 -->
+        <div id="project-nav" class="form-section">
+            <h2>请选择要报名的项目</h2>
+            <div class="project-buttons">
+                <button class="btn" onclick="showProject('ancestor')">祖先超度</button>
+                <button class="btn" onclick="showProject('infant')">水子灵超度</button>
+                <button class="btn" onclick="showProject('debt')">冤亲债主</button>
+                <button class="btn" onclick="showProject('karma')">所杀生灵</button>
+                <button class="btn" onclick="showProject('land')">地基主/土地公</button>
+            </div>
+        </div>
+
+        <!-- 祖先超度模板 -->
+        <template id="ancestor-template">
+            <div class="entry">
+                <div class="entry-header">
+                    <h3>祖先/亡灵 #<span class="entry-number">1</span></h3>
+                    <button class="btn btn-danger" onclick="removeEntry(this)">删除</button>
+                </div>
+                <div class="input-group">
+                    <label>姓名：</label>
+                    <input type="text" class="ancestor-name" required>
+                </div>
+                <div class="input-group">
+                    <label>安奉类型：</label>
+                    <select class="location-type" onchange="toggleLocationDetail(this)">
+                        <option value="地藏殿牌位">地藏殿牌位</option>
+                        <option value="灵骨殿福位">灵骨殿福位</option>
+                        <option value="墓园">墓园</option>
+                        <option value="牌位">牌位</option>
+                    </select>
+                </div>
+                <div class="input-group location-detail">
+                    <label>详细地点：</label>
+                    <input type="text" class="detail-input">
+                </div>
+                <div class="offerings">
+                    <div class="input-group">
+                        <label>超度令牌（5元/份）</label>
+                        <input type="number" class="token5" min="0" value="0">
+                    </div>
+                    <!-- 其他供品... -->
+                </div>
+            </div>
+        </template>
+
+        <!-- 其他项目模板... -->
+
+        <!-- 预览区 -->
+        <div id="preview-section" class="form-section">
+            <h2>确认提交信息</h2>
+            <div id="preview-content"></div>
+            <button class="btn btn-primary" onclick="submitForm()">确认提交</button>
+            <button class="btn" onclick="showProjectNav()">返回修改</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态管理
+        const state = {
+            currentProject: null,
+            entries: {
+                ancestor: { max: 8, count: 0 },
+                infant: { max: 5, count: 0 },
+                debt: { max: 5, count: 0 },
+                karma: { max: 4, count: 0 },
+                land: { max: 2, count: 0 }
+            },
+            data: {
+                basic: {},
+                projects: {
+                    ancestor: [],
+                    infant: [],
+                    debt: [],
+                    karma: [],
+                    land: []
+                }
+            }
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initBaseForm();
+        });
+
+        function initBaseForm() {
+            document.getElementById('base-form').classList.add('active');
+        }
+
+        // 基础表单验证
+        function validateBaseForm() {
+            const phone = document.getElementById('phone').value;
+            if (!/^09\d{8}$/.test(phone)) {
+                alert('请输入有效的台湾手机号码');
+                return;
+            }
+
+            state.data.basic = {
+                phone: phone,
+                applicant: document.getElementById('applicant').value,
+                address: document.getElementById('address').value,
+                timestamp: new Date().toISOString()
+            };
+
+            showProjectNav();
+        }
+
+        // 显示项目导航
+        function showProjectNav() {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('project-nav').classList.add('active');
+        }
+
+        // 显示具体项目
+        function showProject(type) {
+            state.currentProject = type;
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            
+            const container = document.createElement('div');
+            container.id = `${type}-form`;
+            container.className = 'form-section active';
+            container.innerHTML = `
+                <h2>${getProjectTitle(type)}</h2>
+                <div class="entries-container" id="${type}-entries"></div>
+                <button class="btn btn-primary" onclick="addEntry('${type}')">新增</button>
+                <button class="btn" onclick="showPreview()">预览提交</button>
+            `;
+
+            document.querySelector('.container').appendChild(container);
+            addEntry(type);
+        }
+
+        // 添加条目
+        function addEntry(type) {
+            if (state.entries[type].count >= state.entries[type].max) {
+                alert(`最多只能添加${state.entries[type].max}位`);
+                return;
+            }
+
+            const template = document.getElementById(`${type}-template`);
+            const clone = template.content.cloneNode(true);
+            const entryNumber = document.querySelectorAll(`#${type}-entries .entry`).length + 1;
+            
+            clone.querySelector('.entry-number').textContent = entryNumber;
+            clone.querySelector('.location-type').addEventListener('change', function() {
+                toggleLocationDetail(this);
+            });
+
+            document.getElementById(`${type}-entries`).appendChild(clone);
+            state.entries[type].count++;
+        }
+
+        // 删除条目
+        function removeEntry(btn) {
+            const entry = btn.closest('.entry');
+            entry.remove();
+            state.entries[state.currentProject].count--;
+            refreshEntryNumbers();
+        }
+
+        // 刷新条目编号
+        function refreshEntryNumbers() {
+            document.querySelectorAll(`#${state.currentProject}-entries .entry`).forEach((entry, index) => {
+                entry.querySelector('.entry-number').textContent = index + 1;
+            });
+        }
+
+        // 预览功能
+        function showPreview() {
+            collectFormData();
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('preview-section').classList.add('active');
+            
+            const previewContent = document.getElementById('preview-content');
+            previewContent.innerHTML = `
+                <h3>总金额：${calculateTotal()}元</h3>
+                <div class="preview-details">
+                    ${generatePreviewDetails()}
+                </div>
+            `;
+        }
+
+        // 提交表单
+        async function submitForm() {
+            const payload = formatForGoogleSheets();
+            
+            try {
+                const response = await fetch('YOUR_GAS_URL', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert('提交成功！');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('提交失败：', error);
+                alert('提交失败，请稍后重试');
+            }
+        }
+
+        // 其他辅助函数...
+    </script>
+</body>
+</html>
