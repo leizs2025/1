@@ -277,50 +277,60 @@
         .catch(err => alert("提交失败：" + err.message));
     }
 
-    function downloadSummaryPdf() {
-      const mainName = document.getElementById("mainName").value.trim();
-      const phoneNumber = document.getElementById("phoneNumber").value.trim();
-      const total = document.getElementById("totalAmount").textContent;
+ function downloadSummaryPdf() {
+  const mainName = document.getElementById("mainName").value.trim();
+  const phoneNumber = document.getElementById("phoneNumber").value.trim();
+  const total = document.getElementById("totalAmount").textContent;
 
-      const pdfArea = document.createElement("div");
-      pdfArea.style.backgroundColor = "#fff";
-      pdfArea.style.color = "#000";
-      pdfArea.style.padding = "1.5rem";
-      pdfArea.style.fontFamily = "Arial, sans-serif";
-      pdfArea.innerHTML = `
-        <h2 style="color:#000;">太岁光明灯报名结算</h2>
-        <p><strong>主祈者：</strong>${mainName}</p>
-        <p><strong>电话：</strong>${phoneNumber}</p>
-        <p style="margin-top:1rem;"><strong>${total}</strong></p>
-      `;
+  const pdfArea = document.createElement("div");
+  pdfArea.style.backgroundColor = "#fff";
+  pdfArea.style.color = "#000";
+  pdfArea.style.padding = "1.5rem";
+  pdfArea.style.fontFamily = "Arial, sans-serif";
+  pdfArea.style.width = "fit-content";
 
-      formData.forEach((entry, index) => {
-        if (!entry.name && !entry.zodiac) return;
-        const box = document.createElement("div");
-        box.style.borderTop = "1px solid #ccc";
-        box.style.marginTop = "1rem";
-        box.style.paddingTop = "0.5rem";
-        box.innerHTML = `
-          <p><strong>第 ${index + 1} 位</strong></p>
-          <p>姓名: ${entry.name}｜生肖: ${entry.zodiac}</p>
-          <p>太岁: ${entry.taiSui}｜纸金: ${entry.paperGold1}</p>
-          <p>光明灯: ${entry.light}｜纸金: ${entry.paperGold2}</p>
-          <p>长生禄位: ${entry.longevity}｜纸金: ${entry.paperGold3}</p>
-          <p>文昌帝君: ${entry.wisdom}｜纸金: ${entry.paperGold4}</p>
-          <p>十六罗汉: ${entry.arhat}｜纸金: ${entry.paperGold5}</p>
-          <p>安奉功德金: ${entry.donation}</p>
-        `;
-        pdfArea.appendChild(box);
-      });
+  pdfArea.innerHTML = `
+    <h2 style="color:#000;">太岁光明灯报名结算</h2>
+    <p><strong>主祈者：</strong>${mainName}</p>
+    <p><strong>电话：</strong>${phoneNumber}</p>
+    <p style="margin-top:1rem;"><strong>${total}</strong></p>
+  `;
 
-      html2pdf().set({
-        margin: 0.5,
-        filename: '太岁光明灯_结算.pdf',
-        image: { type: 'jpeg', quality: 0.9 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).from(pdfArea).save();
-    }
+  formData.forEach((entry, index) => {
+    if (!entry.name && !entry.zodiac) return;
+    const box = document.createElement("div");
+    box.style.borderTop = "1px solid #ccc";
+    box.style.marginTop = "1rem";
+    box.style.paddingTop = "0.5rem";
+    box.innerHTML = `
+      <p><strong>第 ${index + 1} 位</strong></p>
+      <p>姓名: ${entry.name}｜生肖: ${entry.zodiac}</p>
+      <p>太岁: ${entry.taiSui}｜纸金: ${entry.paperGold1}</p>
+      <p>光明灯: ${entry.light}｜纸金: ${entry.paperGold2}</p>
+      <p>长生禄位: ${entry.longevity}｜纸金: ${entry.paperGold3}</p>
+      <p>文昌帝君: ${entry.wisdom}｜纸金: ${entry.paperGold4}</p>
+      <p>十六罗汉: ${entry.arhat}｜纸金: ${entry.paperGold5}</p>
+      <p>安奉功德金: ${entry.donation}</p>
+    `;
+    pdfArea.appendChild(box);
+  });
+
+  html2canvas(pdfArea, {
+    scale: 2,
+    useCORS: true
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const imgProps = { width: canvas.width, height: canvas.height };
+    const pdfWidth = 210;
+    const ratio = pdfWidth / imgProps.width;
+    const pdfHeight = imgProps.height * ratio + 10;
+
+    const pdf = new jspdf.jsPDF('p', 'mm', [pdfHeight, pdfWidth]);
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight - 10);
+    pdf.save('太岁光明灯_结算.pdf');
+  });
+}
+
 
     window.addEventListener("DOMContentLoaded", () => {
       fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev/?getSerial=1")
