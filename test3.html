@@ -1,195 +1,426 @@
-<script>
-// 增强的状态管理
-const state = {
-    currentProject: null,
-    maxEntries: {
-        ancestor: 8,
-        infant: 5,
-        debt: 5,
-        karma: 4,
-        land: 2
-    },
-    prices: {
-        token5: 5,
-        ship30: 30,
-        lotus6: 6,
-        paper3: 3,
-        paper6: 6,
-        paper27: 27,
-        combo: 40
-    },
-    data: {
-        basic: {},
-        projects: {
-            ancestor: [],
-            infant: [],
-            debt: [],
-            karma: [],
-            land: []
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线祈福报名系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #FFF8E7;
+            --primary-color: #FF4444;
         }
-    }
+
+        body {
+            background: var(--bg-color);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .page {
+            display: block;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        .page.hidden {
+            display: none !important;
+            opacity: 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            width: 100%;
+            font-size: 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .participant-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            box-sizing: border-box;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }
+
+        .item-row input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            text-align: right;
+        }
+
+        #totalAmount {
+            color: var(--primary-color);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn {
+            background: #ff4444 !important;
+            padding: 5px 10px !important;
+            font-size: 12px !important;
+            width: auto !important;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 第一页：基本信息 -->
+    <div id="page1" class="page card">
+        <h2>基本信息</h2>
+        <input type="tel" id="phone" placeholder="手机号" required>
+        <input type="text" id="registrant" placeholder="填写人姓名" required>
+        <select id="blessType">
+            <option value="消灾">消灾法会</option>
+            <option value="超度">超度法会</option>
+        </select>
+        <button id="nextBtn">下一步</button>
+    </div>
+
+    <!-- 第二页：祈福信息 -->
+    <div id="page2" class="page card hidden">
+        <h2>祈福信息</h2>
+        <div id="participants"></div>
+        <button id="addParticipantBtn" style="background:#4CAF50;">+ 添加祈福者</button>
+        <div id="totalAmount">总金额：0 元</div>
+        <button id="previewBtn">预览提交</button>
+    </div>
+
+    <!-- 第三页：预览页 -->
+    <div id="previewPage" class="page card hidden">
+        <h2>信息预览</h2>
+        <div id="previewContent"></div>
+        <button id="backBtn" style="background:#666;">返回修改</button>
+        <button id="downloadBtn">下载PDF</button>
+        <button id="submitBtn">确认提交</button>
+    </div>
+
+<script>
+// 系统数据存储
+let formData = {
+    phone: '',
+    registrant: '',
+    type: '消灾',
+    participants: [{
+        name: '',
+        address: '',
+        items: { 
+            token: 0,
+            homa: 0,
+            paper3: 0,
+            paper6: 0
+        }
+    }]
 };
 
-// 增强的显示控制
-function showProjectNav() {
-    document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
-    document.getElementById('project-nav').classList.add('active');
+// 初始化应用
+function initializeApp() {
+    bindEventListeners();
+    renderParticipants();
 }
 
-// 增强的预览功能
-function showPreview() {
-    collectAllData();
-    updateCalculations();
-    showSection('preview-section');
+// 事件绑定
+function bindEventListeners() {
+    document.getElementById('nextBtn').addEventListener('click', nextPage);
+    document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
+    document.getElementById('previewBtn').addEventListener('click', showPreview);
+    document.getElementById('backBtn').addEventListener('click', goBack);
+    document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+    document.getElementById('submitBtn').addEventListener('click', submitData);
 }
 
-// 完整的数据收集
-function collectAllData() {
-    Object.keys(state.maxEntries).forEach(projectType => {
-        state.data.projects[projectType] = [];
-        document.querySelectorAll(`#${projectType}-entries .entry`).forEach(entry => {
-            const entryData = {
-                items: {}
-            };
-
-            // 收集公共字段
-            if(entry.querySelector('.applicant-name')) {
-                entryData.applicant = entry.querySelector('.applicant-name').value;
-            }
-            if(entry.querySelector('.location-type')) {
-                entryData.locationType = entry.querySelector('.location-type').value;
-            }
-            if(entry.querySelector('.location-input')) {
-                entryData.locationDetail = entry.querySelector('.location-input').value;
-            }
-
-            // 收集所有供品数据
-            entry.querySelectorAll('.item').forEach(input => {
-                const key = input.classList[1];
-                entryData.items[key] = parseInt(input.value) || 0;
-            });
-
-            state.data.projects[projectType].push(entryData);
-        });
-    });
-}
-
-// 增强的金额计算
-function updateCalculations() {
-    let total = 0;
-    const details = [];
-    const categoryTotals = {};
-
-    // 遍历所有项目
-    Object.keys(state.data.projects).forEach(projectType => {
-        state.data.projects[projectType].forEach(entry => {
-            Object.entries(entry.items).forEach(([itemKey, quantity]) => {
-                const price = state.prices[itemKey];
-                const amount = quantity * price;
-                
-                // 按项目类型统计
-                if(!categoryTotals[projectType]) {
-                    categoryTotals[projectType] = {
-                        name: getProjectTitle(projectType),
-                        total: 0
-                    };
-                }
-                categoryTotals[projectType].total += amount;
-
-                total += amount;
-            });
-        });
-    });
-
-    // 生成明细
-    let detailsHTML = '';
-    Object.values(categoryTotals).forEach(category => {
-        if(category.total > 0) {
-            detailsHTML += `
-                <div class="price-category">
-                    <span>${category.name}：</span>
-                    <span>${category.total}元</span>
-                </div>
-            `;
-        }
-    });
-
-    document.getElementById('price-details').innerHTML = detailsHTML;
-    document.getElementById('total-amount').textContent = total;
-}
-
-// 增强的条目添加功能
-function addEntry(projectType) {
-    const entries = document.querySelectorAll(`#${projectType}-entries .entry`);
-    if(entries.length >= state.maxEntries[projectType]) {
-        alert(`最多可添加${state.maxEntries[projectType]}位`);
+// 页面切换
+function nextPage() {
+    const phone = document.getElementById('phone').value.trim();
+    const registrant = document.getElementById('registrant').value.trim();
+    
+    if (!phone || !registrant) {
+        alert('请填写手机号和填写人姓名');
         return;
     }
 
-    const template = document.getElementById('ancestor-template');
-    const clone = template.content.cloneNode(true);
-    const entryNumber = entries.length + 1;
-    
-    // 更新条目编号
-    clone.querySelector('.entry-number').textContent = entryNumber;
+    formData.phone = phone;
+    formData.registrant = registrant;
+    formData.type = document.getElementById('blessType').value;
 
-    // 绑定事件监听器
-    clone.querySelectorAll('.item').forEach(input => {
-        input.addEventListener('input', updateCalculations);
-    });
-    clone.querySelector('.location-type')?.addEventListener('change', function() {
-        toggleLocationDetail(this);
-    });
-
-    document.getElementById(`${projectType}-entries`).appendChild(clone);
-    updateCalculations();
+    document.getElementById('page1').classList.add('hidden');
+    document.getElementById('page2').classList.remove('hidden');
 }
 
-// 增强的切换地点详情显示
-function toggleLocationDetail(select) {
-    const entry = select.closest('.entry');
-    const detailDiv = entry.querySelector('.location-detail');
-    detailDiv.style.display = select.value ? 'block' : 'none';
-    
-    if(select.value === '其他') {
-        detailDiv.innerHTML = `
-            <label>请说明具体地点：</label>
-            <input type="text" class="location-input" required>
-        `;
+// 添加参与者
+function addParticipant() {
+    if (formData.participants.length >= 13) {
+        alert('最多添加13位祈福者');
+        return;
+    }
+    formData.participants.push({
+        name: '',
+        address: '',
+        items: { 
+            token: 0,
+            homa: 0,
+            paper3: 0,
+            paper6: 0
+        }
+    });
+    renderParticipants();
+}
+
+// 删除参与者
+function removeParticipant(index) {
+    index = parseInt(index);
+    if (index > 0 && index < formData.participants.length) {
+        formData.participants.splice(index, 1);
+        renderParticipants();
     }
 }
 
-// 初始化事件绑定
-document.addEventListener('DOMContentLoaded', () => {
-    // 绑定数字输入验证
-    document.body.addEventListener('input', function(e) {
-        if(e.target.classList.contains('item')) {
-            e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        }
+// 渲染参与者
+function renderParticipants() {
+    const container = document.getElementById('participants');
+    container.innerHTML = formData.participants.map((p, index) => `
+        <div class="participant-card">
+            <h3>祈福者 ${index+1} 
+                ${index > 0 ? `<button class="delete-btn" data-index="${index}">删除</button>` : ''}
+            </h3>
+            <input placeholder="姓名（可选）" 
+                value="${p.name}" 
+                data-index="${index}" 
+                data-field="name">
+            <input placeholder="地址（可选）" 
+                value="${p.address}" 
+                data-index="${index}" 
+                data-field="address">
+            
+            <div class="item-row">
+                <span>祈福令牌（5元）</span>
+                <input type="number" min="0" value="${p.items.token}"
+                    data-index="${index}" 
+                    data-field="token">
+            </div>
+            <div class="item-row">
+                <span>小护摩片（1元）</span>
+                <input type="number" min="0" value="${p.items.homa}"
+                    data-index="${index}" 
+                    data-field="homa">
+            </div>
+            <div class="item-row">
+                <span>纸金（3元）</span>
+                <input type="number" min="0" value="${p.items.paper3}"
+                    data-index="${index}" 
+                    data-field="paper3">
+            </div>
+            <div class="item-row">
+                <span>纸金（6元）</span>
+                <input type="number" min="0" value="${p.items.paper6}"
+                    data-index="${index}" 
+                    data-field="paper6">
+            </div>
+        </div>
+    `).join('');
+
+    // 绑定动态元素事件
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => removeParticipant(btn.dataset.index));
     });
-});
+    
+    document.querySelectorAll('[data-field]').forEach(input => {
+        input.addEventListener('input', handleInputChange);
+    });
+    
+    updateTotal();
+}
+
+// 处理输入变更
+function handleInputChange(e) {
+    const index = parseInt(e.target.dataset.index);
+    const field = e.target.dataset.field;
+    const value = e.target.value;
+
+    if (['token', 'homa', 'paper3', 'paper6'].includes(field)) {
+        const numValue = Math.max(0, parseInt(value) || 0);
+        formData.participants[index].items[field] = numValue;
+    } else {
+        formData.participants[index][field] = value;
+    }
+    updateTotal();
+}
+
+// 更新总金额
+function updateTotal() {
+    const total = formData.participants.reduce((sum, p) => 
+        sum + p.items.token*5 + p.items.homa*1 + p.items.paper3*3 + p.items.paper6*6, 0);
+    document.getElementById('totalAmount').textContent = `总金额：${total} 元`;
+}
+
+// 预览功能
+function showPreview() {
+    document.getElementById('page2').classList.add('hidden');
+    document.getElementById('previewPage').classList.remove('hidden');
+    
+    document.getElementById('previewContent').innerHTML = `
+        <div class="preview-section">
+            <h3>基本信息</h3>
+            <p>📱 手机号：${formData.phone}</p>
+            <p>📝 填写人：${formData.registrant}</p>
+            <p>🏮 法会类别：${formData.type}</p>
+        </div>
+        
+        ${formData.participants.map((p, i) => `
+            <div class="preview-item">
+                <h4>🙏 祈福者 #${i+1}：${p.name || '匿名祈福者'}</h4>
+                ${p.address ? `<p>📍 地址：${p.address}</p>` : ''}
+                <div class="preview-items">
+                    <p>🛒 物品清单：</p>
+                    <ul>
+                        <li>🎫 祈福令牌：${p.items.token} 个</li>
+                        <li>🔥 小护摩片：${p.items.homa} 片</li>
+                        <li>💰 3元纸金：${p.items.paper3} 份</li>
+                        <li>💰 6元纸金：${p.items.paper6} 份</li>
+                    </ul>
+                </div>
+            </div>
+        `).join('')}
+        
+        <div class="total-preview">
+            <h3>💰 总金额：${document.getElementById('totalAmount').textContent}</h3>
+        </div>
+    `;
+}
+
+// PDF生成
+async function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    try {
+        // 加载中文字体
+        const fontUrl = 'https://cdn.jsdelivr.net/npm/@jspdf-community/fontregistry-free@1.0.0/fonts/SourceHanSansCN-Normal.ttf';
+        const fontData = await fetch(fontUrl).then(r => r.arrayBuffer());
+        
+        // 注册字体
+        doc.addFileToVFS('SourceHanSansCN.ttf', arrayBufferToBase64(fontData));
+        doc.addFont('SourceHanSansCN.ttf', 'SourceHanSansCN', 'normal');
+        doc.setFont('SourceHanSansCN');
+
+        // 设置基础样式
+        doc.setFontSize(18);
+        doc.text(`祈福报名表（${new Date().toLocaleDateString()}）`, 20, 20);
+
+        // 基本信息
+        let y = 40;
+        doc.setFontSize(12);
+        doc.text(`▪ 手机号：${formData.phone}`, 20, y);
+        doc.text(`▪ 填写人：${formData.registrant}`, 20, y + 10);
+        doc.text(`▪ 法会类别：${formData.type}`, 20, y + 20);
+        y += 40;
+
+        // 祈福者信息
+        formData.participants.forEach((p, index) => {
+            doc.setFontSize(14);
+            doc.text(`祈福者 ${index + 1}：${p.name || '匿名'}`, 20, y);
+            doc.setFontSize(12);
+            
+            if (p.address) {
+                doc.text(`地址：${p.address}`, 30, y + 10);
+                y += 10;
+            }
+
+            const items = [
+                ["祈福令牌", p.items.token, 5],
+                ["小护摩片", p.items.homa, 1],
+                ["3元纸金", p.items.paper3, 3],
+                ["6元纸金", p.items.paper6, 6]
+            ];
+
+            items.forEach(([name, qty, price], i) => {
+                const yPos = y + 20 + (i * 10);
+                doc.text(`${name}：${qty} × ${price}元 = ${qty * price}元`, 30, yPos);
+            });
+
+            y += 60 + (items.length * 10);
+        });
+
+        // 总金额
+        doc.setFontSize(16);
+        doc.text(`赞助总金额：${document.getElementById('totalAmount').textContent}`, 20, y + 20);
+        
+        doc.save('祈福报名表.pdf');
+    } catch (error) {
+        console.error('PDF生成失败:', error);
+        alert('PDF生成失败，请检查网络连接');
+    }
+}
+
+// ArrayBuffer转Base64工具函数
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+// 返回修改
+function goBack() {
+    document.getElementById('previewPage').classList.add('hidden');
+    document.getElementById('page2').classList.remove('hidden');
+}
+
+// 提交数据
+async function submitData() {
+    try {
+        const response = await fetch('YOUR_GOOGLE_APPS_SCRIPT_URL', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        });
+        alert(response.ok ? '提交成功！' : '提交失败');
+        if(response.ok) window.location.reload();
+    } catch (error) {
+        console.error('提交错误:', error);
+        alert('网络连接错误');
+    }
+}
+
+// 启动应用
+document.addEventListener('DOMContentLoaded', initializeApp);
 </script>
-
-<style>
-/* 新增结算样式 */
-.price-category {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 0;
-    padding: 10px;
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.price-category span:first-child {
-    color: var(--primary-color);
-    font-weight: 500;
-}
-
-#total-amount {
-    color: var(--accent-color);
-    font-size: 1.5em;
-    margin-top: 15px;
-}
-</style>
+</body>
+</html>
