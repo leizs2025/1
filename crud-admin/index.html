@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>管理后台</title>
-  <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background-color: #f4f4f4; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>后台管理</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>管理后台</h1>
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>主祈者姓名</th>
-        <th>电话</th>
-        <th>收据号码</th>
-        <th>还愿</th>
-        <th>还愿纸金</th>
-        <th>安奉供养</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- 数据行将动态添加 -->
-    </tbody>
-  </table>
+  <h2>📋 报名资料后台管理</h2>
+
+  <div>
+    <label>🔍 输入手机号查询：</label>
+    <input type="text" id="searchInput" />
+    <button onclick="searchPhone()">搜索</button>
+  </div>
+
+  <div id="resultSelector" style="margin-top: 10px;"></div>
+
+  <div id="adminForm" class="hidden">
+    <!-- 主祈者、收据、收款日期字段 -->
+    <div>
+      <label>主祈者：</label><input id="mainName" />
+      <label>电话：</label><input id="phoneNumber" disabled />
+    </div>
+    <div>
+      <label>收据号码：</label><input id="receiptNumber" />
+      <label>收款日期：</label><input id="receiptDate" type="date" />
+    </div>
+
+    <h3>🧍‍♂️ 祈福者列表（最多15位）</h3>
+    <div id="prayersContainer"></div>
+
+    <div style="margin-top: 10px;">
+      <button onclick="saveChanges()">💾 保存</button>
+      <button onclick="printEntry()">🖨️ 打印</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
