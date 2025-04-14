@@ -1,0 +1,30 @@
+body {
+  font-family: sans-serif;
+  background: #fffef9;
+  padding: 2rem;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+}
+.field {
+  margin-bottom: 1rem;
+}
+input, select, textarea {
+  padding: 8px;
+  font-size: 16px;
+}
+.hidden {
+  display: none;
+}
+.entry-box {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.entry-box h4 {
+  margin-top: 0;
+}
+button {
+  margin-right: 10px;
+}
