@@ -3,43 +3,33 @@ let selectedEntry = null;
 
 function searchPhone() {
   const keyword = document.getElementById("searchInput").value.trim();
-  if (!keyword) return alert("请输入手机号关键字！");
+  if (!keyword) return alert("请输入手机号关键字");
 
-  fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev`)
+  fetch(`https://你的worker地址?search=${encodeURIComponent(keyword)}`)
     .then(res => res.json())
     .then(data => {
       const selector = document.getElementById("resultSelector");
       selector.innerHTML = "";
+      fullData = data;
 
       if (!Array.isArray(data) || data.length === 0) {
         selector.textContent = "未找到资料";
         return;
       }
 
-      fullData = data;
-
-      if (data.length === 1) {
-        selectedEntry = data[0];
+      const select = document.createElement("select");
+      select.innerHTML = `<option disabled selected>请选择一笔资料</option>`;
+      data.forEach((item, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = `${item.serial}｜${item.phoneNumber}`;
+        select.appendChild(opt);
+      });
+      select.onchange = () => {
+        selectedEntry = fullData[select.value];
         renderForm();
-      } else {
-        const select = document.createElement("select");
-        select.innerHTML = `<option disabled selected>请选择一笔资料</option>`;
-        data.forEach((item, idx) => {
-          const opt = document.createElement("option");
-          opt.value = idx;
-          opt.textContent = `${item.serial}｜${item.phoneNumber}`;
-          select.appendChild(opt);
-        });
-        select.onchange = () => {
-          selectedEntry = fullData[select.value];
-          renderForm();
-        };
-        selector.appendChild(select);
-      }
-    })
-    .catch(err => {
-      console.error("查找失败", err);
-      alert("查询失败");
+      };
+      selector.appendChild(select);
     });
 }
 
@@ -56,59 +46,49 @@ function renderForm() {
 
   selectedEntry.data.forEach((item, i) => {
     const div = document.createElement("div");
-    div.style.border = "1px solid #ccc";
-    div.style.margin = "5px";
-    div.style.padding = "5px";
-
     div.innerHTML = `
-      <strong>第 ${i + 1} 位</strong><br/>
-      姓名: <input value="${item.name || ""}" class="pName"/>
-      生肖: <input value="${item.zodiac || ""}" class="pZodiac"/>
-      太岁: <input value="${item.taiSui || ""}" class="pTaiSui"/>
-      光明灯: <input value="${item.light || ""}" class="pLight"/>
-      长生禄位: <input value="${item.longevity || ""}" class="pLongevity"/>
-      文昌帝君: <input value="${item.wisdom || ""}" class="pWisdom"/>
-      十六罗汉: <input value="${item.arhat || ""}" class="pArhat"/>
-      纸金1: <input type="number" value="${item.paperGold1 || 0}" class="pg1"/>
-      纸金2: <input type="number" value="${item.paperGold2 || 0}" class="pg2"/>
-      纸金3: <input type="number" value="${item.paperGold3 || 0}" class="pg3"/>
-      纸金4: <input type="number" value="${item.paperGold4 || 0}" class="pg4"/>
-      纸金5: <input type="number" value="${item.paperGold5 || 0}" class="pg5"/>
-      安奉功德金: <input type="number" value="${item.donation || 0}" class="donate"/>
+      <strong>第${i + 1}位</strong><br>
+      姓名: <input class="pName" value="${item.name || ''}" />
+      生肖: <input class="pZodiac" value="${item.zodiac || ''}" />
+      太岁: <input class="pTaiSui" value="${item.taiSui || ''}" />
+      光明灯: <input class="pLight" value="${item.light || ''}" />
+      长生禄位: <input class="pLongevity" value="${item.longevity || ''}" />
+      文昌帝君: <input class="pWisdom" value="${item.wisdom || ''}" />
+      十六罗汉: <input class="pArhat" value="${item.arhat || ''}" />
+      纸金1~5: <input type="number" class="pg1" value="${item.paperGold1 || 0}" />
+      <input type="number" class="pg2" value="${item.paperGold2 || 0}" />
+      <input type="number" class="pg3" value="${item.paperGold3 || 0}" />
+      <input type="number" class="pg4" value="${item.paperGold4 || 0}" />
+      <input type="number" class="pg5" value="${item.paperGold5 || 0}" />
+      功德金: <input type="number" class="donate" value="${item.donation || 0}" />
+      <hr>
     `;
     container.appendChild(div);
   });
 }
 
 function saveChanges() {
-  if (!selectedEntry) return alert("请先查询一笔资料");
-
-  const updatedData = [];
-  const blocks = document.getElementById("prayersContainer").children;
-
-  for (let div of blocks) {
-    updatedData.push({
-      name: div.querySelector(".pName").value,
-      zodiac: div.querySelector(".pZodiac").value,
-      taiSui: div.querySelector(".pTaiSui").value,
-      light: div.querySelector(".pLight").value,
-      longevity: div.querySelector(".pLongevity").value,
-      wisdom: div.querySelector(".pWisdom").value,
-      arhat: div.querySelector(".pArhat").value,
-      paperGold1: +div.querySelector(".pg1").value || 0,
-      paperGold2: +div.querySelector(".pg2").value || 0,
-      paperGold3: +div.querySelector(".pg3").value || 0,
-      paperGold4: +div.querySelector(".pg4").value || 0,
-      paperGold5: +div.querySelector(".pg5").value || 0,
-      donation: +div.querySelector(".donate").value || 0,
-    });
-  }
+  const data = [...document.getElementById("prayersContainer").children].map(div => ({
+    name: div.querySelector(".pName").value,
+    zodiac: div.querySelector(".pZodiac").value,
+    taiSui: div.querySelector(".pTaiSui").value,
+    light: div.querySelector(".pLight").value,
+    longevity: div.querySelector(".pLongevity").value,
+    wisdom: div.querySelector(".pWisdom").value,
+    arhat: div.querySelector(".pArhat").value,
+    paperGold1: +div.querySelector(".pg1").value,
+    paperGold2: +div.querySelector(".pg2").value,
+    paperGold3: +div.querySelector(".pg3").value,
+    paperGold4: +div.querySelector(".pg4").value,
+    paperGold5: +div.querySelector(".pg5").value,
+    donation: +div.querySelector(".donate").value,
+  }));
 
   const body = {
     phoneNumber: selectedEntry.phoneNumber,
-    data: updatedData,
     receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim()
+    receiptDate: document.getElementById("receiptDate").value.trim(),
+    data
   };
 
   fetch("https://你的worker地址", {
@@ -117,14 +97,20 @@ function saveChanges() {
     body: JSON.stringify(body)
   })
     .then(res => res.json())
-    .then(result => {
-      if (result.success) alert("保存成功！");
-      else alert("保存失败：" + result.message);
+    .then(res => alert(res.success ? "保存成功！" : "保存失败！"));
+}
+
+function deleteEntry() {
+  if (!confirm("确认删除整组资料？")) return;
+  fetch(`https://你的worker地址?delete=${selectedEntry.phoneNumber}`)
+    .then(res => res.json())
+    .then(res => {
+      alert("删除成功");
+      location.reload();
     });
 }
 
 function printEntry() {
-  if (!selectedEntry) return alert("请先查出一笔资料");
   const win = window.open("form-print.html", "_blank");
   win.onload = () => {
     win.postMessage(JSON.stringify(selectedEntry), "*");
