@@ -5,34 +5,41 @@ function searchPhone() {
   const keyword = document.getElementById("searchInput").value.trim();
   if (!keyword) return alert("请输入手机号关键字！");
 
-  fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${keyword}`)
+  fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev`)
     .then(res => res.json())
     .then(data => {
-      fullData = data;
       const selector = document.getElementById("resultSelector");
       selector.innerHTML = "";
 
-      if (data.length === 0) {
+      if (!Array.isArray(data) || data.length === 0) {
         selector.textContent = "未找到资料";
         return;
       }
+
+      fullData = data;
 
       if (data.length === 1) {
         selectedEntry = data[0];
         renderForm();
       } else {
         const select = document.createElement("select");
+        select.innerHTML = `<option disabled selected>请选择一笔资料</option>`;
+        data.forEach((item, idx) => {
+          const opt = document.createElement("option");
+          opt.value = idx;
+          opt.textContent = `${item.serial}｜${item.phoneNumber}`;
+          select.appendChild(opt);
+        });
         select.onchange = () => {
-          selectedEntry = data[select.selectedIndex];
+          selectedEntry = fullData[select.value];
           renderForm();
         };
-        data.forEach(item => {
-          const option = document.createElement("option");
-          option.textContent = `${item.serial}｜${item.phoneNumber}`;
-          select.appendChild(option);
-        });
         selector.appendChild(select);
       }
+    })
+    .catch(err => {
+      console.error("查找失败", err);
+      alert("查询失败");
     });
 }
 
@@ -104,7 +111,7 @@ function saveChanges() {
     receiptDate: document.getElementById("receiptDate").value.trim()
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+  fetch("https://你的worker地址", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
