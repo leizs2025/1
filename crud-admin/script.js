@@ -6,38 +6,54 @@ window.searchPhone = function () {
   if (!keyword) return alert("请输入手机号关键字！");
 
   fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(keyword)}`)
-    .then(res => res.text())
-    .then(data => {
-      fullData = data;
-      const selector = document.getElementById("resultSelector");
-      selector.innerHTML = "";
+  .then(res => res.text())
+  .then(text => {
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("⚠️ JSON 解析失败：", text);
+      alert("查询失败：返回的不是有效 JSON");
+      return;
+    }
 
-      if (data.length === 0) {
-        selector.textContent = "未找到资料";
-        return;
-      }
+    if (!Array.isArray(data)) {
+      console.warn("⚠️ 返回的不是数组：", data);
+      alert("查询失败：格式错误（不是数组）");
+      return;
+    }
 
-      if (data.length === 1) {
-        selectedEntry = data[0];
+    fullData = data;
+    const selector = document.getElementById("resultSelector");
+    selector.innerHTML = "";
+
+    if (data.length === 0) {
+      selector.textContent = "未找到资料";
+      return;
+    }
+
+    if (data.length === 1) {
+      selectedEntry = data[0];
+      renderForm();
+    } else {
+      const select = document.createElement("select");
+      select.onchange = () => {
+        selectedEntry = data[select.selectedIndex];
         renderForm();
-      } else {
-        const select = document.createElement("select");
-        select.onchange = () => {
-          selectedEntry = data[select.selectedIndex];
-          renderForm();
-        };
-        data.forEach(item => {
-          const option = document.createElement("option");
-          option.textContent = `${item.serial}｜${item.phoneNumber}`;
-          select.appendChild(option);
-        });
-        selector.appendChild(select);
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert("查询失败：" + err.message);
-    });
+      };
+      data.forEach(item => {
+        const option = document.createElement("option");
+        option.textContent = `${item.serial}｜${item.phoneNumber}`;
+        select.appendChild(option);
+      });
+      selector.appendChild(select);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("查询失败：" + err.message);
+  });
+
 };
 
 function renderForm() {
