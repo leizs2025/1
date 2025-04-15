@@ -6,7 +6,7 @@ window.searchPhone = function () {
   if (!keyword) return alert("请输入手机号关键字！");
 
   fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(keyword)}`)
-    .then(res => res.json())
+    .then(res => res.text())
     .then(data => {
       fullData = data;
       const selector = document.getElementById("resultSelector");
