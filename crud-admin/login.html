@@ -2,22 +2,83 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>管理登录</title>
-  <link rel="stylesheet" href="style.css">
+  <title>后台登录</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to right, #ffefba, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 300px;
+    }
+
+    h2 {
+      color: #b80000;
+      margin-bottom: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      margin: 8px 0 16px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(145deg, #d0021b, #ff5e62);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: linear-gradient(145deg, #b80012, #e44c50);
+    }
+
+    .logo {
+      height: 60px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>管理登录</h2>
-    <div class="field">
-      <label>账号:</label>
-      <input type="text" id="username" />
-    </div>
-    <div class="field">
-      <label>密码:</label>
-      <input type="password" id="password" />
-    </div>
+  <div class="login-container">
+    <img src="your-logo.png" alt="庙Logo" class="logo" />
+    <h2>后台管理登录</h2>
+    <input type="password" id="password" placeholder="请输入管理密码" />
     <button onclick="login()">登录</button>
   </div>
-  <script src="auth.js"></script>
+
+  <script>
+    function login() {
+      const pw = document.getElementById("password").value.trim();
+      if (pw === "123456") {
+        location.href = "index.html";
+      } else {
+        alert("密码错误，请重新输入！");
+      }
+    }
+  </script>
 </body>
 </html>
