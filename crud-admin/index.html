@@ -13,13 +13,8 @@
     .title {
       text-align: center;
       color: #b30000;
-      margin-bottom: 10px;
-      text-shadow: 1px 1px #fff;
-    }
-    .subtitle {
-      text-align: center;
-      color: #555;
       margin-bottom: 30px;
+      text-shadow: 1px 1px #fff;
     }
     .result-box select {
       font-size: 16px;
@@ -45,48 +40,84 @@
     .btn-primary:hover {
       background: #c00;
     }
-    .input-group.align-center {
-      display: flex;
-      align-items: center;
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
 
   <h2 class="title">🙏 后台报名资料管理</h2>
-  <p id="adminNameDisplay" class="subtitle">加载中...</p>
 
-  <div class="mb-4">
-    <label for="searchInput" class="form-label">请输入手机号进行查找：</label>
-    <div class="input-group align-center">
-      <input type="text" id="searchInput" class="form-control" placeholder="例如：0146..." />
-      <button onclick="searchPhone()" class="btn btn-danger">🔍 查询</button>
-    </div>
+  <div class="mb-3 d-flex justify-content-center align-items-center">
+    <input type="text" id="searchInput" class="form-control w-50 me-2" placeholder="请输入手机号进行查找，例如：0146..." />
+    <button onclick="searchPhone()" class="btn btn-danger me-2">🔍 查询</button>
+    <button onclick="startNewEntry()" class="btn btn-success">➕ 新增资料</button>
   </div>
 
-  <div id="resultSelector" class="mb-3 result-box"></div>
+  <div id="resultSelector" class="mb-3 result-box text-center"></div>
 
   <div id="adminForm" class="hidden">
     <div class="card">
       <div class="row">
         <div class="col-md-6">
-          <label>主祈者</label>
-          <input id="mainName" class="form-control" />
+          <label>编号</label>
+          <input id="serialNumber" class="form-control" disabled />
         </div>
         <div class="col-md-6">
-          <label>电话</label>
-          <input id="phoneNumber" class="form-control" disabled />
+          <label>主祈者</label>
+          <input id="mainName" class="form-control" />
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-6">
+          <label>电话</label>
+          <input id="phoneNumber" class="form-control" />
+        </div>
+        <div class="col-md-6">
           <label>收据号码</label>
           <input id="receiptNumber" class="form-control" />
         </div>
+      </div>
+
+      <div class="row">
         <div class="col-md-6">
           <label>收款日期</label>
           <input id="receiptDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label d-block">还愿</label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="wishReturn" id="wishReturnYes" value="是">
+              <label class="form-check-label" for="wishReturnYes">是</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="wishReturn" id="wishReturnNo" value="" checked>
+              <label class="form-check-label" for="wishReturnNo">否</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label>还愿纸金</label>
+          <input id="wishPaper" class="form-control" type="number" min="0" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label d-block">安奉供养</label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="offering" id="offeringYes" value="是">
+              <label class="form-check-label" for="offeringYes">是</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="offering" id="offeringNo" value="" checked>
+              <label class="form-check-label" for="offeringNo">否</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -94,22 +125,12 @@
     <h5 class="mt-4">🧍‍♂️ 祈福者列表（最多15位）</h5>
     <div id="prayersContainer" class="mb-3"></div>
 
-    <div class="d-flex gap-3">
+    <div class="d-flex justify-content-center gap-3">
       <button onclick="saveChanges()" class="btn btn-primary">💾 保存</button>
       <button onclick="deleteEntry()" class="btn btn-warning">🗑 删除</button>
       <button onclick="printEntry()" class="btn btn-secondary">🖨️ 打印</button>
     </div>
   </div>
-
-  <script>
-    const adminName = localStorage.getItem("admin");
-    if (!adminName) {
-      alert("未登录，请返回登录页！");
-      location.href = "login.html";
-    } else {
-      document.getElementById("adminNameDisplay").textContent = `👤 当前管理员：${adminName}`;
-    }
-  </script>
 
   <script src="script.js"></script>
 </body>
