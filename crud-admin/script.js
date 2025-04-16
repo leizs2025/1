@@ -124,17 +124,17 @@ window.saveChanges = function () {
     receiptDate: document.getElementById("receiptDate").value.trim()
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) alert("保存成功！");
-      else alert("保存失败：" + result.message);
-    });
-};
+fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+  method: "PUT", // Original PUT request
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body) // `body` contains the data to be sent
+})
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) alert("保存成功！");
+    else alert("保存失败：" + result.message);
+  });
+
 
 window.printEntry = function () {
   if (!selectedEntry) return alert("请先查出一笔资料");
