@@ -124,16 +124,23 @@ window.saveChanges = function () {
     receiptDate: document.getElementById("receiptDate").value.trim()
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+  method: "POST", // Use POST instead of PUT
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    method: "PUT", // Custom field to indicate a PUT operation
+    phoneNumber: selectedEntry.phoneNumber,
+    data: updatedData,
+    receiptNumber: document.getElementById("receiptNumber").value.trim(),
+    receiptDate: document.getElementById("receiptDate").value.trim()
   })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) alert("保存成功！");
-      else alert("保存失败：" + result.message);
-    });
+})
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) alert("保存成功！");
+    else alert("保存失败：" + result.message);
+  });
+
 };
 
 window.printEntry = function () {
