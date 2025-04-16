@@ -70,15 +70,25 @@
     <button onclick="login()">登录</button>
   </div>
 
-  <script>
-    function login() {
-      const pw = document.getElementById("password").value.trim();
-      if (pw === "123456") {
-        location.href = "index.html";
-      } else {
-        alert("密码错误，请重新输入！");
-      }
+<script>
+  function login() {
+    const pw = document.getElementById("password").value.trim();
+
+    let adminName = "";
+    if (pw === "123456") {
+      adminName = "小张";
+    } else if (pw === "654321") {
+      adminName = "小林";
+    } else {
+      alert("密码错误，请重新输入！");
+      return;
     }
-  </script>
+
+    // 💾 存入管理员身份
+    localStorage.setItem("admin", adminName);
+    location.href = "index.html"; // 登录成功跳转后台页面
+  }
+</script>
+
 </body>
 </html>
