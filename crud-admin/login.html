@@ -55,40 +55,32 @@
     button:hover {
       background: linear-gradient(145deg, #b80012, #e44c50);
     }
-
-    .logo {
-      height: 60px;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <img src="your-logo.png" alt="庙Logo" class="logo" />
     <h2>后台管理登录</h2>
-    <input type="password" id="password" placeholder="请输入管理密码" />
+    <input type="password" id="password" placeholder="请输入管理员密码" />
     <button onclick="login()">登录</button>
   </div>
 
-<script>
-  function login() {
-    const pw = document.getElementById("password").value.trim();
+  <script>
+    function login() {
+      const pw = document.getElementById("password").value.trim();
 
-    let adminName = "";
-    if (pw === "123456") {
-      adminName = "小张";
-    } else if (pw === "654321") {
-      adminName = "小林";
-    } else {
-      alert("密码错误，请重新输入！");
-      return;
+      let adminName = "";
+      if (pw === "123456") {
+        adminName = "小张";
+      } else if (pw === "654321") {
+        adminName = "小林";
+      } else {
+        alert("密码错误，请重新输入！");
+        return;
+      }
+
+      localStorage.setItem("admin", adminName);
+      location.href = "index.html";
     }
-
-    // 💾 存入管理员身份
-    localStorage.setItem("admin", adminName);
-    location.href = "index.html"; // 登录成功跳转后台页面
-  }
-</script>
-
+  </script>
 </body>
 </html>
