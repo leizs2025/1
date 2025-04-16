@@ -1,209 +1,229 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>打印报名表单</title>
+  <meta charset="UTF-8" />
+  <title>打印祈福资料</title>
   <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
     body {
-      font-family: "Arial", sans-serif;
-      padding: 40px;
-      font-size: 14px;
+      font-family: "Segoe UI", sans-serif;
+      margin: auto;
       color: #000;
+      max-width: 750px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #b30000;
+      margin: 5px 0;
+      font-size: 24px;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.3;
+      margin: 2px 0;
     }
 
-    .logo img {
-      height: 60px;
-      vertical-align: middle;
-      margin: 0 10px;
-    }
-
-    h2 {
-      margin: 5px 0;
-      font-size: 20px;
-      color: #800000;
-    }
-
-    .temple-info {
-      margin-top: 5px;
-      font-size: 14px;
+    .taishui {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin: 5px 0 10px;
     }
 
     .info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
+      margin-top: 12px;
       font-size: 14px;
     }
 
-    .info div {
-      width: 48%;
+    .info span {
+      display: inline-block;
+      margin-right: 20px;
+      margin-bottom: 4px;
+    }
+
+    .btn-print {
+      text-align: right;
+      margin: 10px 0 5px;
+    }
+
+    .btn-print button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background: #d0021b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
-      margin-bottom: 20px;
+      margin-top: 10px;
+      font-size: 13px;
       table-layout: fixed;
     }
 
     th, td {
-      border: 1px solid #444;
-      padding: 6px;
+      border: 1px solid #000;
+      padding: 5px;
       text-align: center;
-      font-size: 13px;
       word-break: break-word;
+      white-space: normal;
     }
 
     th {
       white-space: normal;
-      word-break: break-word;
-      line-height: 1.2;
-      text-align: center;
-      background-color: #f2f2f2;
-    }
-
-    th:nth-child(1), td:nth-child(1) {
-      width: 130px;
-      word-wrap: break-word;
-    }
-
-    th:not(:nth-child(1)), td:not(:nth-child(1)) {
-      width: 55px;
-    }
-
-    .summary-item {
-      text-align: right;
-      font-size: 14px;
       font-weight: bold;
     }
 
-    .summary {
-      margin-top: 8px;
-      text-align: right;
-      font-size: 16px;
-      font-weight: bold;
+    .footer-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 20px;
+      gap: 20px;
+      page-break-inside: avoid;
+    }
+
+    .blessing-box {
+      flex: 1;
+      max-width: 55%;
     }
 
     .blessing {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: bold;
+       text-align: center;
+      line-height: 1.6;
+     
+}
+    }
+
+    .totals {
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: right;
+      line-height: 1.6;
     }
 
     @media print {
-      button { display: none; }
+      .btn-print {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/OOjs_UI_icon_edit-ltr.svg/1024px-OOjs_UI_icon_edit-ltr.svg.png" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/OOjs_UI_icon_check.svg/1024px-OOjs_UI_icon_check.svg.png" />
-    </div>
-    <div class="temple-info">
-      <h2>太岁光明灯 报名表单</h2>
-      <div>太岁庙 — 台中市南区大光明路 88 号</div>
-      <div><strong>2025（乙巳）年 太岁：吴遂</strong></div>
-    </div>
-  </div>
+  <h2>真佛宗诗巫妙理雷藏寺</h2>
+  <div class="header">Persatuan Miao Li Tang Sibu</div>
+  <div class="header">No.22N, Taman Damai, Off Brooke Drive 33,</div>
+  <div class="header">Jalan Tun Abang Haji Openg, 96000, Sibu, Sarawak, Malaysia.</div>
+  <div class="header">Tel: 6-084-342986 (妙理堂) / 013-980-4461 (妙理雷藏寺)</div>
+  <div class="header">Fax: 6-084-319961</div>
+  <div class="taishui">2025 (乙巳) 年 当值太岁 吴遂</div>
 
   <div class="info">
-    <div>
-      <p>主祈者：<span id="mainName"></span></p>
-      <p>电话：<span id="phoneNumber"></span></p>
-    </div>
-    <div>
-      <p>收据号码：<span id="receiptNumber"></span></p>
-      <p>收款日期：<span id="receiptDate"></span></p>
-    </div>
+    <span><strong>主祈者：</strong><span id="mainName"></span></span>
+    <span><strong>电话：</strong><span id="phoneNumber"></span></span>
+    <span><strong>收据编号：</strong><span id="receiptNumber"></span></span>
+    <span><strong>收款日期：</strong><span id="receiptDate"></span></span>
   </div>
 
-  <table id="prayersTable">
-    <thead>
-      <tr>
-        <th>姓名</th><th>生肖</th>
-        <th>太岁</th><th>纸金</th>
-        <th>光明<br>灯</th><th>纸金</th>
-        <th>长生<br>禄位</th><th>纸金</th>
-        <th>文昌<br>帝君</th><th>纸金</th>
-        <th>十六<br>罗汉</th><th>纸金</th>
-        <th>安奉<br>功德金</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="summary-item">安奉功德金 = <span id="totalDonation">0</span></div>
-  <div class="summary-item">真佛十四宝金 3.00 x <span id="paperQty">0</span> 份 = <span id="paperAmount">0</span></div>
-  <div class="summary">赞助总金额：<span id="totalAmount">0</span></div>
-
-  <div class="blessing">
-    师尊，佛菩萨加持灾厄化解，逢兇化吉，万事都如意。
-  </div>
-
-  <div style="text-align:center; margin-top:20px;">
+  <div class="btn-print">
     <button onclick="window.print()">🖨️ 打印表单</button>
   </div>
 
-  <script>
-    window.addEventListener("message", e => {
-      const entry = JSON.parse(e.data);
-      document.getElementById("mainName").textContent = entry.mainName;
-      document.getElementById("phoneNumber").textContent = entry.phoneNumber;
-      document.getElementById("receiptNumber").textContent = entry.receiptNumber || "—";
-      document.getElementById("receiptDate").textContent = entry.receiptDate || "—";
+  <table>
+    <thead>
+      <tr>
+        <th style="width:20%">祈福者</th>
+        <th style="width:7%">太岁</th><th style="width:5%">纸金</th>
+        <th style="width:7%">光明<br/>灯</th><th style="width:5%">纸金</th>
+        <th style="width:7%">长生<br/>禄位</th><th style="width:5%">纸金</th>
+        <th style="width:7%">文昌<br/>帝君</th><th style="width:5%">纸金</th>
+        <th style="width:7%">十六<br/>罗汉</th><th style="width:5%">纸金</th>
+        <th style="width:10%">安奉<br/>功德金</th>
+      </tr>
+    </thead>
+    <tbody id="prayerBody"></tbody>
+  </table>
+<div class="footer-wrap">
+  <div class="blessing-box">
+    <div class="blessing">
+      师尊，佛菩萨加持灾厄化解，<br/>
+      逢兇化吉，万事都如意。
+    </div>
+  </div>
+  <div class="totals" id="totalBox"></div>
+</div>
 
-      const tbody = document.querySelector("#prayersTable tbody");
-      tbody.innerHTML = "";
+<script>
+  window.addEventListener("message", function (event) {
+    let data;
+    try {
+      data = JSON.parse(event.data);
+    } catch {
+      alert("❌ 无效数据格式");
+      return;
+    }
 
-      let paperGoldTotal = 0;
-      let donationTotal = 0;
+    // 基本信息
+    document.getElementById("mainName").textContent = data.mainName || "";
+    document.getElementById("phoneNumber").textContent = data.phoneNumber || "";
+    document.getElementById("receiptNumber").textContent = data.receiptNumber || "";
+    document.getElementById("receiptDate").textContent = data.receiptDate || "";
 
-      entry.data.forEach(p => {
-        if (!p.name && !p.zodiac) return;
+    // 填表格
+    const tbody = document.getElementById("prayerBody");
+    tbody.innerHTML = "";
 
-        const showCheck = val => Number(val) > 0 ? "✔️" : "";
-        const donationQty = Math.floor(Number(p.donation || 0) / 3);
-        const donationAmount = Number(p.donation || 0);
-        const donationStr = `安奉功德金 = 真佛十四宝金 3.00 x ${donationQty} 份 = ${donationAmount}`;
+    let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${p.name || ""}</td>
-          <td>${p.zodiac || ""}</td>
-          <td>${p.taiSui || ""}</td>
-          <td>${showCheck(p.paperGold1)}</td>
-          <td>${p.light || ""}</td>
-          <td>${showCheck(p.paperGold2)}</td>
-          <td>${p.longevity || ""}</td>
-          <td>${showCheck(p.paperGold3)}</td>
-          <td>${p.wisdom || ""}</td>
-          <td>${showCheck(p.paperGold4)}</td>
-          <td>${p.arhat || ""}</td>
-          <td>${showCheck(p.paperGold5)}</td>
-          <td>${donationStr}</td>
-        `;
-        tbody.appendChild(row);
+    (data.data || []).forEach(p => {
+      const num = val => parseFloat(val || 0);
+      const showCheck = val => val === "是" ? "✔" : "";
 
-        paperGoldTotal += Number(p.paperGold1) + Number(p.paperGold2) +
-                          Number(p.paperGold3) + Number(p.paperGold4) + Number(p.paperGold5);
-        donationTotal += donationAmount;
-      });
+      sum.pg1 += num(p.paperGold1);
+      sum.pg2 += num(p.paperGold2);
+      sum.pg3 += num(p.paperGold3);
+      sum.pg4 += num(p.paperGold4);
+      sum.pg5 += num(p.paperGold5);
+      sum.donation += num(p.donation);
 
-      const total = paperGoldTotal * 3 + donationTotal;
-      document.getElementById("totalDonation").textContent = donationTotal || 0;
-      document.getElementById("paperQty").textContent = paperGoldTotal || 0;
-      document.getElementById("paperAmount").textContent = paperGoldTotal * 3 || 0;
-      document.getElementById("totalAmount").textContent = total;
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${p.name || ""}</td>
+        <td>${showCheck(p.taiSui)}</td><td>${p.paperGold1 || ""}</td>
+        <td>${showCheck(p.light)}</td><td>${p.paperGold2 || ""}</td>
+        <td>${showCheck(p.longevity)}</td><td>${p.paperGold3 || ""}</td>
+        <td>${showCheck(p.wisdom)}</td><td>${p.paperGold4 || ""}</td>
+        <td>${showCheck(p.arhat)}</td><td>${p.paperGold5 || ""}</td>
+        <td>${p.donation || ""}</td>
+      `;
+      tbody.appendChild(row);
     });
-  </script>
+
+    // 合计区域
+    const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+    const paperMoney = paperTotal * 3;
+    const total = paperMoney + sum.donation;
+
+    document.getElementById("totalBox").innerHTML = `
+      <div>安奉功德金：RM ${sum.donation.toFixed(2)}</div>
+      <div>真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</div>
+      <div>总计：RM ${total.toFixed(2)}</div>
+    `;
+  });
+</script>
 </body>
 </html>
