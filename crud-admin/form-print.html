@@ -27,7 +27,7 @@
     .header {
       text-align: center;
       font-size: 13px;
-      line-height: 1.3;
+      line-height: 1.0;
       margin: 2px 0;
     }
 
@@ -215,7 +215,7 @@ th, td {
         <td>${p.donation || ""}</td>
       `;
       tbody.appendChild(row);
-    });
+    }
 
     // 合计区域
     const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
