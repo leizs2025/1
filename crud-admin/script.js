@@ -353,5 +353,17 @@ function getCurrentFormData() {
       真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
       总计：RM ${total.toFixed(2)}
     `;
-
 }
+window.printEntry = function () {
+  if (!selectedEntry) return alert("请先查出一笔资料");
+
+  const win = window.open("form-print.html", "_blank");
+
+  const interval = setInterval(() => {
+    if (win && win.document.readyState === "complete") {
+      clearInterval(interval);
+      win.postMessage(JSON.stringify(selectedEntry), "*");
+    }
+  }, 100);
+};
+
