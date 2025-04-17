@@ -95,26 +95,36 @@ function renderForm() {
   document.getElementById("adminForm").classList.remove("hidden");
 
   document.getElementById("serialNumber").value = selectedEntry.serial || "";
-  document.getElementById("mainName").value = selectedEntry.mainName;
-  document.getElementById("phoneNumber").value = selectedEntry.phoneNumber;
-  document.getElementById("phoneNumber").disabled = true;
+  document.getElementById("mainName").value = selectedEntry.mainName || "";
+  document.getElementById("phoneNumber").value = selectedEntry.phoneNumber || "";
   document.getElementById("receiptNumber").value = selectedEntry.receiptNumber || "";
   document.getElementById("receiptDate").value = selectedEntry.receiptDate || "";
   document.getElementById("wishPaper").value = selectedEntry.wishPaper || "";
 
+  // 还愿与供养
   document.getElementById("wishReturnYes").checked = selectedEntry.wishReturn === "是";
-  document.getElementById("wishReturnNo").checked = !selectedEntry.wishReturn || selectedEntry.wishReturn === "";
+  document.getElementById("wishReturnNo").checked = selectedEntry.wishReturn !== "是";
 
   document.getElementById("offeringYes").checked = selectedEntry.offering === "是";
-  document.getElementById("offeringNo").checked = !selectedEntry.offering || selectedEntry.offering === "";
+  document.getElementById("offeringNo").checked = selectedEntry.offering !== "是";
 
+  // 祈福者资料
   const container = document.getElementById("prayersContainer");
   container.innerHTML = "";
 
-  selectedEntry.data.forEach((item, i) => {
-    container.appendChild(createPrayerBlock(item, i + 1));
+  (selectedEntry.data || []).forEach((item, index) => {
+    // 只渲染有姓名的卡片
+    if (item.name && item.name.trim() !== "") {
+      container.appendChild(createPrayerBlock(item, index + 1));
+    }
   });
+
+  // 若没有祈福者，至少显示一个空的
+  if (container.children.length === 0) {
+    container.appendChild(createPrayerBlock({}, 1));
+  }
 }
+
 
 function createRadioGroup(name, className, checkedVal) {
   return `
