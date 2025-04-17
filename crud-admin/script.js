@@ -138,34 +138,7 @@ function createRadioGroup(name, className, checkedVal) {
     </div>
   `;
 }
-window.duplicateAsNewEntry = function () {
-  if (!selectedEntry) return alert("请先查询一笔资料");
 
-  // 克隆旧数据
-  const clone = JSON.parse(JSON.stringify(selectedEntry));
-  selectedEntry = null;
-
-  document.getElementById("serialNumber").value = "";
-  document.getElementById("mainName").value = clone.mainName || "";
-  document.getElementById("phoneNumber").value = clone.phoneNumber || "";
-  document.getElementById("phoneNumber").disabled = false;
-  document.getElementById("receiptNumber").value = clone.receiptNumber || "";
-  document.getElementById("receiptDate").value = clone.receiptDate || "";
-  document.getElementById("wishPaper").value = clone.wishPaper || "";
-  document.getElementById("wishReturnYes").checked = clone.wishReturn === "是";
-  document.getElementById("wishReturnNo").checked = clone.wishReturn !== "是";
-  document.getElementById("offeringYes").checked = clone.offering === "是";
-  document.getElementById("offeringNo").checked = clone.offering !== "是";
-
-  const container = document.getElementById("prayersContainer");
-  container.innerHTML = "";
-
-  (clone.data || []).forEach((p, i) => {
-    container.appendChild(createPrayerBlock(p, i + 1));
-  });
-
-  document.getElementById("adminForm").classList.remove("hidden");
-};
 
 function createPrayerBlock(data = {}, index = 1) {
   const div = document.createElement("div");
@@ -209,37 +182,7 @@ function checkMin() {
   }
 }
 
-window.saveChanges = function () {
-  const phone = document.getElementById("phoneNumber").value.trim();
 
-  if (!selectedEntry) {
-    // 🔍 新增时先检查是否已有相同手机号
-    if (!phone) return alert("请输入手机号！");
-
-    fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(phone)}`)
-      .then(res => res.text())
-      .then(text => {
-        let result;
-        try {
-          result = JSON.parse(text);
-        } catch {
-          alert("❌ 检查失败：返回格式不正确");
-          return;
-        }
-
-        if (Array.isArray(result) && result.length > 0) {
-          alert("⚠️ 此电话号码已存在，请勿重复报名！");
-          return;
-        }
-
-        // ✅ 没有重复 → 保存
-        actuallySave();
-      });
-  } else {
-    // 编辑模式 → 直接保存
-    actuallySave();
-  }
-};
 function actuallySave() {
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
