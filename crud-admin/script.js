@@ -128,6 +128,34 @@ function createRadioGroup(name, className, checkedVal) {
     </div>
   `;
 }
+window.duplicateAsNewEntry = function () {
+  if (!selectedEntry) return alert("请先查询一笔资料");
+
+  // 克隆旧数据
+  const clone = JSON.parse(JSON.stringify(selectedEntry));
+  selectedEntry = null;
+
+  document.getElementById("serialNumber").value = "";
+  document.getElementById("mainName").value = clone.mainName || "";
+  document.getElementById("phoneNumber").value = clone.phoneNumber || "";
+  document.getElementById("phoneNumber").disabled = false;
+  document.getElementById("receiptNumber").value = clone.receiptNumber || "";
+  document.getElementById("receiptDate").value = clone.receiptDate || "";
+  document.getElementById("wishPaper").value = clone.wishPaper || "";
+  document.getElementById("wishReturnYes").checked = clone.wishReturn === "是";
+  document.getElementById("wishReturnNo").checked = clone.wishReturn !== "是";
+  document.getElementById("offeringYes").checked = clone.offering === "是";
+  document.getElementById("offeringNo").checked = clone.offering !== "是";
+
+  const container = document.getElementById("prayersContainer");
+  container.innerHTML = "";
+
+  (clone.data || []).forEach((p, i) => {
+    container.appendChild(createPrayerBlock(p, i + 1));
+  });
+
+  document.getElementById("adminForm").classList.remove("hidden");
+};
 
 function createPrayerBlock(data = {}, index = 1) {
   const div = document.createElement("div");
@@ -172,6 +200,37 @@ function checkMin() {
 }
 
 window.saveChanges = function () {
+  const phone = document.getElementById("phoneNumber").value.trim();
+
+  if (!selectedEntry) {
+    // 🔍 新增时先检查是否已有相同手机号
+    if (!phone) return alert("请输入手机号！");
+
+    fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(phone)}`)
+      .then(res => res.text())
+      .then(text => {
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          alert("❌ 检查失败：返回格式不正确");
+          return;
+        }
+
+        if (Array.isArray(result) && result.length > 0) {
+          alert("⚠️ 此电话号码已存在，请勿重复报名！");
+          return;
+        }
+
+        // ✅ 没有重复 → 保存
+        actuallySave();
+      });
+  } else {
+    // 编辑模式 → 直接保存
+    actuallySave();
+  }
+};
+function actuallySave() {
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
     name: div.querySelector(".pName").value,
@@ -210,18 +269,23 @@ window.saveChanges = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("保存成功！");
-        startNewEntry(); // 自动清空并回到新增模式
+        alert("✅ 保存成功！");
+        startNewEntry(); // 清空表单回到新增模式
       } else {
-        alert("保存失败：" + result.message);
+        alert("❌ 保存失败：" + result.message);
       }
     });
-};
+}
+
 
 window.deleteEntry = function () {
-  if (!selectedEntry) return alert("请先查询一笔资料");
-  const confirmDelete = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
-  if (!confirmDelete) return;
+  if (!selectedEntry) {
+    alert("⚠️ 请先查询一笔资料再删除！");
+    return;
+  }
+
+  const confirmed = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
+  if (!confirmed) return;
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
@@ -235,24 +299,20 @@ window.deleteEntry = function () {
     .then(result => {
       if (result.success) {
         alert("✅ 删除成功！");
-        document.getElementById("adminForm").classList.add("hidden");
-        document.getElementById("resultSelector").innerHTML = "";
-        document.getElementById("searchInput").value = "";
+        // 清除界面
         selectedEntry = null;
+        document.getElementById("adminForm").classList.add("hidden");
+        document.getElementById("searchInput").value = "";
+        document.getElementById("resultSelector").innerHTML = "";
       } else {
-        alert("删除失败：" + result.message);
+        alert("❌ 删除失败：" + result.message);
       }
+    })
+    .catch(err => {
+      alert("❌ 删除请求出错：" + err.message);
     });
 };
 
-window.printEntry = function () {
-  const data = selectedEntry || getCurrentFormData();
-  if (!data) return alert("当前无可打印资料");
-  const win = window.open("form-print.html", "_blank");
-  win.onload = () => {
-    win.postMessage(JSON.stringify(data), "*");
-  };
-};
 
 function getCurrentFormData() {
   const prayers = document.getElementById("prayersContainer").children;
