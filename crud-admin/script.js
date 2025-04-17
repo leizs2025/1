@@ -124,6 +124,56 @@ function renderForm() {
     container.appendChild(createPrayerBlock({}, 1));
   }
 }
+window.saveChanges = function () {
+  const prayers = document.getElementById("prayersContainer").children;
+  const updatedData = Array.from(prayers).map(div => ({
+    name: div.querySelector(".pName").value,
+    zodiac: div.querySelector(".pZodiac").value,
+    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+    light: div.querySelector('input.pLight:checked')?.value || "",
+    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+    arhat: div.querySelector('input.pArhat:checked')?.value || "",
+    paperGold1: +div.querySelector(".pg1").value || 0,
+    paperGold2: +div.querySelector(".pg2").value || 0,
+    paperGold3: +div.querySelector(".pg3").value || 0,
+    paperGold4: +div.querySelector(".pg4").value || 0,
+    paperGold5: +div.querySelector(".pg5").value || 0,
+    donation: +div.querySelector(".donate").value || 0
+  }));
+
+  const phoneInput = document.getElementById("phoneNumber").value.trim();
+  const isPhoneModified = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
+  const method = selectedEntry && !isPhoneModified ? "PUT" : "POST";
+
+  const body = {
+    method,
+    phoneNumber: phoneInput,
+    mainName: document.getElementById("mainName").value.trim(),
+    data: updatedData,
+    receiptNumber: document.getElementById("receiptNumber").value.trim(),
+    receiptDate: document.getElementById("receiptDate").value.trim(),
+    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
+    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
+    wishPaper: document.getElementById("wishPaper").value.trim(),
+    admin: localStorage.getItem("admin") || "未登录"
+  };
+
+  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        alert("保存成功！");
+        startNewEntry();
+      } else {
+        alert("保存失败：" + result.message);
+      }
+    });
+};
 
 
 function createRadioGroup(name, className, checkedVal) {
