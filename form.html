@@ -129,7 +129,7 @@
       <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
       <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
       <button onclick="prevPage()">上一页</button>
-      <button onclick="nextPage()">下一页</button>
+      <button onclick="nextPage()">新增一位</button>
       <button onclick="gotoSummary()">结算提交</button>
     </div>
 
@@ -141,6 +141,11 @@
       <button onclick="downloadSummaryPdf()">下载结算 PDF</button>
     </div>
   </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
     let currentPage = 0;
@@ -186,16 +191,23 @@
       }
     }
 
-    function prevPage() {
-      if (currentPage > 0) {
-        saveCurrentPageData();
-        currentPage--;
-        updatePage();
-      } else {
-        document.getElementById("mainInfo").classList.remove("hidden");
-        document.getElementById("formPages").classList.add("hidden");
-      }
-    }
+function prevPage() {
+  const summaryVisible = !document.getElementById("summaryPage").classList.contains("hidden");
+
+  if (summaryVisible) {
+    document.getElementById("summaryPage").classList.add("hidden");
+    document.getElementById("formPages").classList.remove("hidden");
+    updatePage(); // 回到最后一页数据
+  } else if (currentPage > 0) {
+    saveCurrentPageData();
+    currentPage--;
+    updatePage();
+  } else {
+    document.getElementById("mainInfo").classList.remove("hidden");
+    document.getElementById("formPages").classList.add("hidden");
+  }
+}
+
 
     function gotoSummary() {
       saveCurrentPageData();
@@ -276,7 +288,7 @@
         .catch(err => alert("提交失败：" + err.message));
     }
 
- function downloadSummaryPdf() {
+function downloadSummaryPdf() {
   const mainName = document.getElementById("mainName").value.trim();
   const phoneNumber = document.getElementById("phoneNumber").value.trim();
   const total = document.getElementById("totalAmount").textContent;
@@ -286,7 +298,9 @@
   pdfArea.style.color = "#000";
   pdfArea.style.padding = "1.5rem";
   pdfArea.style.fontFamily = "Arial, sans-serif";
-  pdfArea.style.width = "fit-content";
+  pdfArea.style.width = "800px";
+  pdfArea.style.position = "absolute";
+  pdfArea.style.top = "-9999px"; // ⬅️ 屏幕外不干扰视觉
 
   pdfArea.innerHTML = `
     <h2 style="color:#000;">太岁光明灯报名结算</h2>
@@ -295,24 +309,29 @@
     <p style="margin-top:1rem;"><strong>${total}</strong></p>
   `;
 
-  formData.forEach((entry, index) => {
-    if (!entry.name && !entry.zodiac) return;
-    const box = document.createElement("div");
-    box.style.borderTop = "1px solid #ccc";
-    box.style.marginTop = "1rem";
-    box.style.paddingTop = "0.5rem";
-    box.innerHTML = `
-      <p><strong>第 ${index + 1} 位</strong></p>
-      <p>姓名: ${entry.name}｜生肖: ${entry.zodiac}</p>
-      <p>太岁: ${entry.taiSui}｜纸金: ${entry.paperGold1}</p>
-      <p>光明灯: ${entry.light}｜纸金: ${entry.paperGold2}</p>
-      <p>长生禄位: ${entry.longevity}｜纸金: ${entry.paperGold3}</p>
-      <p>文昌帝君: ${entry.wisdom}｜纸金: ${entry.paperGold4}</p>
-      <p>十六罗汉: ${entry.arhat}｜纸金: ${entry.paperGold5}</p>
-      <p>安奉功德金: ${entry.donation}</p>
-    `;
-    pdfArea.appendChild(box);
-  });
+formData.forEach((entry, index) => {
+  const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
+  if (!hasContent) return; // ⬅️ 没填写内容的就跳过
+
+  const box = document.createElement("div");
+  box.style.borderTop = "1px solid #ccc";
+  box.style.marginTop = "1rem";
+  box.style.paddingTop = "0.5rem";
+  box.innerHTML = `
+    <p><strong>第 ${index + 1} 位</strong></p>
+    <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
+    <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
+    <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
+    <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
+    <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
+    <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
+    <p>安奉功德金: ${entry.donation || 0}</p>
+  `;
+  pdfArea.appendChild(box);
+});
+
+
+  document.body.appendChild(pdfArea); // ⬅️ 加入页面才能截图！
 
   html2canvas(pdfArea, {
     scale: 2,
@@ -324,11 +343,15 @@
     const ratio = pdfWidth / imgProps.width;
     const pdfHeight = imgProps.height * ratio + 10;
 
-    const pdf = new jspdf.jsPDF('p', 'mm', [pdfHeight, pdfWidth]);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', [pdfHeight, pdfWidth]);
     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight - 10);
     pdf.save('太岁光明灯_结算.pdf');
+
+    document.body.removeChild(pdfArea); // ⬅️ 清掉！
   });
 }
+
 
 
 
