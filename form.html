@@ -130,16 +130,24 @@
       <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
       <button onclick="prevPage()">上一页</button>
       <button onclick="nextPage()">新增一位</button>
-      <button onclick="gotoSummary()">结算提交</button>
+       <button onclick="gotoSummary()">结算提交</button>
     </div>
 
     <div id="summaryPage" class="hidden">
       <h3>结算</h3>
       <p id="totalAmount">赞助总金额: 0 元</p>
       <button onclick="prevPage()">返回上一页</button>
-      <button onclick="submitForm()">提交</button>
+      <button onclick="gotoPreview()">预览资料</button>
       <button onclick="downloadSummaryPdf()">下载结算 PDF</button>
     </div>
+<div id="previewPage" class="hidden">
+  <h3>资料预览</h3>
+  <div id="previewContent" style="text-align:left; font-size: 16px; margin-bottom: 10px;"></div>
+  
+  <button onclick="backToSummary()">⬅️ 返回结算</button>
+  <button onclick="submitForm()">✅ 确认送出</button>
+</div>
+
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -208,13 +216,57 @@ function prevPage() {
   }
 }
 
+function gotoPreview() {
+  saveCurrentPageData();
+  if (currentPage === 0) currentPage = 1; // ⬅️ 防止为空页
+  document.getElementById("summaryPage").classList.add("hidden");
+  document.getElementById("previewPage").classList.remove("hidden");
 
-    function gotoSummary() {
-      saveCurrentPageData();
-      document.getElementById("formPages").classList.add("hidden");
-      document.getElementById("summaryPage").classList.remove("hidden");
-      calculateTotal();
-    }
+  const previewBox = document.getElementById("previewContent");
+  const mainName = document.getElementById("mainName").value.trim();
+  const phoneNumber = document.getElementById("phoneNumber").value.trim();
+
+  let html = `<p><strong>主祈者：</strong>${mainName}</p>`;
+  html += `<p><strong>电话：</strong>${phoneNumber}</p>`;
+
+  formData.forEach((entry, index) => {
+    if (!entry.name && !entry.zodiac) return;
+    html += `
+      <hr/>
+      <p><strong>第 ${index + 1} 位</strong></p>
+      <p>姓名：${entry.name}｜生肖：${entry.zodiac}</p>
+      <p>太岁：${entry.taiSui}｜纸金：${entry.paperGold1}</p>
+      <p>光明灯：${entry.light}｜纸金：${entry.paperGold2}</p>
+      <p>长生禄位：${entry.longevity}｜纸金：${entry.paperGold3}</p>
+      <p>文昌帝君：${entry.wisdom}｜纸金：${entry.paperGold4}</p>
+      <p>十六罗汉：${entry.arhat}｜纸金：${entry.paperGold5}</p>
+      <p>安奉功德金：${entry.donation}</p>
+    `;
+  });
+
+  const total = formData.reduce((sum, entry) => sum + (
+    entry.paperGold1 + entry.paperGold2 + entry.paperGold3 + entry.paperGold4 + entry.paperGold5
+  ) * 3 + entry.donation, 0);
+  html += `<hr/><p><strong>赞助总金额：</strong> ${total} 元</p>`;
+
+  previewBox.innerHTML = html;
+}
+
+function gotoSummary() {
+  saveCurrentPageData(); // ⬅️ 没点下一页也可以写入 formData[0]
+  if (currentPage === 0) currentPage = 1; // 强制进入第 1 页数据块
+  document.getElementById("formPages").classList.add("hidden");
+  document.getElementById("previewPage").classList.add("hidden");
+  document.getElementById("summaryPage").classList.remove("hidden");
+  calculateTotal();
+}
+
+function backToSummary() {
+  document.getElementById("previewPage").classList.add("hidden");
+  document.getElementById("summaryPage").classList.remove("hidden");
+}
+
+   
 
     function saveCurrentPageData() {
       if (currentPage === 0) return;
@@ -283,6 +335,7 @@ function prevPage() {
         .then(response => response.json())
         .then(data => {
           if (data.success) alert("提交成功！");
+           resetForm(); // ✅ 添加这个调用
           else alert("提交失败：" + (data.error || "未知错误"));
         })
         .catch(err => alert("提交失败：" + err.message));
