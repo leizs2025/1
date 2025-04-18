@@ -125,7 +125,13 @@ function renderForm() {
   }
 }
 window.saveChanges = function () {
-  if (!selectedEntry) return alert("⚠️ 请先查出一笔资料再进行保存！");
+  const phoneInput = document.getElementById("phoneNumber").value.trim();
+  const mainName = document.getElementById("mainName").value.trim();
+
+  if (!mainName || !phoneInput) {
+    alert("主祈者姓名和电话都不能为空！");
+    return;
+  }
 
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
@@ -145,16 +151,16 @@ window.saveChanges = function () {
   }));
 
   const body = {
-    phoneNumber: selectedEntry.phoneNumber, // 用原始号码查找行
-    mainName: document.getElementById("mainName").value.trim(),
+    method: "PUT",
+    phoneNumber: selectedEntry?.phoneNumber || phoneInput, // 用查出来的作索引
+    mainName,
     data: updatedData,
     receiptNumber: document.getElementById("receiptNumber").value.trim(),
     receiptDate: document.getElementById("receiptDate").value.trim(),
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
     wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录",
-    method: "PUT"  // 明确告诉后端：更新操作
+    admin: localStorage.getItem("admin") || "未登录"
   };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
@@ -165,13 +171,14 @@ window.saveChanges = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("✅ 保存成功！");
+        alert("✅ 更新成功！");
         startNewEntry();
       } else {
-        alert("❌ 保存失败：" + result.message);
+        alert("❌ 更新失败：" + result.message);
       }
     });
 };
+
 
 
 function createRadioGroup(name, className, checkedVal) {
