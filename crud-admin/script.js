@@ -297,25 +297,7 @@ window.deleteEntry = function () {
     });
 };
 
-window.saveChanges = function () {
-  if (!selectedEntry) return alert("请先查询一笔资料后再保存！");
-  const body = { ...getFormData(), method: "PUT" };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 保存成功！");
-        startNewEntry();
-      } else {
-        alert("❌ 保存失败：" + result.message);
-      }
-    });
-};
 
 function getCurrentFormData() {
   const prayers = document.getElementById("prayersContainer").children;
