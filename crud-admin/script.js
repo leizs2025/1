@@ -244,7 +244,7 @@ window.forceInsertNewEntry = function () {
     return;
   }
 
-  const body = { ...getFormData(), method: "POST" };
+  const body = { ...getCurrentFormData(), method: "POST" };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
