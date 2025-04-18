@@ -61,6 +61,24 @@ window.searchPhone = function () {
       alert("查询失败：" + err.message);
     });
 };
+window.deleteEntry = function(phoneNumber) {
+  if (!confirm("确认删除该记录？")) return;
+
+  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ method: "DELETE", phoneNumber })
+  })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        alert("✅ 删除成功！");
+        startNewEntry();
+      } else {
+        alert("❌ 删除失败：" + result.message);
+      }
+    });
+};
 
 window.startNewEntry = function () {
   selectedEntry = null;
