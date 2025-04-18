@@ -233,36 +233,18 @@ function checkMin() {
 }
 
 
-function actuallySave() {
-  const prayers = document.getElementById("prayersContainer").children;
-  const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
-  }));
+window.forceInsertNewEntry = function () {
+  const newPhone = document.getElementById("phoneNumber").value.trim();
+  if (!newPhone) return alert("请填写电话号码！");
 
-  const body = {
-    method: selectedEntry ? "PUT" : "POST",
-    phoneNumber: document.getElementById("phoneNumber").value.trim(),
-    mainName: document.getElementById("mainName").value.trim(),
-    data: updatedData,
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录"
-  };
+  // 检查是否有重复
+  const exists = fullData.some(entry => entry.phoneNumber === newPhone);
+  if (exists) {
+    alert("❌ 该电话号码已存在，不能重复新增！");
+    return;
+  }
+
+  const body = { ...getFormData(), method: "POST" };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
@@ -272,14 +254,13 @@ function actuallySave() {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("✅ 保存成功！");
-        startNewEntry(); // 清空表单回到新增模式
+        alert("✅ 新增成功！");
+        startNewEntry();
       } else {
-        alert("❌ 保存失败：" + result.message);
+        alert("❌ 新增失败：" + result.message);
       }
     });
-}
-
+};
 
 window.deleteEntry = function () {
   if (!selectedEntry) {
@@ -317,39 +298,8 @@ window.deleteEntry = function () {
 };
 
 window.saveChanges = function () {
-  const prayers = document.getElementById("prayersContainer").children;
-  const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
-  }));
-
-  const phoneInput = document.getElementById("phoneNumber").value.trim();
-  const isPhoneModified = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
-  const method = selectedEntry && !isPhoneModified ? "PUT" : "POST";
-
-  const body = {
-    method,
-    phoneNumber: phoneInput,
-    mainName: document.getElementById("mainName").value.trim(),
-    data: updatedData,
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录"
-  };
+  if (!selectedEntry) return alert("请先查询一笔资料后再保存！");
+  const body = { ...getFormData(), method: "PUT" };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
@@ -359,10 +309,10 @@ window.saveChanges = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("保存成功！");
+        alert("✅ 保存成功！");
         startNewEntry();
       } else {
-        alert("保存失败：" + result.message);
+        alert("❌ 保存失败：" + result.message);
       }
     });
 };
@@ -408,14 +358,14 @@ function getCurrentFormData() {
     `;
 }
 window.printEntry = function () {
-  if (!selectedEntry) return alert("请先查出一笔资料");
+  const currentData = getCurrentFormData(); // 获取当前表单中填写的数据
 
   const win = window.open("form-print.html", "_blank");
 
   const interval = setInterval(() => {
     if (win && win.document.readyState === "complete") {
       clearInterval(interval);
-      win.postMessage(JSON.stringify(selectedEntry), "*");
+      win.postMessage(JSON.stringify(currentData), "*");
     }
   }, 100);
 };
