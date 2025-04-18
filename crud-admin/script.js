@@ -327,6 +327,43 @@ window.forceInsertNewEntry = function () {
     });
 };
 
+function updateTotalBox() {
+  const prayers = document.getElementById("prayersContainer").children;
+
+  const sum = {
+    pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0
+  };
+
+  Array.from(prayers).forEach(div => {
+    sum.pg1 += +div.querySelector(".pg1").value || 0;
+    sum.pg2 += +div.querySelector(".pg2").value || 0;
+    sum.pg3 += +div.querySelector(".pg3").value || 0;
+    sum.pg4 += +div.querySelector(".pg4").value || 0;
+    sum.pg5 += +div.querySelector(".pg5").value || 0;
+    sum.donation += +div.querySelector(".donate").value || 0;
+  });
+
+  const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+  const paperMoney = paperTotal * 3;
+  const total = paperMoney + sum.donation;
+
+  const totalBox = document.getElementById("totalBox");
+  totalBox.innerHTML = `
+    安奉功德金：RM ${sum.donation.toFixed(2)}<br/>
+    真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
+    总计：RM ${total.toFixed(2)}
+  `;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 function getCurrentFormData() {
