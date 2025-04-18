@@ -10,16 +10,19 @@
       font-family: 'Segoe UI', sans-serif;
       padding: 20px;
     }
+
     .title {
       text-align: center;
       color: #b30000;
       margin-bottom: 30px;
       text-shadow: 1px 1px #fff;
     }
+
     .result-box select {
       font-size: 16px;
       padding: 8px;
     }
+
     .card {
       background: #fff;
       border-radius: 10px;
@@ -27,35 +30,62 @@
       padding: 20px;
       margin-bottom: 15px;
     }
+
+    .card .row + .row {
+      margin-top: 15px;
+    }
+
     label {
       font-weight: 600;
     }
-    .form-control {
-      margin-bottom: 10px;
+
+    .form-control,
+    .btn {
+      height: 45px;
+      font-size: 16px;
     }
+
     .btn-primary {
       background: linear-gradient(145deg, #d0021b, #ff5e62);
       border: none;
     }
+
     .btn-primary:hover {
       background: #c00;
     }
+
     .hidden {
       display: none;
+    }
+
+    .admin-info {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: #666;
+      font-size: 14px;
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #fff;
     }
   </style>
 </head>
 <body>
   <!-- 当前管理员提示 -->
-  <div style="position: absolute; top: 10px; right: 20px; color: #666; font-size: 14px;">
-    当前管理员：<span id="whoLogin"></span>
+  <div class="admin-info">
+    👤 当前管理员：<span id="whoLogin"></span>
   </div>
+
   <h2 class="title">🙏 后台报名资料管理</h2>
 
-  <div class="mb-3 d-flex justify-content-center align-items-center">
-    <input type="text" id="searchInput" class="form-control w-50 me-2" placeholder="请输入手机号进行查找，例如：0146..." />
-    <button onclick="searchPhone()" class="btn btn-danger me-2">🔍 查询</button>
-    <button onclick="startNewEntry()" class="btn btn-success">➕ 新增资料</button>
+  <!-- 查询/新增 -->
+  <div class="mb-4 d-flex justify-content-center">
+    <div class="input-group" style="max-width: 700px;">
+      <input type="text" id="searchInput" class="form-control" placeholder="请输入手机号进行查找，例如：0146..." />
+      <button onclick="searchPhone()" class="btn btn-danger">🔍 查询</button>
+      <button onclick="startNewEntry()" class="btn btn-success">➕ 新增资料</button>
+    </div>
   </div>
 
   <div id="resultSelector" class="mb-3 result-box text-center"></div>
@@ -127,12 +157,13 @@
 
     <h5 class="mt-4">🧍‍♂️ 祈福者列表（最多15位）</h5>
     <div id="prayersContainer" class="mb-3"></div>
-    <div class="d-flex justify-content-end mb-2">
-  <button onclick="addPrayer()" class="btn btn-outline-primary btn-sm">➕ 新增下一位祈福者</button>
-</div>
-<div id="prayersContainer" class="mb-3"></div>
 
-    <div class="d-flex justify-content-center gap-3">
+    <div class="d-flex justify-content-end mb-3">
+      <button onclick="addPrayer()" class="btn btn-outline-primary btn-sm">➕ 新增下一位祈福者</button>
+    </div>
+
+    <div class="d-flex justify-content-center gap-4 mt-4">
+    <button onclick="forceInsertNewEntry()" class="btn btn-success">➕ 新增一笔</button>
       <button onclick="saveChanges()" class="btn btn-primary">💾 保存</button>
       <button onclick="deleteEntry()" class="btn btn-warning">🗑 删除</button>
       <button onclick="printEntry()" class="btn btn-secondary">🖨️ 打印</button>
