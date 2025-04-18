@@ -84,8 +84,9 @@
     <div class="input-group" style="max-width: 700px;">
       <input type="text" id="searchInput" class="form-control" placeholder="请输入手机号进行查找，例如：0146..." />
       <button onclick="searchPhone()" class="btn btn-danger">🔍 查询</button>
-      <button onclick="startNewEntry()" class="btn btn-success">➕ 新增资料</button>
+      <button onclick="startNewEntry()" class="btn btn-success">➕ 新表单</button>
     </div>
+    
   </div>
 
   <div id="resultSelector" class="mb-3 result-box text-center"></div>
@@ -163,11 +164,13 @@
     </div>
 
     <div class="d-flex justify-content-center gap-4 mt-4">
-    <button onclick="forceInsertNewEntry()" class="btn btn-success">➕ 新增一笔</button>
-      <button onclick="saveChanges()" class="btn btn-primary">💾 保存</button>
+    <button onclick="forceInsertNewEntry()" class="btn btn-success">➕ 新增保存</button>
+      <button onclick="saveChanges()" class="btn btn-primary">💾 更新保存</button>
       <button onclick="deleteEntry()" class="btn btn-warning">🗑 删除</button>
       <button onclick="printEntry()" class="btn btn-secondary">🖨️ 打印</button>
     </div>
+    <div id="totalBox" class="text-center mt-4 fs-5 fw-bold text-danger"></div>
+
   </div>
 
   <script src="script.js"></script>
