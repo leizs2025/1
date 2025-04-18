@@ -8,6 +8,37 @@
       size: A4;
       margin: 15mm;
     }
+.header-block {
+  display: flex;
+  align-items: center; /* 👈 垂直居中 */
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.header-block .logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.header-center h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #000;
+  line-height: 1.4;
+}
+
+.header-line {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
 
     body {
       font-family: "Segoe UI", sans-serif;
@@ -17,17 +48,30 @@
       width: 100%;
     }
 
+    .logo-center-wrap {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .logo-center-wrap img {
+      width: 120px;
+      height: auto;
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+
     h2 {
       text-align: center;
       color: #b30000;
       margin: 5px 0;
-      font-size: 24px;
+      font-size: 28px;
+      line-height: 1.4;
     }
 
-    .header {
+    .header-line {
       text-align: center;
       font-size: 13px;
-      line-height: 1.0;
+      line-height: 1.4;
       margin: 2px 0;
     }
 
@@ -72,20 +116,14 @@
       table-layout: fixed;
     }
 
-th, td {
-  border: 1px solid #000;
-  padding: 5px;
-  text-align: center;
-  word-break: break-word;
-  white-space: normal;
-  height: 30px; /* 👈 固定高度 */
-  vertical-align: middle; /* 👈 垂直置中，更美观 */
-}
-
-
-    th {
+    th, td {
+      border: 1px solid #000;
+      padding: 5px;
+      text-align: center;
+      word-break: break-word;
       white-space: normal;
-      font-weight: bold;
+      height: 30px;
+      vertical-align: middle;
     }
 
     .footer-wrap {
@@ -105,10 +143,8 @@ th, td {
     .blessing {
       font-size: 16px;
       font-weight: bold;
-       text-align: center;
+      text-align: center;
       line-height: 1.6;
-     
-}
     }
 
     .totals {
@@ -127,12 +163,23 @@ th, td {
   </style>
 </head>
 <body>
-  <h2>真佛宗诗巫妙理雷藏寺</h2>
-  <div class="header">Persatuan Miao Li Tang Sibu</div>
-  <div class="header">No.22N, Taman Damai, Off Brooke Drive 33,</div>
-  <div class="header">Jalan Tun Abang Haji Openg, 96000, Sibu, Sarawak, Malaysia.</div>
-  <div class="header">Tel: 6-084-342986 (妙理堂) / 013-980-4461 (妙理雷藏寺)</div>
-  <div class="header">Fax: 6-084-319961</div>
+
+  <div class="header-block">
+  <img src="left-logo.jpg" class="logo" alt="左 Logo">
+  
+  <div class="header-center">
+    <h2>真佛宗诗巫妙理雷藏寺</h2>
+    <div class="header-line">Persatuan Miao Li Tang Sibu</div>
+    <div class="header-line">No.22N, Taman Damai, Off Brooke Drive 33,</div>
+    <div class="header-line">Jalan Tun Abang Haji Openg, 96000, Sibu, Sarawak, Malaysia.</div>
+    <div class="header-line">Tel: 6-084-342986 (妙理堂) / 013-980-4461 (妙理雷藏寺)</div>
+    <div class="header-line">Fax: 6-084-319961</div>
+  </div>
+
+  <img src="right-logo.jpg" class="logo" alt="右 Logo">
+</div>
+
+
   <div class="taishui">2025 (乙巳) 年 当值太岁 吴遂</div>
 
   <div class="info">
@@ -160,74 +207,72 @@ th, td {
     </thead>
     <tbody id="prayerBody"></tbody>
   </table>
-<div class="footer-wrap">
-  <div class="blessing-box">
-    <div class="blessing">
-      师尊，佛菩萨加持灾厄化解，<br/>
-      逢兇化吉，万事都如意。
+
+  <div class="footer-wrap">
+    <div class="blessing-box">
+      <div class="blessing">
+        师尊，佛菩萨加持灾厄化解，<br/>
+        逢兇化吉，万事都如意。
+      </div>
     </div>
+    <div class="totals" id="totalBox"></div>
   </div>
-  <div class="totals" id="totalBox"></div>
-</div>
 
-<script>
-  window.addEventListener("message", function (event) {
-    let data;
-    try {
-      data = JSON.parse(event.data);
-    } catch {
-      alert("❌ 无效数据格式");
-      return;
-    }
+  <script>
+    window.addEventListener("message", function (event) {
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        alert("❌ 无效数据格式");
+        return;
+      }
 
-    // 基本信息
-    document.getElementById("mainName").textContent = data.mainName || "";
-    document.getElementById("phoneNumber").textContent = data.phoneNumber || "";
-    document.getElementById("receiptNumber").textContent = data.receiptNumber || "";
-    document.getElementById("receiptDate").textContent = data.receiptDate || "";
+      document.getElementById("mainName").textContent = data.mainName || "";
+      document.getElementById("phoneNumber").textContent = data.phoneNumber || "";
+      document.getElementById("receiptNumber").textContent = data.receiptNumber || "";
+      document.getElementById("receiptDate").textContent = data.receiptDate || "";
 
-    // 填表格
-    const tbody = document.getElementById("prayerBody");
-    tbody.innerHTML = "";
+      const tbody = document.getElementById("prayerBody");
+      tbody.innerHTML = "";
 
-    let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
+      let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
 
       for (let i = 0; i < 15; i++) {
-      const p = (data.data || [])[i] || {};
-      const num = val => parseFloat(val || 0);
-      const showCheck = val => val === "是" ? "✔" : "";
+        const p = (data.data || [])[i] || {};
+        const num = val => parseFloat(val || 0);
+        const showCheck = val => val === "是" ? "✔" : "";
 
-      sum.pg1 += num(p.paperGold1);
-      sum.pg2 += num(p.paperGold2);
-      sum.pg3 += num(p.paperGold3);
-      sum.pg4 += num(p.paperGold4);
-      sum.pg5 += num(p.paperGold5);
-      sum.donation += num(p.donation);
+        sum.pg1 += num(p.paperGold1);
+        sum.pg2 += num(p.paperGold2);
+        sum.pg3 += num(p.paperGold3);
+        sum.pg4 += num(p.paperGold4);
+        sum.pg5 += num(p.paperGold5);
+        sum.donation += num(p.donation);
 
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${p.name || ""}</td>
-        <td>${showCheck(p.taiSui)}</td><td>${p.paperGold1 || ""}</td>
-        <td>${showCheck(p.light)}</td><td>${p.paperGold2 || ""}</td>
-        <td>${showCheck(p.longevity)}</td><td>${p.paperGold3 || ""}</td>
-        <td>${showCheck(p.wisdom)}</td><td>${p.paperGold4 || ""}</td>
-        <td>${showCheck(p.arhat)}</td><td>${p.paperGold5 || ""}</td>
-        <td>${p.donation || ""}</td>
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.name || ""}</td>
+          <td>${showCheck(p.taiSui)}</td><td>${p.paperGold1 || ""}</td>
+          <td>${showCheck(p.light)}</td><td>${p.paperGold2 || ""}</td>
+          <td>${showCheck(p.longevity)}</td><td>${p.paperGold3 || ""}</td>
+          <td>${showCheck(p.wisdom)}</td><td>${p.paperGold4 || ""}</td>
+          <td>${showCheck(p.arhat)}</td><td>${p.paperGold5 || ""}</td>
+          <td>${p.donation || ""}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+      const paperMoney = paperTotal * 3;
+      const total = paperMoney + sum.donation;
+
+      document.getElementById("totalBox").innerHTML = `
+        <div>安奉功德金：RM ${sum.donation.toFixed(2)}</div>
+        <div>真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</div>
+        <div>总计：RM ${total.toFixed(2)}</div>
       `;
-      tbody.appendChild(row);
-    }
-
-    // 合计区域
-    const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
-    const paperMoney = paperTotal * 3;
-    const total = paperMoney + sum.donation;
-
-    document.getElementById("totalBox").innerHTML = `
-      <div>安奉功德金：RM ${sum.donation.toFixed(2)}</div>
-      <div>真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</div>
-      <div>总计：RM ${total.toFixed(2)}</div>
-    `;
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
