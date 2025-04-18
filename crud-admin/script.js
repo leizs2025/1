@@ -125,6 +125,8 @@ function renderForm() {
   }
 }
 window.saveChanges = function () {
+  if (!selectedEntry) return alert("⚠️ 请先查出一笔资料再进行保存！");
+
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
     name: div.querySelector(".pName").value,
@@ -142,13 +144,8 @@ window.saveChanges = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
-  const phoneInput = document.getElementById("phoneNumber").value.trim();
-  const isPhoneModified = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
-  const method = selectedEntry && !isPhoneModified ? "PUT" : "POST";
-
   const body = {
-    method,
-    phoneNumber: phoneInput,
+    phoneNumber: selectedEntry.phoneNumber, // 用原始号码查找行
     mainName: document.getElementById("mainName").value.trim(),
     data: updatedData,
     receiptNumber: document.getElementById("receiptNumber").value.trim(),
@@ -156,7 +153,8 @@ window.saveChanges = function () {
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
     wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录"
+    admin: localStorage.getItem("admin") || "未登录",
+    method: "PUT"  // 明确告诉后端：更新操作
   };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
@@ -167,10 +165,10 @@ window.saveChanges = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("保存成功！");
+        alert("✅ 保存成功！");
         startNewEntry();
       } else {
-        alert("保存失败：" + result.message);
+        alert("❌ 保存失败：" + result.message);
       }
     });
 };
@@ -237,14 +235,41 @@ window.forceInsertNewEntry = function () {
   const newPhone = document.getElementById("phoneNumber").value.trim();
   if (!newPhone) return alert("请填写电话号码！");
 
-  // 检查是否有重复
   const exists = fullData.some(entry => entry.phoneNumber === newPhone);
   if (exists) {
     alert("❌ 该电话号码已存在，不能重复新增！");
     return;
   }
 
-  const body = { ...getCurrentFormData(), method: "POST" };
+  const prayers = document.getElementById("prayersContainer").children;
+  const updatedData = Array.from(prayers).map(div => ({
+    name: div.querySelector(".pName").value,
+    zodiac: div.querySelector(".pZodiac").value,
+    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+    light: div.querySelector('input.pLight:checked')?.value || "",
+    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+    arhat: div.querySelector('input.pArhat:checked')?.value || "",
+    paperGold1: +div.querySelector(".pg1").value || 0,
+    paperGold2: +div.querySelector(".pg2").value || 0,
+    paperGold3: +div.querySelector(".pg3").value || 0,
+    paperGold4: +div.querySelector(".pg4").value || 0,
+    paperGold5: +div.querySelector(".pg5").value || 0,
+    donation: +div.querySelector(".donate").value || 0
+  }));
+
+  const body = {
+    phoneNumber: newPhone,
+    mainName: document.getElementById("mainName").value.trim(),
+    data: updatedData,
+    receiptNumber: document.getElementById("receiptNumber").value.trim(),
+    receiptDate: document.getElementById("receiptDate").value.trim(),
+    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
+    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
+    wishPaper: document.getElementById("wishPaper").value.trim(),
+    admin: localStorage.getItem("admin") || "未登录",
+    method: "POST"  // 明确告诉后端：新增操作
+  };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
@@ -259,41 +284,6 @@ window.forceInsertNewEntry = function () {
       } else {
         alert("❌ 新增失败：" + result.message);
       }
-    });
-};
-
-window.deleteEntry = function () {
-  if (!selectedEntry) {
-    alert("⚠️ 请先查询一笔资料再删除！");
-    return;
-  }
-
-  const confirmed = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
-  if (!confirmed) return;
-
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      method: "DELETE",
-      phoneNumber: selectedEntry.phoneNumber
-    })
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 删除成功！");
-        // 清除界面
-        selectedEntry = null;
-        document.getElementById("adminForm").classList.add("hidden");
-        document.getElementById("searchInput").value = "";
-        document.getElementById("resultSelector").innerHTML = "";
-      } else {
-        alert("❌ 删除失败：" + result.message);
-      }
-    })
-    .catch(err => {
-      alert("❌ 删除请求出错：" + err.message);
     });
 };
 
