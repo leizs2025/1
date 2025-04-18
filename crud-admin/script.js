@@ -61,25 +61,37 @@ window.searchPhone = function () {
       alert("查询失败：" + err.message);
     });
 };
-window.deleteEntry = function(phoneNumber) {
-const phoneNumber = document.getElementById("phoneNumber").value.trim();
-console.log("当前要删除的手机号：", phoneNumber); // 👈 调试输出
+window.deleteEntry = function () {
+  if (!selectedEntry) {
+    alert("⚠️ 请先查询一笔资料再删除！");
+    return;
+  }
 
-  if (!confirm("确认删除该记录？")) return;
+  const confirmDelete = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
+  if (!confirmDelete) return;
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ method: "DELETE", phoneNumber })
+    body: JSON.stringify({
+      method: "DELETE",
+      phoneNumber: selectedEntry.phoneNumber
+    })
   })
     .then(res => res.json())
     .then(result => {
       if (result.success) {
         alert("✅ 删除成功！");
-        startNewEntry();
+        document.getElementById("adminForm").classList.add("hidden");
+        document.getElementById("searchInput").value = "";
+        document.getElementById("resultSelector").innerHTML = "";
+        selectedEntry = null;
       } else {
         alert("❌ 删除失败：" + result.message);
       }
+    })
+    .catch(err => {
+      alert("❌ 删除出错：" + err.message);
     });
 };
 
