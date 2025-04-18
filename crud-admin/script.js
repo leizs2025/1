@@ -62,6 +62,9 @@ window.searchPhone = function () {
     });
 };
 window.deleteEntry = function(phoneNumber) {
+const phoneNumber = document.getElementById("phoneNumber").value.trim();
+console.log("当前要删除的手机号：", phoneNumber); // 👈 调试输出
+
   if (!confirm("确认删除该记录？")) return;
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
