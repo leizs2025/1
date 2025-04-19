@@ -44,7 +44,7 @@
       font-family: "Segoe UI", sans-serif;
       margin: auto;
       color: #000;
-      max-width: 750px;
+      max-width: 720px;
       width: 100%;
     }
 
@@ -108,23 +108,31 @@
       cursor: pointer;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 13px;
-      table-layout: fixed;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 12px; /* 👈 字体瘦 */
+  table-layout: fixed;
+}
 
-    th, td {
-      border: 1px solid #000;
-      padding: 5px;
-      text-align: center;
-      word-break: break-word;
-      white-space: normal;
-      height: 30px;
-      vertical-align: middle;
-    }
+
+th, td {
+  border: 1px solid #000;
+  padding: 3px 4px; /* 👈 缩边距 */
+  text-align: center;
+  word-break: break-word;
+  white-space: nowrap; /* 👈 不换行 */
+  height: 28px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
 
     .footer-wrap {
       display: flex;
