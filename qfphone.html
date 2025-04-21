@@ -6,23 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <style>
-    body { background-color: #fff8e7; padding-top: 80px; font-family: "Segoe UI", sans-serif; }
-    .btn-group-mobile { display: flex; flex-direction: column; gap: 10px; }
-    @media (min-width: 768px) {
-      .btn-group-mobile { flex-direction: row; justify-content: center; }
-    }
+    body { background-color: #fff8e7; padding: 1rem; font-family: "Segoe UI", sans-serif; }
     #loginBox {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #fff8e7;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #fff8e7; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 9999;
     }
-    .card-label { font-weight: bold; color: #555; font-size: 14px; margin-top: 6px; }
+    .card-header { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -32,10 +22,10 @@
     <button onclick="checkLogin()" class="btn btn-primary">登录</button>
   </div>
 
-  <nav class="navbar fixed-top bg-light shadow-sm px-3">
+  <nav class="navbar sticky-top bg-light shadow-sm px-3 mb-3">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-      <span class="navbar-brand">🙏 祈福后台（手机端）</span>
-      <span class="text-end">
+      <span class="navbar-brand">🙏 手机祈福后台</span>
+      <span>
         管理员：<span id="whoLogin" class="fw-bold text-primary"></span>
         <button onclick="logout()" class="btn btn-sm btn-outline-danger ms-2">登出</button>
       </span>
@@ -43,23 +33,63 @@
   </nav>
 
   <div class="container">
-    <div class="mb-3">
-      <div class="input-group">
-        <input type="text" id="searchInput" class="form-control" placeholder="输入手机号查询...">
-        <button onclick="searchPhone()" class="btn btn-primary">查询</button>
-      </div>
+    <div class="input-group mb-3">
+      <input id="searchInput" class="form-control" placeholder="输入手机号">
+      <button onclick="searchPhone()" class="btn btn-primary">查询</button>
     </div>
 
     <div id="resultSelector" class="mb-3"></div>
-    <div id="adminForm" class="d-none"></div>
+
+    <div id="adminForm" class="d-none">
+      <div class="mb-3 row">
+        <div class="col">
+          <label>表格填写者</label>
+          <input id="mainName" class="form-control">
+        </div>
+        <div class="col">
+          <label>手机号</label>
+          <input id="phoneNumber" class="form-control">
+        </div>
+      </div>
+
+      <div class="mb-3 row">
+        <div class="col">
+          <label>法会类别</label>
+          <select id="dharmaType" class="form-select">
+            <option value="清明节">清明节</option>
+            <option value="中元节">中元节</option>
+            <option value="红财神">红财神</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>收据编号</label>
+          <input id="receiptNumber" class="form-control">
+        </div>
+        <div class="col">
+          <label>收款日期</label>
+          <input id="receiptDate" type="date" class="form-control">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>祈福报名供养金</label>
+        <input id="sponsorAmount" type="number" min="0" class="form-control" oninput="updateDonationBreakdown()">
+      </div>
+
+      <div id="prayersContainer" class="mb-3"></div>
+      <button onclick="addPrayer()" class="btn btn-outline-primary mb-3">➕ 新增祈福者</button>
+
+      <div id="donationBreakdown" class="mb-3"></div>
+
+      <div class="d-grid gap-2">
+        <button onclick="forceInsertNewEntry()" class="btn btn-success">新增保存</button>
+        <button onclick="saveChanges()" class="btn btn-primary">更新保存</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    const users = {
-      "pw123": "amy",
-      "pw456": "ben",
-      "qifu2024": "李师兄"
-    };
+    const users = { "pw123": "amy", "pw456": "ben", "qifu2024": "李师兄" };
 
     function checkLogin() {
       const p = document.getElementById("loginPass").value.trim();
@@ -85,58 +115,178 @@
       document.getElementById("adminForm").classList.remove("d-none");
     }
 
-    async function searchPhone() {
+    let selectedEntry = null;
+
+    function searchPhone() {
       const keyword = document.getElementById("searchInput").value.trim();
-      if (!keyword) return alert("⚠️ 请输入手机号");
+      if (!keyword) return alert("请输入手机号");
+      fetch(`https://form.gealarm2012.workers.dev/admin-qifu?search=${encodeURIComponent(keyword)}`)
+        .then(res => res.json())
+        .then(data => {
+          const info = Array.isArray(data) ? data[0] : data;
+          info.prayers = info.data || [];
+          selectedEntry = info;
+          renderForm(info);
+        });
+    }
 
-      const res = await fetch("https://form.gealarm2012.workers.dev/admin-qifu?search=" + encodeURIComponent(keyword));
-      const list = await res.json();
-      const data = Array.isArray(list) ? list[0] : list;
-      const prayers = data.data || data.prayers || [];
+    function renderForm(entry) {
+      const form = document.getElementById("adminForm");
+      form.classList.remove("d-none");
 
-      if (!Array.isArray(prayers)) return alert("⚠️ 查无数据");
+      document.getElementById("mainName").value = entry.mainName || "";
+      document.getElementById("phoneNumber").value = entry.phoneNumber || "";
+      document.getElementById("dharmaType").value = entry.dharmaType || "";
+      document.getElementById("receiptNumber").value = entry.receiptNumber || "";
+      document.getElementById("receiptDate").value = padDate(entry.receiptDate);
+      document.getElementById("sponsorAmount").value = entry.sponsorAmount || "";
 
-      data.prayers = prayers;
-      renderForm(data);
+      const container = document.getElementById("prayersContainer");
+      container.innerHTML = "";
+
+      (entry.prayers || []).forEach((p, i) => {
+        const isEmpty = !p.name?.trim() && !+p.token && !+p.fire && !+p.pg3 && !+p.pg6;
+        if (!isEmpty) container.appendChild(createPrayerBlock(p, i + 1));
+      });
+
+      if (!container.children.length) container.appendChild(createPrayerBlock({}, 1));
+
+      updateDonationBreakdown();
     }
 
     function padDate(input) {
       if (!input) return "";
       const d = new Date(input);
-      if (isNaN(d)) return "";
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     }
 
-    function renderForm(entry) {
-      const container = document.getElementById("adminForm");
-      container.classList.remove("d-none");
-      container.innerHTML = `
-        <div class="card p-3">
-          <h5>📌 祈福资料</h5>
-          <div class="card-label">表格填写者</div><div>${entry.mainName || "-"}</div>
-          <div class="card-label">手机号</div><div>${entry.phoneNumber || "-"}</div>
-          <div class="card-label">法会类别</div><div>${entry.dharmaType || "-"}</div>
-          <div class="card-label">收据编号</div><div>${entry.receiptNumber || "—"}</div>
-          <div class="card-label">收款日期</div><div>${padDate(entry.receiptDate)}</div>
-          <div class="card-label">供养金</div><div>RM ${(+entry.sponsorAmount || 0).toFixed(2)}</div>
-          <div class="card-label">收款人</div><div>${entry.admin || "—"}</div>
+    function addPrayer() {
+      const n = document.getElementById("prayersContainer").children.length + 1;
+      document.getElementById("prayersContainer").appendChild(createPrayerBlock({}, n));
+    }
+
+function createPrayerBlock(p = {}, index = 1) {
+  const d = document.createElement("div");
+  d.className = "card p-3 mb-3";
+  d.innerHTML = `
+    <div class="card-header">第 ${index} 位祈福者</div>
+    <div class="row g-2 mt-1">
+      <div class="col-6">
+        <label>姓名</label>
+        <input class="form-control name" value="${p.name || ""}">
+      </div>
+      <div class="col-6">
+        <label>地址</label>
+        <input class="form-control address" value="${p.address || ""}">
+      </div>
+    </div>
+    <div class="row g-2 mt-1">
+      <div class="col">
+        <label>祈福令牌</label>
+        <input class="form-control token" type="number" value="${+p.token || ""}" oninput="updateDonationBreakdown()">
+      </div>
+      <div class="col">
+        <label>小护摩片</label>
+        <input class="form-control fire" type="number" value="${+p.fire || ""}" oninput="updateDonationBreakdown()">
+      </div>
+      <div class="col">
+        <label>纸金 3</label>
+        <input class="form-control pg3" type="number" value="${+p.pg3 || ""}" oninput="updateDonationBreakdown()">
+      </div>
+      <div class="col">
+        <label>纸金 6</label>
+        <input class="form-control pg6" type="number" value="${+p.pg6 || ""}" oninput="updateDonationBreakdown()">
+      </div>
+    </div>
+  `;
+  return d;
+}
+
+    function getCurrentFormData() {
+      const prayers = [];
+      document.querySelectorAll("#prayersContainer .card").forEach(card => {
+        prayers.push({
+          name: card.querySelector(".name").value,
+          address: card.querySelector(".address").value,
+          token: +card.querySelector(".token").value || 0,
+          fire: +card.querySelector(".fire").value || 0,
+          pg3: +card.querySelector(".pg3").value || 0,
+          pg6: +card.querySelector(".pg6").value || 0,
+        });
+      });
+
+      return {
+        mainName: document.getElementById("mainName").value.trim(),
+        phoneNumber: document.getElementById("phoneNumber").value.trim(),
+        dharmaType: document.getElementById("dharmaType").value,
+        receiptNumber: document.getElementById("receiptNumber").value,
+        receiptDate: document.getElementById("receiptDate").value,
+        sponsorAmount: +document.getElementById("sponsorAmount").value || 0,
+        data: prayers
+      };
+    }
+
+    function updateDonationBreakdown() {
+      const ps = document.querySelectorAll("#prayersContainer .card");
+      let token = 0, fire = 0, pg3 = 0, pg6 = 0;
+
+      ps.forEach(p => {
+        token += +p.querySelector(".token").value || 0;
+        fire  += +p.querySelector(".fire").value || 0;
+        pg3   += +p.querySelector(".pg3").value || 0;
+        pg6   += +p.querySelector(".pg6").value || 0;
+      });
+
+      const sponsor = +document.getElementById("sponsorAmount").value || 0;
+      const html = `
+        <div class="text-end">
+          祈福令牌：5×${token} = RM${(token*5).toFixed(2)}<br>
+          小护摩片：1×${fire} = RM${fire.toFixed(2)}<br>
+          纸金3：3×${pg3} = RM${(pg3*3).toFixed(2)}<br>
+          纸金6：6×${pg6} = RM${(pg6*6).toFixed(2)}<br>
+          随喜：RM${sponsor.toFixed(2)}<br>
+          <strong>总计：RM ${(token*5 + fire + pg3*3 + pg6*6 + sponsor).toFixed(2)}</strong>
         </div>
-        <h6 class="mt-4">🧍‍♂️ 祈福者</h6>
-        ${entry.prayers.map((p, i) => {
-          const isEmpty = !p.name?.trim();
-          if (isEmpty) return "";
-          return `
-            <div class="border p-2 rounded mb-2">
-              <div><strong>${i + 1}. ${p.name}</strong></div>
-              <div class="small text-muted">🏠 ${p.address || ""}</div>
-              <div class="small">令牌: ${p.token || 0}，小护摩片: ${p.fire || 0}，纸金3: ${p.pg3 || 0}，纸金6: ${p.pg6 || 0}</div>
-            </div>
-          `;
-        }).join("")}
       `;
+      document.getElementById("donationBreakdown").innerHTML = html;
+      window.currentTotalAmount = token*5 + fire + pg3*3 + pg6*6 + sponsor;
+    }
+
+    function forceInsertNewEntry() {
+      const d = getCurrentFormData();
+      if (!d.mainName || !d.phoneNumber) return alert("主祈者和手机号必填");
+      d.method = "POST";
+      d.total = window.currentTotalAmount || 0;
+      d.admin = localStorage.getItem("admin") || "";
+
+      fetch("https://form.gealarm2012.workers.dev/admin-qifu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(d)
+      })
+        .then(r => r.json())
+        .then(r => {
+          if (r.success) alert("✅ 新增成功");
+          else alert("❌ 新增失败：" + r.message);
+        });
+    }
+
+    function saveChanges() {
+      const d = getCurrentFormData();
+      d.method = "PUT";
+      d.total = window.currentTotalAmount || 0;
+      d.admin = localStorage.getItem("admin") || "";
+
+      fetch("https://form.gealarm2012.workers.dev/admin-qifu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(d)
+      })
+        .then(r => r.json())
+        .then(r => {
+          if (r.success) alert("✅ 更新成功");
+          else alert("❌ 更新失败：" + r.message);
+        });
     }
   </script>
 </body>
