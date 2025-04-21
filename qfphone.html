@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>📱 手机端祈福后台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background-color: #fff8e7; padding-top: 80px; font-family: "Segoe UI", sans-serif; }
+    .btn-group-mobile { display: flex; flex-direction: column; gap: 10px; }
+    @media (min-width: 768px) {
+      .btn-group-mobile { flex-direction: row; justify-content: center; }
+    }
+    #loginBox {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #fff8e7;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .card-label { font-weight: bold; color: #555; font-size: 14px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div id="loginBox">
+    <h4 class="mb-3">请输入管理员密码</h4>
+    <input id="loginPass" placeholder="密码" class="form-control mb-2" type="password" style="max-width:300px;">
+    <button onclick="checkLogin()" class="btn btn-primary">登录</button>
+  </div>
+
+  <nav class="navbar fixed-top bg-light shadow-sm px-3">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <span class="navbar-brand">🙏 祈福后台（手机端）</span>
+      <span class="text-end">
+        管理员：<span id="whoLogin" class="fw-bold text-primary"></span>
+        <button onclick="logout()" class="btn btn-sm btn-outline-danger ms-2">登出</button>
+      </span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="mb-3">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="输入手机号查询...">
+        <button onclick="searchPhone()" class="btn btn-primary">查询</button>
+      </div>
+    </div>
+
+    <div id="resultSelector" class="mb-3"></div>
+    <div id="adminForm" class="d-none"></div>
+  </div>
+
+  <script>
+    const users = {
+      "pw123": "amy",
+      "pw456": "ben",
+      "qifu2024": "李师兄"
+    };
+
+    function checkLogin() {
+      const p = document.getElementById("loginPass").value.trim();
+      if (users[p]) {
+        const u = users[p];
+        localStorage.setItem("admin", u);
+        document.getElementById("whoLogin").textContent = u;
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminForm").classList.remove("d-none");
+      } else {
+        alert("密码错误");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("admin");
+      location.reload();
+    }
+
+    if (localStorage.getItem("admin")) {
+      document.getElementById("whoLogin").textContent = localStorage.getItem("admin");
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("adminForm").classList.remove("d-none");
+    }
+
+    async function searchPhone() {
+      const keyword = document.getElementById("searchInput").value.trim();
+      if (!keyword) return alert("⚠️ 请输入手机号");
+
+      const res = await fetch("https://form.gealarm2012.workers.dev/admin-qifu?search=" + encodeURIComponent(keyword));
+      const list = await res.json();
+      const data = Array.isArray(list) ? list[0] : list;
+      const prayers = data.data || data.prayers || [];
+
+      if (!Array.isArray(prayers)) return alert("⚠️ 查无数据");
+
+      data.prayers = prayers;
+      renderForm(data);
+    }
+
+    function padDate(input) {
+      if (!input) return "";
+      const d = new Date(input);
+      if (isNaN(d)) return "";
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function renderForm(entry) {
+      const container = document.getElementById("adminForm");
+      container.classList.remove("d-none");
+      container.innerHTML = `
+        <div class="card p-3">
+          <h5>📌 祈福资料</h5>
+          <div class="card-label">表格填写者</div><div>${entry.mainName || "-"}</div>
+          <div class="card-label">手机号</div><div>${entry.phoneNumber || "-"}</div>
+          <div class="card-label">法会类别</div><div>${entry.dharmaType || "-"}</div>
+          <div class="card-label">收据编号</div><div>${entry.receiptNumber || "—"}</div>
+          <div class="card-label">收款日期</div><div>${padDate(entry.receiptDate)}</div>
+          <div class="card-label">供养金</div><div>RM ${(+entry.sponsorAmount || 0).toFixed(2)}</div>
+          <div class="card-label">收款人</div><div>${entry.admin || "—"}</div>
+        </div>
+        <h6 class="mt-4">🧍‍♂️ 祈福者</h6>
+        ${entry.prayers.map((p, i) => {
+          const isEmpty = !p.name?.trim();
+          if (isEmpty) return "";
+          return `
+            <div class="border p-2 rounded mb-2">
+              <div><strong>${i + 1}. ${p.name}</strong></div>
+              <div class="small text-muted">🏠 ${p.address || ""}</div>
+              <div class="small">令牌: ${p.token || 0}，小护摩片: ${p.fire || 0}，纸金3: ${p.pg3 || 0}，纸金6: ${p.pg6 || 0}</div>
+            </div>
+          `;
+        }).join("")}
+      `;
+    }
+  </script>
+</body>
+</html>
