@@ -89,7 +89,7 @@
   </div>
 
   <script>
-    const users = { "pw123": "amy", "pw456": "ben", "qifu2024": "李师兄" };
+    const users = { "123456": "雷藏寺", "654321": "妙理堂", "qifu2024": "超级管理员" };
 
     function checkLogin() {
       const p = document.getElementById("loginPass").value.trim();
@@ -117,18 +117,46 @@
 
     let selectedEntry = null;
 
-    function searchPhone() {
-      const keyword = document.getElementById("searchInput").value.trim();
-      if (!keyword) return alert("请输入手机号");
-      fetch(`https://form.gealarm2012.workers.dev/admin-qifu?search=${encodeURIComponent(keyword)}`)
-        .then(res => res.json())
-        .then(data => {
-          const info = Array.isArray(data) ? data[0] : data;
-          info.prayers = info.data || [];
-          selectedEntry = info;
-          renderForm(info);
+function searchPhone() {
+  const keyword = document.getElementById("searchInput").value.trim();
+  if (!keyword) return alert("请输入手机号");
+
+  fetch(`https://form.gealarm2012.workers.dev/admin-qifu?search=${encodeURIComponent(keyword)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (!Array.isArray(data) || data.length === 0) {
+        alert("未找到相关资料");
+        return;
+      }
+
+      const selector = document.getElementById("resultSelector");
+      selector.innerHTML = "";
+
+      if (data.length === 1) {
+        selectedEntry = data[0];
+        selectedEntry.prayers = selectedEntry.data || [];
+        renderForm(selectedEntry);
+      } else {
+        const select = document.createElement("select");
+        select.className = "form-select mb-2";
+        select.innerHTML = `<option selected disabled>共找到 ${data.length} 条，请选择</option>`;
+        data.forEach((entry, idx) => {
+          const opt = document.createElement("option");
+          opt.value = idx;
+          opt.textContent = `${entry.phoneNumber} - ${entry.mainName}`;
+          select.appendChild(opt);
         });
-    }
+        select.onchange = () => {
+          const i = +select.value;
+          selectedEntry = data[i];
+          selectedEntry.prayers = selectedEntry.data || [];
+          renderForm(selectedEntry);
+        };
+        selector.appendChild(select);
+      }
+    })
+    .catch(err => alert("查询失败：" + err.message));
+}
 
     function renderForm(entry) {
       const form = document.getElementById("adminForm");
@@ -165,42 +193,42 @@
       document.getElementById("prayersContainer").appendChild(createPrayerBlock({}, n));
     }
 
-function createPrayerBlock(p = {}, index = 1) {
-  const d = document.createElement("div");
-  d.className = "card p-3 mb-3";
-  d.innerHTML = `
-    <div class="card-header">第 ${index} 位祈福者</div>
-    <div class="row g-2 mt-1">
-      <div class="col-6">
-        <label>姓名</label>
-        <input class="form-control name" value="${p.name || ""}">
-      </div>
-      <div class="col-6">
-        <label>地址</label>
-        <input class="form-control address" value="${p.address || ""}">
-      </div>
-    </div>
-    <div class="row g-2 mt-1">
-      <div class="col">
-        <label>祈福令牌</label>
-        <input class="form-control token" type="number" value="${+p.token || ""}" oninput="updateDonationBreakdown()">
-      </div>
-      <div class="col">
-        <label>小护摩片</label>
-        <input class="form-control fire" type="number" value="${+p.fire || ""}" oninput="updateDonationBreakdown()">
-      </div>
-      <div class="col">
-        <label>纸金 3</label>
-        <input class="form-control pg3" type="number" value="${+p.pg3 || ""}" oninput="updateDonationBreakdown()">
-      </div>
-      <div class="col">
-        <label>纸金 6</label>
-        <input class="form-control pg6" type="number" value="${+p.pg6 || ""}" oninput="updateDonationBreakdown()">
-      </div>
-    </div>
-  `;
-  return d;
-}
+    function createPrayerBlock(p = {}, index = 1) {
+      const d = document.createElement("div");
+      d.className = "card p-3 mb-3";
+      d.innerHTML = `
+        <div class="card-header">第 ${index} 位祈福者</div>
+        <div class="row g-2 mt-1">
+          <div class="col-6">
+            <label>姓名</label>
+            <input class="form-control name" value="${p.name || ""}">
+          </div>
+          <div class="col-6">
+            <label>地址</label>
+            <input class="form-control address" value="${p.address || ""}">
+          </div>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col">
+            <label>祈福令牌</label>
+            <input class="form-control token" type="number" value="${+p.token || ""}" oninput="updateDonationBreakdown()">
+          </div>
+          <div class="col">
+            <label>小护摩片</label>
+            <input class="form-control fire" type="number" value="${+p.fire || ""}" oninput="updateDonationBreakdown()">
+          </div>
+          <div class="col">
+            <label>纸金 3</label>
+            <input class="form-control pg3" type="number" value="${+p.pg3 || ""}" oninput="updateDonationBreakdown()">
+          </div>
+          <div class="col">
+            <label>纸金 6</label>
+            <input class="form-control pg6" type="number" value="${+p.pg6 || ""}" oninput="updateDonationBreakdown()">
+          </div>
+        </div>
+      `;
+      return d;
+    }
 
     function getCurrentFormData() {
       const prayers = [];
@@ -211,7 +239,7 @@ function createPrayerBlock(p = {}, index = 1) {
           token: +card.querySelector(".token").value || 0,
           fire: +card.querySelector(".fire").value || 0,
           pg3: +card.querySelector(".pg3").value || 0,
-          pg6: +card.querySelector(".pg6").value || 0,
+          pg6: +card.querySelector(".pg6").value || 0
         });
       });
 
@@ -224,6 +252,20 @@ function createPrayerBlock(p = {}, index = 1) {
         sponsorAmount: +document.getElementById("sponsorAmount").value || 0,
         data: prayers
       };
+    }
+
+    function renderNewForm() {
+      document.getElementById("mainName").value = "";
+      document.getElementById("phoneNumber").value = "";
+      document.getElementById("dharmaType").value = "清明节";
+      document.getElementById("receiptNumber").value = "";
+      document.getElementById("receiptDate").value = "";
+      document.getElementById("sponsorAmount").value = "";
+
+      const container = document.getElementById("prayersContainer");
+      container.innerHTML = "";
+      container.appendChild(createPrayerBlock({}, 1));
+      updateDonationBreakdown();
     }
 
     function updateDonationBreakdown() {
@@ -246,8 +288,7 @@ function createPrayerBlock(p = {}, index = 1) {
           纸金6：6×${pg6} = RM${(pg6*6).toFixed(2)}<br>
           随喜：RM${sponsor.toFixed(2)}<br>
           <strong>总计：RM ${(token*5 + fire + pg3*3 + pg6*6 + sponsor).toFixed(2)}</strong>
-        </div>
-      `;
+        </div>`;
       document.getElementById("donationBreakdown").innerHTML = html;
       window.currentTotalAmount = token*5 + fire + pg3*3 + pg6*6 + sponsor;
     }
@@ -268,6 +309,7 @@ function createPrayerBlock(p = {}, index = 1) {
         .then(r => {
           if (r.success) alert("✅ 新增成功");
           else alert("❌ 新增失败：" + r.message);
+          renderNewForm();
         });
     }
 
@@ -286,6 +328,7 @@ function createPrayerBlock(p = {}, index = 1) {
         .then(r => {
           if (r.success) alert("✅ 更新成功");
           else alert("❌ 更新失败：" + r.message);
+          renderNewForm();
         });
     }
   </script>
