@@ -246,31 +246,33 @@
     }
 
     // ✅ 金额区渲染
-    document.getElementById("totalBox").innerHTML = `
-      <div style="
-        font-size: 0.9rem;
-        max-width: 100%;
-        padding: 10px 12px;
-        border: 1px dashed #aaa;
-        border-radius: 6px;
-        background: #fdfdfd;
-        box-sizing: border-box;
-      ">
-        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-          <div>真佛十四宝金：3.00 x ${paperTotal} 份</div>
-          ${formatAmount(paperMoney)}
-        </div>
-        <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">（含还愿纸金）</div>
-        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-          <div>安奉功德金：</div>
-          ${formatAmount(sum.donation)}
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-          <div><strong>总计：</strong></div>
-          <strong>${formatAmount(total)}</strong>
-        </div>
-      </div>
-    `;
+document.getElementById("totalBox").innerHTML = `
+  <div style="
+    font-size: 0.9rem;
+    max-width: 100%;
+    padding: 8px 10px;
+    border: 1px dashed #aaa;
+    border-radius: 6px;
+    background: #fdfdfd;
+    box-sizing: border-box;
+    line-height: 1.3;
+  ">
+    <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+      <div>真佛十四宝金：3.00 x ${paperTotal} 份</div>
+      ${formatAmount(paperMoney)}
+    </div>
+    <div style="color: #888; font-size: 0.85em; margin: 3px 0 6px;">（含还愿纸金）</div>
+    <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+      <div>安奉功德金：</div>
+      ${formatAmount(sum.donation)}
+    </div>
+    <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+      <div><strong>总计：</strong></div>
+      <strong>${formatAmount(total)}</strong>
+    </div>
+  </div>
+`;
+
   });
 </script>
 
