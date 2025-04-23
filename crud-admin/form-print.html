@@ -235,24 +235,26 @@
     const total = paperMoney + sum.donation;
 
 document.getElementById("totalBox").innerHTML = `
-  <table style="font-size: 1rem; border-collapse: collapse;">
+  <table style="font-size: 1rem; border-collapse: collapse; width: 100%;">
     <tr>
-      <td style="white-space: nowrap;">真佛十四宝金：</td>
-      <td style="white-space: nowrap;">3.00 x ${paperTotal} 份 =</td>
-      <td style="text-align: right;">RM ${paperMoney.toFixed(2)}</td>
+      <td style="white-space: nowrap; padding: 0.25rem 0;">真佛十四宝金：</td>
+      <td style="white-space: nowrap; padding: 0.25rem 0;">3.00 x ${paperTotal} 份 =</td>
+      <td style="text-align: right; padding: 0.25rem 0;">RM ${paperMoney.toFixed(2)}</td>
     </tr>
     <tr>
-      <td colspan="3" style="color: #888; font-size: 0.95em;">（含还愿纸金）</td>
+      <td colspan="3" style="color: #888; font-size: 0.95em; padding-bottom: 0.5rem;">
+        （含还愿纸金）
+      </td>
     </tr>
     <tr>
-      <td style="white-space: nowrap;">安奉功德金：</td>
+      <td style="white-space: nowrap; padding: 0.25rem 0;">安奉功德金：</td>
       <td></td>
-      <td style="text-align: right;">RM ${sum.donation.toFixed(2)}</td>
+      <td style="text-align: right; padding: 0.25rem 0;">RM ${sum.donation.toFixed(2)}</td>
     </tr>
     <tr>
-      <td style="white-space: nowrap;">总计：</td>
+      <td style="white-space: nowrap; padding: 0.25rem 0;">总计：</td>
       <td></td>
-      <td style="text-align: right;"><strong>RM ${total.toFixed(2)}</strong></td>
+      <td style="text-align: right; padding: 0.25rem 0;"><strong>RM ${total.toFixed(2)}</strong></td>
     </tr>
   </table>
 `;
