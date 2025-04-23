@@ -235,23 +235,25 @@
     const total = paperMoney + sum.donation;
 
 document.getElementById("totalBox").innerHTML = `
-  <div style="font-size: 14px; line-height: 1.8;">
-    <div style="display: flex; justify-content: space-between;">
-      <span>真佛十四宝金：</span>
-      <span>3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</span>
-    </div>
-    <div style="text-align: right; color: #888;">（含还愿纸金）</div>
-    <div style="display: flex; justify-content: space-between;">
-      <span>安奉功德金：</span>
-      <span>RM ${sum.donation.toFixed(2)}</span>
-    </div>
-    <div style="display: flex; justify-content: space-between;">
-      <span>总计：</span>
-      <strong>RM ${total.toFixed(2)}</strong>
-    </div>
-  </div>
+  <table style="border-collapse: collapse; font-size: 14px; line-height: 1.8;">
+    <tr>
+      <td style="white-space: nowrap;">真佛十四宝金：</td>
+      <td style="white-space: nowrap;">3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td style="color: #888;">（含还愿纸金）</td>
+    </tr>
+    <tr>
+      <td style="white-space: nowrap;">安奉功德金：</td>
+      <td>RM ${sum.donation.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td style="white-space: nowrap;">总计：</td>
+      <td><strong>RM ${total.toFixed(2)}</strong></td>
+    </tr>
+  </table>
 `;
-
 
 
   });
