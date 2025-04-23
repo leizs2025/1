@@ -4,41 +4,7 @@
   <meta charset="UTF-8" />
   <title>打印祈福资料</title>
   <style>
-    @page {
-      size: A4;
-      margin: 15mm;
-    }
-.header-block {
-  display: flex;
-  align-items: center; /* 👈 垂直居中 */
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 10px;
-}
-
-.header-block .logo {
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-}
-
-.header-center {
-  flex: 1;
-  text-align: center;
-}
-
-.header-center h2 {
-  margin: 0;
-  font-size: 28px;
-  color: #000;
-  line-height: 1.4;
-}
-
-.header-line {
-  font-size: 13px;
-  line-height: 1.4;
-  margin: 2px 0;
-}
+    @page { size: A4; margin: 15mm; }
 
     body {
       font-family: "Segoe UI", sans-serif;
@@ -48,28 +14,33 @@
       width: 100%;
     }
 
-    .logo-center-wrap {
-      text-align: center;
-      margin-bottom: 8px;
+    .header-block {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 10px;
     }
 
-    .logo-center-wrap img {
+    .header-block .logo {
       width: 120px;
       height: auto;
-      margin: 0 10px;
-      vertical-align: middle;
+      object-fit: contain;
     }
 
-    h2 {
+    .header-center {
+      flex: 1;
       text-align: center;
-      color: #b30000;
-      margin: 5px 0;
+    }
+
+    .header-center h2 {
+      margin: 0;
       font-size: 28px;
+      color: #000;
       line-height: 1.4;
     }
 
     .header-line {
-      text-align: center;
       font-size: 13px;
       line-height: 1.4;
       margin: 2px 0;
@@ -108,31 +79,25 @@
       cursor: pointer;
     }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  font-size: 12px; /* 👈 字体瘦 */
-  table-layout: fixed;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+      table-layout: fixed;
+    }
 
-
-th, td {
-  border: 1px solid #000;
-  padding: 3px 4px; /* 👈 缩边距 */
-  text-align: center;
-  word-break: break-word;
-  white-space: nowrap; /* 👈 不换行 */
-  height: 28px;
-  vertical-align: middle;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-}
-.table-wrap {
-  overflow-x: auto;
-  max-width: 100%;
-}
+    th, td {
+      border: 1px solid #000;
+      padding: 3px 4px;
+      text-align: center;
+      word-break: break-word;
+      white-space: nowrap;
+      height: 28px;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .footer-wrap {
       display: flex;
@@ -159,72 +124,66 @@ th, td {
       flex-shrink: 0;
       font-size: 14px;
       font-weight: bold;
-      text-align: right;
       line-height: 1.6;
     }
 
     @media print {
-      .btn-print {
-        display: none;
-      }
+      .btn-print { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <div class="header-block">
+<div class="header-block">
   <img src="left-logo.jpg" class="logo" alt="左 Logo">
-  
   <div class="header-center">
     <h2>真佛宗诗巫妙理雷藏寺</h2>
     <div class="header-line">Persatuan Miao Li Tang Sibu</div>
     <div class="header-line">No.22N, Taman Damai, Off Brooke Drive 33,</div>
     <div class="header-line">Jalan Tun Abang Haji Openg, 96000, Sibu, Sarawak, Malaysia.</div>
-    <div class="header-line">Tel: 6-084-342986 (妙理堂) / 013-980-4461 (妙理雷藏寺)</div>
+    <div class="header-line">Tel: 6-084-342986 / 013-980-4461</div>
     <div class="header-line">Fax: 6-084-319961</div>
   </div>
-
   <img src="right-logo.jpg" class="logo" alt="右 Logo">
 </div>
 
+<div class="taishui">2025 (乙巳) 年 当值太岁 吴遂</div>
 
-  <div class="taishui">2025 (乙巳) 年 当值太岁 吴遂</div>
+<div class="info">
+  <span><strong>主祈者：</strong><span id="mainName"></span></span>
+  <span><strong>电话：</strong><span id="phoneNumber"></span></span>
+  <span><strong>收据编号：</strong><span id="receiptNumber"></span></span>
+  <span><strong>收款日期：</strong><span id="receiptDate"></span></span>
+</div>
 
-  <div class="info">
-    <span><strong>主祈者：</strong><span id="mainName"></span></span>
-    <span><strong>电话：</strong><span id="phoneNumber"></span></span>
-    <span><strong>收据编号：</strong><span id="receiptNumber"></span></span>
-    <span><strong>收款日期：</strong><span id="receiptDate"></span></span>
-  </div>
+<div class="btn-print">
+  <button onclick="window.print()">🖨️ 打印表单</button>
+</div>
 
-  <div class="btn-print">
-    <button onclick="window.print()">🖨️ 打印表单</button>
-  </div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:20%">祈福者</th>
+      <th style="width:7%">太岁</th><th style="width:5%">纸金</th>
+      <th style="width:7%">光明<br/>灯</th><th style="width:5%">纸金</th>
+      <th style="width:7%">长生<br/>禄位</th><th style="width:5%">纸金</th>
+      <th style="width:7%">文昌<br/>帝君</th><th style="width:5%">纸金</th>
+      <th style="width:7%">十六<br/>罗汉</th><th style="width:5%">纸金</th>
+      <th style="width:10%">安奉<br/>功德金</th>
+    </tr>
+  </thead>
+  <tbody id="prayerBody"></tbody>
+</table>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:20%">祈福者</th>
-        <th style="width:7%">太岁</th><th style="width:5%">纸金</th>
-        <th style="width:7%">光明<br/>灯</th><th style="width:5%">纸金</th>
-        <th style="width:7%">长生<br/>禄位</th><th style="width:5%">纸金</th>
-        <th style="width:7%">文昌<br/>帝君</th><th style="width:5%">纸金</th>
-        <th style="width:7%">十六<br/>罗汉</th><th style="width:5%">纸金</th>
-        <th style="width:10%">安奉<br/>功德金</th>
-      </tr>
-    </thead>
-    <tbody id="prayerBody"></tbody>
-  </table>
-
-  <div class="footer-wrap">
-    <div class="blessing-box">
-      <div class="blessing">
-        师尊，佛菩萨加持灾厄化解，<br/>
-        逢兇化吉，万事都如意。
-      </div>
+<div class="footer-wrap">
+  <div class="blessing-box">
+    <div class="blessing">
+      师尊，佛菩萨加持灾厄化解，<br/>
+      逢兇化吉，万事都如意。
     </div>
-    <div class="totals" id="totalBox"></div>
   </div>
+  <div class="totals" id="totalBox"></div>
+</div>
 
 <script>
   window.addEventListener("message", function (event) {
@@ -232,7 +191,7 @@ th, td {
     try {
       data = JSON.parse(event.data);
     } catch {
-      alert("❌ 無效資料格式");
+      alert("❌ 无效数据格式");
       return;
     }
 
@@ -244,12 +203,7 @@ th, td {
     const tbody = document.getElementById("prayerBody");
     tbody.innerHTML = "";
 
-    let sum = {
-      pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0,
-      donation: 0,
-      wishPaper: 0
-    };
-
+    let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0, wishPaper: 0 };
     const num = val => parseFloat(val || 0);
     const showCheck = val => val === "是" ? "✔" : "";
 
@@ -275,18 +229,30 @@ th, td {
       tbody.appendChild(row);
     }
 
-    // ✅ 正確加總 wishPaper（在主資料中）
     sum.wishPaper = num(data.wishPaper);
-
-    // ✅ 計算總紙金份數（含還願）
     const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5 + sum.wishPaper;
     const paperMoney = paperTotal * 3;
     const total = paperMoney + sum.donation;
 
     document.getElementById("totalBox").innerHTML = `
-      <div>真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}</div>
-      <div>安奉功德金：RM ${sum.donation.toFixed(2)}</div>
-      <div><strong>总计：RM ${total.toFixed(2)}</strong></div>
+      <div>
+        <div>
+          <span style="display:inline-block; min-width: 240px;">
+            真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}
+          </span>
+        </div>
+        <div style="color:#888; font-size: 0.95em; margin-left: 1.2em;">
+          （含还愿纸金）
+        </div>
+      </div>
+      <div style="margin-top: 8px;">
+        <span style="display:inline-block; width: 110px; text-align: right;">安奉功德金：</span>
+        RM ${sum.donation.toFixed(2)}
+      </div>
+      <div>
+        <span style="display:inline-block; width: 110px; text-align: right;">总计：</span>
+        <strong>RM ${total.toFixed(2)}</strong>
+      </div>
     `;
   });
 </script>
