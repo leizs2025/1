@@ -244,7 +244,7 @@ th, td {
       const tbody = document.getElementById("prayerBody");
       tbody.innerHTML = "";
 
-      let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
+      let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0, wishPaper: 0 };
 
       for (let i = 0; i < 15; i++) {
         const p = (data.data || [])[i] || {};
@@ -257,6 +257,8 @@ th, td {
         sum.pg4 += num(p.paperGold4);
         sum.pg5 += num(p.paperGold5);
         sum.donation += num(p.donation);
+        sum.wishPaper += num(p.wishPaper);
+
 
         const row = document.createElement("tr");
         row.innerHTML = `
@@ -271,7 +273,7 @@ th, td {
         tbody.appendChild(row);
       }
 
-      const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+      const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5 + sum.wishPaper;
       const paperMoney = paperTotal * 3;
       const total = paperMoney + sum.donation;
 
