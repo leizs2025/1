@@ -234,34 +234,43 @@
     const paperMoney = paperTotal * 3;
     const total = paperMoney + sum.donation;
 
+function formatAmount(amount) {
+  const [intPart, decimalPart] = amount.toFixed(2).split(".");
+  return `
+    <div style="display: flex; justify-content: flex-end; font-variant-numeric: tabular-nums;">
+      <span style="text-align: right; min-width: 60px;">RM ${intPart}.</span>
+      <span style="min-width: 20px;">${decimalPart}</span>
+    </div>
+  `;
+}
+
 document.getElementById("totalBox").innerHTML = `
-  <table style="font-size: 1rem; border-collapse: collapse; width: 100%;">
-    <tr>
-      <td style="white-space: nowrap; padding: 0.25rem 0;">真佛十四宝金：</td>
-      <td style="white-space: nowrap; padding: 0.25rem 0;">3.00 x ${paperTotal} 份 =</td>
-      <td style="text-align: right; padding: 0.25rem 0;">RM ${paperMoney.toFixed(2)}</td>
-    </tr>
-    <tr>
-      <td colspan="3" style="color: #888; font-size: 0.95em; padding-bottom: 0.5rem;">
-        （含还愿纸金）
-      </td>
-    </tr>
-    <tr>
-      <td style="white-space: nowrap; padding: 0.25rem 0;">安奉功德金：</td>
-      <td></td>
-      <td style="text-align: right; padding: 0.25rem 0;">RM ${sum.donation.toFixed(2)}</td>
-    </tr>
-    <tr>
-      <td style="white-space: nowrap; padding: 0.25rem 0;">总计：</td>
-      <td></td>
-      <td style="text-align: right; padding: 0.25rem 0;"><strong>RM ${total.toFixed(2)}</strong></td>
-    </tr>
-  </table>
+  <div style="
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 280px;
+    padding: 10px 12px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #f8f8f8;
+    box-sizing: border-box;
+  ">
+    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+      <div>真佛十四宝金：</div>
+      ${formatAmount(paperMoney)}
+    </div>
+    <div style="color: #888; font-size: 0.85em; margin-bottom: 6px;">（含还愿纸金）</div>
+    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+      <div>安奉功德金：</div>
+      ${formatAmount(sum.donation)}
+    </div>
+    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+      <div><strong>总计：</strong></div>
+      <strong>${formatAmount(total)}</strong>
+    </div>
+  </div>
 `;
 
-
-
-  });
 </script>
 
 </body>
