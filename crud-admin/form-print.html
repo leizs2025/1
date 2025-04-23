@@ -250,6 +250,7 @@ th, td {
       const p = (data.data || [])[i] || {};
       const num = val => parseFloat(val || 0);
       const showCheck = val => val === "是" ? "✔" : "";
+      console.log("🔎 debug wishPaper:", p.name, "|", p.wishPaper);
 
       sum.pg1 += num(p.paperGold1);
       sum.pg2 += num(p.paperGold2);
