@@ -232,7 +232,7 @@ th, td {
     try {
       data = JSON.parse(event.data);
     } catch {
-      alert("❌ 无效数据格式");
+      alert("❌ 無效資料格式");
       return;
     }
 
@@ -244,20 +244,22 @@ th, td {
     const tbody = document.getElementById("prayerBody");
     tbody.innerHTML = "";
 
-    let sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, wishPaper: 0, donation: 0 };
+    let sum = {
+      pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0,
+      donation: 0,
+      wishPaper: 0
+    };
+
+    const num = val => parseFloat(val || 0);
+    const showCheck = val => val === "是" ? "✔" : "";
 
     for (let i = 0; i < 15; i++) {
       const p = (data.data || [])[i] || {};
-      const num = val => parseFloat(val || 0);
-      const showCheck = val => val === "是" ? "✔" : "";
-      console.log("🔎 debug wishPaper:", p.name, "|", p.wishPaper);
-
       sum.pg1 += num(p.paperGold1);
       sum.pg2 += num(p.paperGold2);
       sum.pg3 += num(p.paperGold3);
       sum.pg4 += num(p.paperGold4);
       sum.pg5 += num(p.paperGold5);
-      sum.wishPaper += num(p.wishPaper);  // ✅ 累加还愿纸金
       sum.donation += num(p.donation);
 
       const row = document.createElement("tr");
@@ -273,7 +275,10 @@ th, td {
       tbody.appendChild(row);
     }
 
-    // ✅ 計算總紙金份數含还愿纸金
+    // ✅ 正確加總 wishPaper（在主資料中）
+    sum.wishPaper = num(data.wishPaper);
+
+    // ✅ 計算總紙金份數（含還願）
     const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5 + sum.wishPaper;
     const paperMoney = paperTotal * 3;
     const total = paperMoney + sum.donation;
@@ -285,5 +290,6 @@ th, td {
     `;
   });
 </script>
+
 </body>
 </html>
