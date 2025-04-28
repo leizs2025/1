@@ -1,345 +1,260 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>报名表单</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <title>太岁光明灯报名表单</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background: linear-gradient(to bottom, #fff5e6, #ffeaea);
-    }
-    .container {
-      width: 90%;
-      max-width: 400px;
-      margin: auto;
-      text-align: center;
-    }
-    .field, .paper-field {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-    label {
-      font-size: 18px;
-      flex: 0.45;
-      text-align: left;
-      margin-right: 3px;
-    }
-    .paper-field label {
-      flex: 1;
-    }
-    .paper-gold {
-      width: 36%;
-      height: 35px;
-      padding: 5px;
-      font-size: 18px;
-      border: 2px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-    .input, select {
-      flex: 0.5;
-      font-size: 18px;
-      padding: 5px;
-      height: 40px;
-      border: 2px solid #ccc;
-      border-radius: 5px;
-      background: white;
-      box-sizing: border-box;
-    }
-    select {
-      appearance: none;
-      background: url('data:image/svg+xml;utf8,<svg fill="%23000" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5H7z"/></svg>') no-repeat right 8px center;
-      background-size: 12px;
-    }
-    button {
-      margin: 6px;
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      background: linear-gradient(145deg, #d0021b, #ff5e62);
-      color: #fff9e3;
-      font-weight: bold;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(255, 0, 0, 0.2);
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: linear-gradient(145deg, #b80012, #e44c50);
-    }
-    .hidden {
-      display: none;
-    }
+    body { font-family: Arial, sans-serif; font-size: 18px; background: linear-gradient(to bottom, #fff5e6, #ffeaea); }
+    .container { width: 90%; max-width: 400px; margin: auto; text-align: center; }
+    .field, .paper-field { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    label { font-size: 18px; flex: 0.45; text-align: left; margin-right: 3px; }
+    .paper-field label { flex: 1; }
+    .paper-gold { width: 36%; height: 35px; padding: 5px; font-size: 18px; border: 2px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    .input, select { flex: 0.5; font-size: 18px; padding: 5px; height: 40px; border: 2px solid #ccc; border-radius: 5px; background: white; box-sizing: border-box; }
+    select { appearance: none; background: url('data:image/svg+xml;utf8,<svg fill=\"%23000\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5H7z\"/></svg>') no-repeat right 8px center; background-size: 12px; }
+    button { margin: 6px; padding: 8px 12px; font-size: 16px; cursor: pointer; border: none; background: linear-gradient(145deg, #d0021b, #ff5e62); color: #fff9e3; font-weight: bold; border-radius: 10px; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.2); transition: background 0.3s; }
+    button:hover { background: linear-gradient(145deg, #b80012, #e44c50); }
+    button[type="button"] { cursor: pointer; }
+    .hidden { display: none; }
     @media (max-width: 600px) {
-      #mainName.input,
-      #phoneNumber.input,
-      #name.input,
-      #zodiac.input,
-      #donation.input {
-        width: 65%;
-      }
+      #mainName, #phoneNumber, #name, #zodiac, #donation { width: 65%; }
     }
-    h1, h2, h3 {
-      color: #b80000;
-      text-shadow: 1px 1px 2px #ffd700;
-    }
-    .first-page {
-      border: none !important;
-      box-shadow: none !important;
-      background: transparent !important;
-    }
+    h1, h2, h3 { color: #b80000; text-shadow: 1px 1px 2px #ffd700; }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h2>太岁光明灯报名表单</h2>
-  
+<div class="container">
+  <h2>太岁光明灯报名表单</h2>
 
-    <div id="mainInfo">
-      <div class="field">
-        <label>主祈者姓名:</label>
-        <input type="text" id="mainName" class="input">
-      </div>
-      <div class="field">
-        <label>电话:</label>
-        <input type="text" id="phoneNumber" class="input">
-      </div>
-      <button onclick="nextPage()">下一页</button>
-    </div>
-
-    <div id="formPages" class="hidden">
-      <h3 id="pageTitle">第 1 页</h3>
-      <div class="field"><label>姓名:</label> <input type="text" id="name" class="input"></div>
-      <div class="field"><label>生肖:</label> <input type="text" id="zodiac" class="input"></div>
-      <div class="field"><label>太岁:</label> <select id="taiSui" class="input"><option value=""></option><option value="是">是</option></select></div>
-      <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold1" class="paper-gold"></div>
-      <div class="field"><label>光明灯:</label> <select id="light" class="input"><option value=""></option><option value="是">是</option></select></div>
-      <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold2" class="paper-gold"></div>
-      <div class="field"><label>长生禄位:</label> <select id="longevity" class="input"><option value=""></option><option value="是">是</option></select></div>
-      <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold3" class="paper-gold"></div>
-      <div class="field"><label>文昌帝君:</label> <select id="wisdom" class="input"><option value=""></option><option value="是">是</option></select></div>
-      <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold4" class="paper-gold"></div>
-      <div class="field"><label>十六罗汉:</label> <select id="arhat" class="input"><option value=""></option><option value="是">是</option></select></div>
-      <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
-      <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
-      <button onclick="prevPage()">上一页</button>
-      <button onclick="nextPage()">新增一位</button>
-       <button onclick="gotoSummary()">结算提交</button>
-    </div>
-
-    <div id="summaryPage" class="hidden">
-      <h3>结算</h3>
-      <p id="totalAmount">赞助总金额: 0 元</p>
-      <button onclick="prevPage()">返回上一页</button>
-      <button onclick="gotoPreview()">预览资料</button>
-      <button onclick="downloadSummaryPdf()">下载结算 PDF</button>
-    </div>
-<div id="previewPage" class="hidden">
-  <h3>资料预览</h3>
-  <div id="previewContent" style="text-align:left; font-size: 16px; margin-bottom: 10px;"></div>
-  
-  <button onclick="backToSummary()">⬅️ 返回结算</button>
-  <button onclick="submitForm()">✅ 确认送出</button>
-</div>
-
+  <div id="mainInfo">
+    <div class="field"><label>主祈者姓名:</label><input type="text" id="mainName" class="input"></div>
+    <div class="field"><label>电话:</label><input type="text" id="phoneNumber" class="input"></div>
+    <button type="button" onclick="nextPage()">下一页</button>
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <div id="formPages" class="hidden">
+    <div class="field"><label>姓名:</label> <input type="text" id="name" class="input"></div>
+    <div class="field"><label>生肖:</label> <input type="text" id="zodiac" class="input"></div>
+    <div class="field"><label>太岁:</label> <select id="taiSui" class="input"><option value=""></option><option value="是">是</option></select></div>
+    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold1" class="paper-gold"></div>
+    <div class="field"><label>光明灯:</label> <select id="light" class="input"><option value=""></option><option value="是">是</option></select></div>
+    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold2" class="paper-gold"></div>
+    <div class="field"><label>长生禄位:</label> <select id="longevity" class="input"><option value=""></option><option value="是">是</option></select></div>
+    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold3" class="paper-gold"></div>
+    <div class="field"><label>文昌帝君:</label> <select id="wisdom" class="input"><option value=""></option><option value="是">是</option></select></div>
+    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold4" class="paper-gold"></div>
+    <div class="field"><label>十六罗汉:</label> <select id="arhat" class="input"><option value=""></option><option value="是">是</option></select></div>
+    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
+    <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
 
+    <button type="button" onclick="prevPage()">上一页</button>
+    <button type="button" onclick="nextPage()">新增一位</button>
+    <button type="button" onclick="gotoSummary()">结算提交</button>
+  </div>
+
+  <div id="summaryPage" class="hidden">
+    <h3>结算</h3>
+    <p id="totalAmount">赞助总金额: 0 元</p>
+    <button type="button" onclick="prevPage()">返回上一页</button>
+    <button type="button" onclick="gotoPreview()">预览资料</button>
+    <button type="button" onclick="downloadSummaryPdf()">下载结算 PDF</button>
+  </div>
+
+  <div id="previewPage" class="hidden">
+    <h3>资料预览</h3>
+    <div id="previewContent" style="text-align:left; font-size: 16px; margin-bottom: 10px;"></div>
+    <button type="button" onclick="backToSummary()">⬅️ 返回结算</button>
+    <button type="button" onclick="submitForm()">✅ 确认送出</button>
+  </div>
+</div>
+
+<!-- 引入必要的JS库 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <script>
-    let currentPage = 0;
-    let formData = Array(15).fill(null).map(() => ({
-      name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
-      longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
-      donation: 0
-    }));
+<!-- 这里后面继续接你的脚本 -->
+<script>
+ let currentPage = 0;
+let formData = Array(15).fill(null).map(() => ({
+  name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
+  longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
+  donation: 0
+}));
 
-    function nextPage() {
-      if (currentPage === 0) {
-        let mainName = document.getElementById("mainName");
-        let phoneNumber = document.getElementById("phoneNumber");
+function nextPage() {
+  const isOnMainInfo = !document.getElementById("mainInfo").classList.contains("hidden");
 
-        if (!mainName.value.trim()) {
-          alert("请填写主祈者姓名！");
-          mainName.style.border = "2px solid red";
-          return;
-        } else {
-          mainName.style.border = "";
-        }
+  if (isOnMainInfo) {
+    let mainName = document.getElementById("mainName").value.trim();
+    let phoneNumber = document.getElementById("phoneNumber").value.trim();
 
-        if (!phoneNumber.value.trim()) {
-          alert("请填写电话！");
-          phoneNumber.style.border = "2px solid red";
-          return;
-        } else {
-          phoneNumber.style.border = "";
-        }
+    if (!mainName) { alert("请填写主祈者姓名！"); return; }
+    if (!phoneNumber) { alert("请填写电话！"); return; }
 
-        saveCurrentPageData();
-        document.getElementById("mainInfo").classList.add("hidden");
-        document.getElementById("formPages").classList.remove("hidden");
-      } else {
-        saveCurrentPageData();
-      }
+    document.getElementById("mainInfo").classList.add("hidden");
+    document.getElementById("formPages").classList.remove("hidden");
+    currentPage = 0;
+    updatePage();
+    return;
+  }
 
-      if (currentPage < 14) {
-        currentPage++;
-        updatePage();
-      } else {
-        gotoSummary();
-      }
-    }
+  saveCurrentPageData();
+  if (currentPage < 14) {
+    currentPage++;
+    updatePage();
+  } else {
+    gotoSummary();
+  }
+}
 
 function prevPage() {
-  const summaryVisible = !document.getElementById("summaryPage").classList.contains("hidden");
-
-  if (summaryVisible) {
-    document.getElementById("summaryPage").classList.add("hidden");
-    document.getElementById("formPages").classList.remove("hidden");
-    updatePage(); // 回到最后一页数据
-  } else if (currentPage > 0) {
+  if (currentPage > 0) {
     saveCurrentPageData();
     currentPage--;
     updatePage();
   } else {
-    document.getElementById("mainInfo").classList.remove("hidden");
     document.getElementById("formPages").classList.add("hidden");
+    document.getElementById("mainInfo").classList.remove("hidden");
   }
+}
+
+function saveCurrentPageData() {
+  const data = formData[currentPage];
+  data.name = document.getElementById("name").value.trim();
+  data.zodiac = document.getElementById("zodiac").value.trim();
+  data.taiSui = document.getElementById("taiSui").value;
+  data.paperGold1 = parseFloat(document.getElementById("paperGold1").value) || 0;
+  data.light = document.getElementById("light").value;
+  data.paperGold2 = parseFloat(document.getElementById("paperGold2").value) || 0;
+  data.longevity = document.getElementById("longevity").value;
+  data.paperGold3 = parseFloat(document.getElementById("paperGold3").value) || 0;
+  data.wisdom = document.getElementById("wisdom").value;
+  data.paperGold4 = parseFloat(document.getElementById("paperGold4").value) || 0;
+  data.arhat = document.getElementById("arhat").value;
+  data.paperGold5 = parseFloat(document.getElementById("paperGold5").value) || 0;
+  data.donation = parseFloat(document.getElementById("donation").value) || 0;
+}
+
+function updatePage() {
+  document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
+  const data = formData[currentPage];
+  document.getElementById("name").value = data.name;
+  document.getElementById("zodiac").value = data.zodiac;
+  document.getElementById("taiSui").value = data.taiSui;
+  document.getElementById("paperGold1").value = data.paperGold1 || "";
+  document.getElementById("light").value = data.light;
+  document.getElementById("paperGold2").value = data.paperGold2 || "";
+  document.getElementById("longevity").value = data.longevity;
+  document.getElementById("paperGold3").value = data.paperGold3 || "";
+  document.getElementById("wisdom").value = data.wisdom;
+  document.getElementById("paperGold4").value = data.paperGold4 || "";
+  document.getElementById("arhat").value = data.arhat;
+  document.getElementById("paperGold5").value = data.paperGold5 || "";
+  document.getElementById("donation").value = data.donation || "";
+}
+
+function gotoSummary() {
+  saveCurrentPageData();
+  document.getElementById("formPages").classList.add("hidden");
+  document.getElementById("summaryPage").classList.remove("hidden");
+  calculateTotal();
+}
+
+function calculateTotal() {
+  let total = 0;
+  formData.forEach(item => {
+    total += (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation;
+  });
+  document.getElementById("totalAmount").textContent = `赞助总金额: ${total} 元`;
 }
 
 function gotoPreview() {
   saveCurrentPageData();
-  if (currentPage === 0) currentPage = 1; // ⬅️ 防止为空页
   document.getElementById("summaryPage").classList.add("hidden");
   document.getElementById("previewPage").classList.remove("hidden");
 
-  const previewBox = document.getElementById("previewContent");
+  const preview = document.getElementById("previewContent");
   const mainName = document.getElementById("mainName").value.trim();
   const phoneNumber = document.getElementById("phoneNumber").value.trim();
 
   let html = `<p><strong>主祈者：</strong>${mainName}</p>`;
   html += `<p><strong>电话：</strong>${phoneNumber}</p>`;
+  html += `<hr/>`;
 
   formData.forEach((entry, index) => {
-    if (!entry.name && !entry.zodiac) return;
+    const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
+    if (!hasContent) return;
+
     html += `
-      <hr/>
       <p><strong>第 ${index + 1} 位</strong></p>
-      <p>姓名：${entry.name}｜生肖：${entry.zodiac}</p>
-      <p>太岁：${entry.taiSui}｜纸金：${entry.paperGold1}</p>
-      <p>光明灯：${entry.light}｜纸金：${entry.paperGold2}</p>
-      <p>长生禄位：${entry.longevity}｜纸金：${entry.paperGold3}</p>
-      <p>文昌帝君：${entry.wisdom}｜纸金：${entry.paperGold4}</p>
-      <p>十六罗汉：${entry.arhat}｜纸金：${entry.paperGold5}</p>
-      <p>安奉功德金：${entry.donation}</p>
+      <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
+      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
+      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
+      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
+      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
+      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
+      <p>安奉功德金: ${entry.donation || 0}</p>
+      <hr/>
     `;
   });
 
-  const total = formData.reduce((sum, entry) => sum + (
-    entry.paperGold1 + entry.paperGold2 + entry.paperGold3 + entry.paperGold4 + entry.paperGold5
-  ) * 3 + entry.donation, 0);
-  html += `<hr/><p><strong>赞助总金额：</strong> ${total} 元</p>`;
+  // 加上总金额
+  const total = document.getElementById("totalAmount").textContent;
+  html += `<p><strong>${total}</strong></p>`;
 
-  previewBox.innerHTML = html;
+  preview.innerHTML = html;
 }
 
-function gotoSummary() {
-  saveCurrentPageData(); // ⬅️ 没点下一页也可以写入 formData[0]
-  if (currentPage === 0) currentPage = 1; // 强制进入第 1 页数据块
-  document.getElementById("formPages").classList.add("hidden");
-  document.getElementById("previewPage").classList.add("hidden");
-  document.getElementById("summaryPage").classList.remove("hidden");
-  calculateTotal();
-}
 
 function backToSummary() {
   document.getElementById("previewPage").classList.add("hidden");
   document.getElementById("summaryPage").classList.remove("hidden");
 }
 
-   
+function submitForm() {
+  saveCurrentPageData();
+  let mainName = document.getElementById("mainName").value.trim();
+  let phoneNumber = document.getElementById("phoneNumber").value.trim();
 
-    function saveCurrentPageData() {
-      if (currentPage === 0) return;
-      const index = currentPage - 1;
-      formData[index] = {
-        name: document.getElementById("name").value,
-        zodiac: document.getElementById("zodiac").value,
-        taiSui: document.getElementById("taiSui").value,
-        paperGold1: Number(document.getElementById("paperGold1").value) || 0,
-        light: document.getElementById("light").value,
-        paperGold2: Number(document.getElementById("paperGold2").value) || 0,
-        longevity: document.getElementById("longevity").value,
-        paperGold3: Number(document.getElementById("paperGold3").value) || 0,
-        wisdom: document.getElementById("wisdom").value,
-        paperGold4: Number(document.getElementById("paperGold4").value) || 0,
-        arhat: document.getElementById("arhat").value,
-        paperGold5: Number(document.getElementById("paperGold5").value) || 0,
-        donation: Number(document.getElementById("donation").value) || 0
-      };
-    }
+  if (!mainName || !phoneNumber) {
+    alert("请填写主祈者姓名和电话！");
+    return;
+  }
 
-    function updatePage() {
-      document.getElementById("pageTitle").textContent = `第 ${currentPage} 页`;
-      const data = formData[currentPage - 1];
-      Object.keys(data).forEach(id => {
-        let el = document.getElementById(id);
-        if (el) {
-          el.value = typeof data[id] === 'number' && data[id] === 0 ? "" : data[id];
-        }
-      });
-    }
+  const payload = {
+    mainName,
+    phoneNumber,
+    totalAmount, // ✅ 加上总金额字段
+    data: formData.map(entry => ({
+      name: entry.name || "", zodiac: entry.zodiac || "", taiSui: entry.taiSui || "",
+      paperGold1: entry.paperGold1 || 0, light: entry.light || "", paperGold2: entry.paperGold2 || 0,
+      longevity: entry.longevity || "", paperGold3: entry.paperGold3 || 0,
+      wisdom: entry.wisdom || "", paperGold4: entry.paperGold4 || 0,
+      arhat: entry.arhat || "", paperGold5: entry.paperGold5 || 0,
+      donation: entry.donation || 0
+    }))
+  };
 
-    function calculateTotal() {
-      let total = formData.reduce((sum, item) => sum + (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation, 0);
-      document.getElementById("totalAmount").textContent = `赞助总金额: ${total} 元`;
-    }
-
-    function submitForm() {
-      saveCurrentPageData();
-      let mainName = document.getElementById("mainName").value.trim();
-      let phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-      if (!mainName || !phoneNumber) {
-        alert("请填写主祈者姓名和电话！");
-        return;
+  fetch("https://wandering-moon-bdc2.jeenty.workers.dev/gas2", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("提交成功！");
+        location.reload(); // 或者 resetForm();
+      } else {
+        alert("提交失败：" + (data.error || "未知错误"));
       }
-
-      const payload = {
-        mainName,
-        phoneNumber,
-        data: formData.map(entry => ({
-          name: entry.name || "", zodiac: entry.zodiac || "", taiSui: entry.taiSui || "",
-          paperGold1: entry.paperGold1 || 0, light: entry.light || "", paperGold2: entry.paperGold2 || 0,
-          longevity: entry.longevity || "", paperGold3: entry.paperGold3 || 0,
-          wisdom: entry.wisdom || "", paperGold4: entry.paperGold4 || 0,
-          arhat: entry.arhat || "", paperGold5: entry.paperGold5 || 0,
-          donation: entry.donation || 0
-        }))
-      };
-
-      fetch("https://wandering-moon-bdc2.jeenty.workers.dev/gas2", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) alert("提交成功！");
-           resetForm(); // ✅ 添加这个调用
-          else alert("提交失败：" + (data.error || "未知错误"));
-        })
-        .catch(err => alert("提交失败：" + err.message));
-    }
+    })
+    .catch(err => alert("提交失败：" + err.message));
+}
 
 function downloadSummaryPdf() {
   const mainName = document.getElementById("mainName").value.trim();
@@ -353,7 +268,7 @@ function downloadSummaryPdf() {
   pdfArea.style.fontFamily = "Arial, sans-serif";
   pdfArea.style.width = "800px";
   pdfArea.style.position = "absolute";
-  pdfArea.style.top = "-9999px"; // ⬅️ 屏幕外不干扰视觉
+  pdfArea.style.top = "-9999px";
 
   pdfArea.innerHTML = `
     <h2 style="color:#000;">太岁光明灯报名结算</h2>
@@ -362,52 +277,46 @@ function downloadSummaryPdf() {
     <p style="margin-top:1rem;"><strong>${total}</strong></p>
   `;
 
-formData.forEach((entry, index) => {
-  const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
-  if (!hasContent) return; // ⬅️ 没填写内容的就跳过
+  formData.forEach((entry, index) => {
+    const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
+    if (!hasContent) return;
 
-  const box = document.createElement("div");
-  box.style.borderTop = "1px solid #ccc";
-  box.style.marginTop = "1rem";
-  box.style.paddingTop = "0.5rem";
-  box.innerHTML = `
-    <p><strong>第 ${index + 1} 位</strong></p>
-    <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
-    <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
-    <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
-    <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
-    <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
-    <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
-    <p>安奉功德金: ${entry.donation || 0}</p>
-  `;
-  pdfArea.appendChild(box);
-});
+    const box = document.createElement("div");
+    box.style.borderTop = "1px solid #ccc";
+    box.style.marginTop = "1rem";
+    box.style.paddingTop = "0.5rem";
+    box.innerHTML = `
+      <p><strong>第 ${index + 1} 位</strong></p>
+      <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
+      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
+      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
+      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
+      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
+      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
+      <p>安奉功德金: ${entry.donation || 0}</p>
+    `;
+    pdfArea.appendChild(box);
+  });
 
+  document.body.appendChild(pdfArea);
 
-  document.body.appendChild(pdfArea); // ⬅️ 加入页面才能截图！
-
-  html2canvas(pdfArea, {
-    scale: 2,
-    useCORS: true
-  }).then(canvas => {
+  html2canvas(pdfArea, { scale: 2, useCORS: true }).then(canvas => {
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const imgProps = { width: canvas.width, height: canvas.height };
     const pdfWidth = 210;
+    const imgProps = { width: canvas.width, height: canvas.height };
     const ratio = pdfWidth / imgProps.width;
     const pdfHeight = imgProps.height * ratio + 10;
 
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', [pdfHeight, pdfWidth]);
+    const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight - 10);
     pdf.save('太岁光明灯_结算.pdf');
 
-    document.body.removeChild(pdfArea); // ⬅️ 清掉！
+    document.body.removeChild(pdfArea);
   });
 }
 
+</script>
 
-
-
-  </script>
 </body>
 </html>
