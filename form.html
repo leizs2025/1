@@ -3,320 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>太岁光明灯报名表单</title>
-
+  <title>太岁光明灯报名表单（正式修正版）</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 18px; background: linear-gradient(to bottom, #fff5e6, #ffeaea); }
-    .container { width: 90%; max-width: 400px; margin: auto; text-align: center; }
-    .field, .paper-field { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    label { font-size: 18px; flex: 0.45; text-align: left; margin-right: 3px; }
-    .paper-field label { flex: 1; }
-    .paper-gold { width: 36%; height: 35px; padding: 5px; font-size: 18px; border: 2px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-    .input, select { flex: 0.5; font-size: 18px; padding: 5px; height: 40px; border: 2px solid #ccc; border-radius: 5px; background: white; box-sizing: border-box; }
-    select { appearance: none; background: url('data:image/svg+xml;utf8,<svg fill=\"%23000\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5H7z\"/></svg>') no-repeat right 8px center; background-size: 12px; }
-    button { margin: 6px; padding: 8px 12px; font-size: 16px; cursor: pointer; border: none; background: linear-gradient(145deg, #d0021b, #ff5e62); color: #fff9e3; font-weight: bold; border-radius: 10px; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.2); transition: background 0.3s; }
+    body { font-family: Arial, sans-serif; font-size: 18px; background: linear-gradient(to bottom, #fff5e6, #ffeaea); margin: 0; padding: 20px; }
+    .container { width: 90%; max-width: 500px; margin: auto; text-align: center; }
+    h2, h3 { color: #b80000; text-shadow: 1px 1px 2px #ffd700; }
+    .field { margin-bottom: 10px; display: flex; flex-direction: column; align-items: flex-start; }
+    label { font-size: 16px; margin-bottom: 5px; }
+    input, select { font-size: 16px; padding: 8px; width: 100%; box-sizing: border-box; border: 2px solid #ccc; border-radius: 5px; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { appearance: textfield; }
+    button { margin: 8px; padding: 10px 15px; font-size: 16px; border: none; background: linear-gradient(145deg, #d0021b, #ff5e62); color: #fff9e3; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.3); transition: background 0.3s; }
     button:hover { background: linear-gradient(145deg, #b80012, #e44c50); }
-    button[type="button"] { cursor: pointer; }
+    .card { background: #fff; margin: 10px 0; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .total { font-size: 20px; font-weight: bold; color: #b80000; margin-top: 20px; }
     .hidden { display: none; }
-    @media (max-width: 600px) {
-      #mainName, #phoneNumber, #name, #zodiac, #donation { width: 65%; }
-    }
-    h1, h2, h3 { color: #b80000; text-shadow: 1px 1px 2px #ffd700; }
   </style>
 </head>
-
 <body>
 <div class="container">
   <h2>太岁光明灯报名表单</h2>
 
   <div id="mainInfo">
-    <div class="field"><label>主祈者姓名:</label><input type="text" id="mainName" class="input"></div>
-    <div class="field"><label>电话:</label><input type="text" id="phoneNumber" class="input"></div>
-    <button type="button" onclick="nextPage()">下一页</button>
+    <div class="field">
+      <label>主祈者姓名:</label>
+      <input type="text" id="mainName">
+    </div>
+    <div class="field">
+      <label>电话:</label>
+      <input type="text" id="phoneNumber">
+    </div>
+    <button type="button" onclick="startForm()">开始填写</button>
   </div>
 
-  <div id="formPages" class="hidden">
-    <div class="field"><label>姓名:</label> <input type="text" id="name" class="input"></div>
-    <div class="field"><label>生肖:</label> <input type="text" id="zodiac" class="input"></div>
-    <div class="field"><label>太岁:</label> <select id="taiSui" class="input"><option value=""></option><option value="是">是</option></select></div>
-    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold1" class="paper-gold"></div>
-    <div class="field"><label>光明灯:</label> <select id="light" class="input"><option value=""></option><option value="是">是</option></select></div>
-    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold2" class="paper-gold"></div>
-    <div class="field"><label>长生禄位:</label> <select id="longevity" class="input"><option value=""></option><option value="是">是</option></select></div>
-    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold3" class="paper-gold"></div>
-    <div class="field"><label>文昌帝君:</label> <select id="wisdom" class="input"><option value=""></option><option value="是">是</option></select></div>
-    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold4" class="paper-gold"></div>
-    <div class="field"><label>十六罗汉:</label> <select id="arhat" class="input"><option value=""></option><option value="是">是</option></select></div>
-    <div class="paper-field"><label>纸金:</label> <input type="number" id="paperGold5" class="paper-gold"></div>
-    <div class="field"><label>安奉功德金:</label> <input type="number" id="donation" class="input"></div>
-
-    <button type="button" onclick="prevPage()">上一页</button>
-    <button type="button" onclick="nextPage()">新增一位</button>
-    <button type="button" onclick="gotoSummary()">结算提交</button>
+  <div id="cardSection" class="hidden">
+    <h3>填写资料</h3>
+    <div id="cardsContainer"></div>
+    <button type="button" onclick="addCard()">新增一位</button>
+    <div class="total" id="totalAmount">赞助总金额：0 元</div>
+    <button type="button" onclick="previewForm()">预览资料</button>
+    <button type="button" onclick="submitForm()">确认送出</button>
+    
   </div>
 
-  <div id="summaryPage" class="hidden">
-    <h3>结算</h3>
-    <p id="totalAmount">赞助总金额: 0 元</p>
-    <button type="button" onclick="prevPage()">返回上一页</button>
-    <button type="button" onclick="gotoPreview()">预览资料</button>
-    <button type="button" onclick="downloadSummaryPdf()">下载结算 PDF</button>
-  </div>
-
-  <div id="previewPage" class="hidden">
+  <div id="previewSection" class="hidden">
     <h3>资料预览</h3>
-    <div id="previewContent" style="text-align:left; font-size: 16px; margin-bottom: 10px;"></div>
-    <button type="button" onclick="backToSummary()">⬅️ 返回结算</button>
-    <button type="button" onclick="submitForm()">✅ 确认送出</button>
+    <div id="previewContent" style="text-align: center; font-size: 16px; padding: 10px; max-width: 380px; margin: 0 auto;"></div>
+    <button type="button" onclick="backToEdit()">返回填写</button>
+    <button onclick="downloadPdf()">下载PDF</button>
   </div>
 </div>
 
-<!-- 引入必要的JS库 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<!-- 这里后面继续接你的脚本 -->
 <script>
- let currentPage = 0;
-let formData = Array(15).fill(null).map(() => ({
-  name: "", zodiac: "", taiSui: "", paperGold1: 0, light: "", paperGold2: 0,
-  longevity: "", paperGold3: 0, wisdom: "", paperGold4: 0, arhat: "", paperGold5: 0,
-  donation: 0
-}));
+let formData = [];
+let mainName = "";
+let phoneNumber = "";
 
-function nextPage() {
-  const isOnMainInfo = !document.getElementById("mainInfo").classList.contains("hidden");
-
-  if (isOnMainInfo) {
-    let mainName = document.getElementById("mainName").value.trim();
-    let phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-    if (!mainName) { alert("请填写主祈者姓名！"); return; }
-    if (!phoneNumber) { alert("请填写电话！"); return; }
-
-    document.getElementById("mainInfo").classList.add("hidden");
-    document.getElementById("formPages").classList.remove("hidden");
-    currentPage = 0;
-    updatePage();
+function startForm() {
+  mainName = document.getElementById("mainName").value.trim();
+  phoneNumber = document.getElementById("phoneNumber").value.trim();
+  if (!mainName || !phoneNumber) {
+    alert("\u8bf7\u586b\u5199\u4e3b\u7948\u8005\u59d3\u540d\u548c\u7535\u8bdd！");
     return;
   }
+  document.getElementById("mainInfo").classList.add("hidden");
+  document.getElementById("cardSection").classList.remove("hidden");
+  addCard();
+}
 
-  saveCurrentPageData();
-  if (currentPage < 14) {
-    currentPage++;
-    updatePage();
-  } else {
-    gotoSummary();
+function addCard() {
+  formData.push({ name: "", zodiac: "", taiSui: "", paperGold1: "", light: "", paperGold2: "", longevity: "", paperGold3: "", wisdom: "", paperGold4: "", arhat: "", paperGold5: "", donation: "" });
+  renderCards();
+  calculateTotal();
+}
+
+function removeCard(idx) {
+  if (confirm("\u786e\u5b9a\u5220\u9664\u8fd9\u4e00\u4f4d\u5417？")) {
+    formData.splice(idx, 1);
+    renderCards();
+    calculateTotal();
   }
 }
 
-function prevPage() {
-  if (currentPage > 0) {
-    saveCurrentPageData();
-    currentPage--;
-    updatePage();
-  } else {
-    document.getElementById("formPages").classList.add("hidden");
-    document.getElementById("mainInfo").classList.remove("hidden");
-  }
+function renderCards() {
+  const container = document.getElementById("cardsContainer");
+  container.innerHTML = "";
+  formData.forEach((entry, idx) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-header">
+        <strong>第 ${idx + 1} 位</strong>
+        <button type="button" onclick="removeCard(${idx})">删除</button>
+      </div>
+      ${generateField("姓名", "name", idx, entry.name)}
+      ${generateField("生肖", "zodiac", idx, entry.zodiac)}
+      ${generateSelect("太岁", "taiSui", idx, entry.taiSui)}
+      ${generateField("纸金", "paperGold1", idx, entry.paperGold1, true)}
+      ${generateSelect("光明灯", "light", idx, entry.light)}
+      ${generateField("纸金", "paperGold2", idx, entry.paperGold2, true)}
+      ${generateSelect("长生禄位", "longevity", idx, entry.longevity)}
+      ${generateField("纸金", "paperGold3", idx, entry.paperGold3, true)}
+      ${generateSelect("文昌帝君", "wisdom", idx, entry.wisdom)}
+      ${generateField("纸金", "paperGold4", idx, entry.paperGold4, true)}
+      ${generateSelect("十六罗汉", "arhat", idx, entry.arhat)}
+      ${generateField("纸金", "paperGold5", idx, entry.paperGold5, true)}
+      ${generateField("安奉功德金", "donation", idx, entry.donation, true)}
+    `;
+    container.appendChild(card);
+  });
 }
 
-function saveCurrentPageData() {
-  const data = formData[currentPage];
-  data.name = document.getElementById("name").value.trim();
-  data.zodiac = document.getElementById("zodiac").value.trim();
-  data.taiSui = document.getElementById("taiSui").value;
-  data.paperGold1 = parseFloat(document.getElementById("paperGold1").value) || 0;
-  data.light = document.getElementById("light").value;
-  data.paperGold2 = parseFloat(document.getElementById("paperGold2").value) || 0;
-  data.longevity = document.getElementById("longevity").value;
-  data.paperGold3 = parseFloat(document.getElementById("paperGold3").value) || 0;
-  data.wisdom = document.getElementById("wisdom").value;
-  data.paperGold4 = parseFloat(document.getElementById("paperGold4").value) || 0;
-  data.arhat = document.getElementById("arhat").value;
-  data.paperGold5 = parseFloat(document.getElementById("paperGold5").value) || 0;
-  data.donation = parseFloat(document.getElementById("donation").value) || 0;
+function generateField(label, key, idx, value, isNumber = false) {
+  return `<div class="field"><label>${label}:</label><input type="${isNumber ? "number" : "text"}" value="${value || ""}" onchange="updateField(${idx}, '${key}', this.value)"></div>`;
 }
 
-function updatePage() {
-  document.getElementById("pageTitle").textContent = `第 ${currentPage + 1} 页`;
-  const data = formData[currentPage];
-  document.getElementById("name").value = data.name;
-  document.getElementById("zodiac").value = data.zodiac;
-  document.getElementById("taiSui").value = data.taiSui;
-  document.getElementById("paperGold1").value = data.paperGold1 || "";
-  document.getElementById("light").value = data.light;
-  document.getElementById("paperGold2").value = data.paperGold2 || "";
-  document.getElementById("longevity").value = data.longevity;
-  document.getElementById("paperGold3").value = data.paperGold3 || "";
-  document.getElementById("wisdom").value = data.wisdom;
-  document.getElementById("paperGold4").value = data.paperGold4 || "";
-  document.getElementById("arhat").value = data.arhat;
-  document.getElementById("paperGold5").value = data.paperGold5 || "";
-  document.getElementById("donation").value = data.donation || "";
+function generateSelect(label, key, idx, value) {
+  return `<div class="field"><label>${label}:</label><select onchange="updateField(${idx}, '${key}', this.value)"><option value="" ${value === "" ? "selected" : ""}></option><option value="是" ${value === "是" ? "selected" : ""}>是</option></select></div>`;
 }
 
-function gotoSummary() {
-  saveCurrentPageData();
-  document.getElementById("formPages").classList.add("hidden");
-  document.getElementById("summaryPage").classList.remove("hidden");
+function updateField(idx, key, value) {
+  formData[idx][key] = value;
   calculateTotal();
 }
 
 function calculateTotal() {
   let total = 0;
-  formData.forEach(item => {
-    total += (item.paperGold1 + item.paperGold2 + item.paperGold3 + item.paperGold4 + item.paperGold5) * 3 + item.donation;
+  formData.forEach(entry => {
+    const sumPaper = (parseFloat(entry.paperGold1 || 0) + parseFloat(entry.paperGold2 || 0) + parseFloat(entry.paperGold3 || 0) + parseFloat(entry.paperGold4 || 0) + parseFloat(entry.paperGold5 || 0));
+    const donation = parseFloat(entry.donation || 0);
+    total += (sumPaper * 3) + donation;
   });
-  document.getElementById("totalAmount").textContent = `赞助总金额: ${total} 元`;
+  document.getElementById("totalAmount").textContent = `赞助总金额：${total} 元`;
 }
 
-function gotoPreview() {
-  saveCurrentPageData();
-  document.getElementById("summaryPage").classList.add("hidden");
-  document.getElementById("previewPage").classList.remove("hidden");
-
-  const preview = document.getElementById("previewContent");
-  const mainName = document.getElementById("mainName").value.trim();
-  const phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-  let html = `<p><strong>主祈者：</strong>${mainName}</p>`;
-  html += `<p><strong>电话：</strong>${phoneNumber}</p>`;
-  html += `<hr/>`;
-
-  formData.forEach((entry, index) => {
-    const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
-    if (!hasContent) return;
-
+function previewForm() {
+  document.getElementById("cardSection").classList.add("hidden");
+  document.getElementById("previewSection").classList.remove("hidden");
+  let html = `<p><strong>主祈者：</strong>${mainName}</p><p><strong>电话：</strong>${phoneNumber}</p><hr>`;
+  formData.forEach((entry, idx) => {
     html += `
-      <p><strong>第 ${index + 1} 位</strong></p>
+      <p><strong>第 ${idx + 1} 位</strong></p>
       <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
-      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
-      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
-      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
-      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
-      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
-      <p>安奉功德金: ${entry.donation || 0}</p>
-      <hr/>
+      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || ""}</p>
+      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || ""}</p>
+      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || ""}</p>
+      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || ""}</p>
+      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || ""}</p>
+      <p>安奉功德金: ${entry.donation || ""}</p>
+      <hr>
     `;
   });
-
-  // 加上总金额
-  const total = document.getElementById("totalAmount").textContent;
-  html += `<p><strong>${total}</strong></p>`;
-
-  preview.innerHTML = html;
+  html += `<p><strong>${document.getElementById("totalAmount").textContent}</strong></p>`;
+  document.getElementById("previewContent").innerHTML = html;
 }
 
 
-function backToSummary() {
-  document.getElementById("previewPage").classList.add("hidden");
-  document.getElementById("summaryPage").classList.remove("hidden");
+function backToEdit() {
+  document.getElementById("previewSection").classList.add("hidden");
+  document.getElementById("cardSection").classList.remove("hidden");
 }
 
 function submitForm() {
-  saveCurrentPageData();
-  let mainName = document.getElementById("mainName").value.trim();
-  let phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-  if (!mainName || !phoneNumber) {
-    alert("请填写主祈者姓名和电话！");
-    return;
-  }
-
-  const payload = {
-    mainName,
-    phoneNumber,
-    totalAmount, // ✅ 加上总金额字段
-    data: formData.map(entry => ({
-      name: entry.name || "", zodiac: entry.zodiac || "", taiSui: entry.taiSui || "",
-      paperGold1: entry.paperGold1 || 0, light: entry.light || "", paperGold2: entry.paperGold2 || 0,
-      longevity: entry.longevity || "", paperGold3: entry.paperGold3 || 0,
-      wisdom: entry.wisdom || "", paperGold4: entry.paperGold4 || 0,
-      arhat: entry.arhat || "", paperGold5: entry.paperGold5 || 0,
-      donation: entry.donation || 0
-    }))
-  };
+  calculateTotal();
+  const totalAmount = document.getElementById("totalAmount").textContent.match(/\d+/)[0];
 
   fetch("https://wandering-moon-bdc2.jeenty.workers.dev/gas2", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      mainName: mainName,
+      phoneNumber: phoneNumber,
+      totalAmount: totalAmount,
+      data: formData
+    })
   })
-    .then(response => response.json())
-    .then(data => {
+  .then(response => response.text())
+  .then(text => {
+    try {
+      const data = JSON.parse(text);
       if (data.success) {
         alert("提交成功！");
-        location.reload(); // 或者 resetForm();
+        location.reload();
       } else {
         alert("提交失败：" + (data.error || "未知错误"));
       }
-    })
-    .catch(err => alert("提交失败：" + err.message));
-}
-
-function downloadSummaryPdf() {
-  const mainName = document.getElementById("mainName").value.trim();
-  const phoneNumber = document.getElementById("phoneNumber").value.trim();
-  const total = document.getElementById("totalAmount").textContent;
-
-  const pdfArea = document.createElement("div");
-  pdfArea.style.backgroundColor = "#fff";
-  pdfArea.style.color = "#000";
-  pdfArea.style.padding = "1.5rem";
-  pdfArea.style.fontFamily = "Arial, sans-serif";
-  pdfArea.style.width = "800px";
-  pdfArea.style.position = "absolute";
-  pdfArea.style.top = "-9999px";
-
-  pdfArea.innerHTML = `
-    <h2 style="color:#000;">太岁光明灯报名结算</h2>
-    <p><strong>主祈者：</strong>${mainName}</p>
-    <p><strong>电话：</strong>${phoneNumber}</p>
-    <p style="margin-top:1rem;"><strong>${total}</strong></p>
-  `;
-
-  formData.forEach((entry, index) => {
-    const hasContent = Object.values(entry).some(val => val !== "" && val !== 0);
-    if (!hasContent) return;
-
-    const box = document.createElement("div");
-    box.style.borderTop = "1px solid #ccc";
-    box.style.marginTop = "1rem";
-    box.style.paddingTop = "0.5rem";
-    box.innerHTML = `
-      <p><strong>第 ${index + 1} 位</strong></p>
-      <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
-      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || 0}</p>
-      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || 0}</p>
-      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || 0}</p>
-      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || 0}</p>
-      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || 0}</p>
-      <p>安奉功德金: ${entry.donation || 0}</p>
-    `;
-    pdfArea.appendChild(box);
-  });
-
-  document.body.appendChild(pdfArea);
-
-  html2canvas(pdfArea, { scale: 2, useCORS: true }).then(canvas => {
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdfWidth = 210;
-    const imgProps = { width: canvas.width, height: canvas.height };
-    const ratio = pdfWidth / imgProps.width;
-    const pdfHeight = imgProps.height * ratio + 10;
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight - 10);
-    pdf.save('太岁光明灯_结算.pdf');
-
-    document.body.removeChild(pdfArea);
+    } catch (err) {
+      console.error("返回内容不是JSON：", text);
+      alert("提交失败，服务器返回异常内容！");
+    }
+  })
+  .catch(err => {
+    alert("提交失败：" + err.message);
   });
 }
+
+function downloadPdf() {
+  const previewSection = document.getElementById("previewSection");
+  const previewArea = document.getElementById("previewContent");
+  const { jsPDF } = window.jspdf;
+
+  previewSection.classList.remove("hidden");
+
+  requestAnimationFrame(() => {
+    html2canvas(previewArea, { scale: 2, useCORS: true }).then(canvas => {
+      if (!canvas || !canvas.width || !canvas.height) {
+        alert("截图失败，请检查内容是否正确！");
+        return;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+      // 💥 设置小票尺寸，比如 80mm宽 x 自动高
+      const ticketWidth = 80; // 小票宽度 (单位 mm)
+      const imgAspectRatio = canvas.width / canvas.height;
+      const ticketHeight = ticketWidth / imgAspectRatio;
+
+      const pdf = new jsPDF('p', 'mm', [ticketWidth, ticketHeight]);
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, ticketWidth, ticketHeight);
+
+      pdf.save('太岁光明灯_报名小票.pdf');
+
+      previewSection.classList.add("hidden");
+      document.getElementById("cardSection").classList.remove("hidden");
+    });
+  });
+}
+
+
+
+
+
 
 </script>
-
 </body>
 </html>
