@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>2025年 太岁光明灯查询记录</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(to bottom, #fff8f0, #ffe4d4);
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+      color: #5b2400;
+      font-size: 18px;
+    }
+    h1 {
+      text-align: center;
+      color: #c9302c;
+      font-size: 28px;
+      border-bottom: 2px solid #c9302c;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .centered-input {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 12px;
+      font-size: 18px;
+      margin: 8px 0;
+      width: 80%;
+      max-width: 400px;
+      border: 2px solid #d2691e;
+      border-radius: 5px;
+      box-sizing: border-box;
+      background-color: #fff8f0;
+      color: #5b2400;
+    }
+    button {
+      background-color: #c9302c;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a91f1a;
+    }
+    .card {
+      background-color: #fffaf5;
+      border: 2px solid #ffd699;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      font-weight: bold;
+      font-size: 18px;
+      color: #a52a2a;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #d9b38c;
+      padding-bottom: 5px;
+    }
+    .person-block {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-left: 4px solid #ffcc80;
+      background-color: #fff4e6;
+    }
+    .person-block span {
+      display: block;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .match-count {
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #c9302c;
+    }
+    .not-found {
+      margin-top: 20px;
+      color: #a00;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>2025年 太岁光明灯查询记录</h1>
+
+  <div class="centered-input">
+    <input type="text" id="searchInput" placeholder="请输入电话或编号进行查询">
+    <button onclick="search()">🔍 查询</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    async function search() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      const resultEl = document.getElementById("result");
+      resultEl.innerHTML = '';
+
+      if (!keyword) {
+        alert("请输入电话号码或编号！");
+        return;
+      }
+
+      const res = await fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json");
+      const data = await res.json();
+
+      const matched = [];
+
+      for (const [key, entry] of Object.entries(data)) {
+        if (!Array.isArray(entry)) continue;
+        const phone = (entry[2] || "").toString();
+        const serial = (entry[0] || "").toString();
+        const combined = phone + serial + key;
+        if (combined.includes(keyword)) {
+          matched.push(entry);
+        }
+      }
+
+      if (matched.length === 0) {
+        resultEl.innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
+        return;
+      }
+
+      let html = `<div class="match-count">🔎 共找到 ${matched.length} 笔符合资料</div>`;
+
+      matched.forEach((found) => {
+        const submitter = found[1] || "未填写";
+        const phone = found[2] || "无";
+
+        html += `<div class="card">
+          <div class="card-header">🧾 填写者：${submitter}　📱 电话：${phone}</div>`;
+
+        for (let i = 0; i < 15; i++) {
+          const base = 4 + i * 13;
+          const name = found[base];
+          if (!name) continue;
+
+          html += `<div class="person-block">
+            <span>🙏 姓名：${name}</span>
+            <span>生肖：${found[base + 1] || ""}</span>
+            <span>太岁灯：${found[base + 2] || ""}　纸金：${found[base + 3] || ""}</span>
+            <span>光明灯：${found[base + 4] || ""}　纸金：${found[base + 5] || ""}</span>
+            <span>长生禄位：${found[base + 6] || ""}　纸金：${found[base + 7] || ""}</span>
+            <span>文昌帝君：${found[base + 8] || ""}　纸金：${found[base + 9] || ""}</span>
+            <span>十六罗汉：${found[base + 10] || ""}　纸金：${found[base + 11] || ""}</span>
+            <span>安奉功德金：${found[base + 12] || ""}</span>
+          </div>`;
+        }
+
+        html += `</div>`; // end card
+      });
+
+      resultEl.innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
