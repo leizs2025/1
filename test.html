@@ -1,360 +1,138 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>多人超度報名系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祈福名单查询页</title>
   <style>
-    /* 原有CSS樣式保持不變 */
-    :root { --primary: #2196F3; --success: #4CAF50; --error: #f44336; --text: #333; }
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 12px; background: #f5f5f5; line-height: 1.5; color: var(--text); }
-    .form-page { background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    h2 { font-size: 1.4rem; color: #222; margin-bottom: 20px; text-align: center; }
-    .form-group { margin-bottom: 16px; position: relative; }
-    label { display: block; font-weight: 500; margin-bottom: 6px; color: #444; }
-    .required::after { content: "*"; color: var(--error); margin-left: 3px; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; background: #fff; -webkit-appearance: none; }
-    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(33,150,243,0.1); }
-    .row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .row > div { flex: 1; }
-    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-    button { flex: 1; padding: 14px; border: none; border-radius: 6px; font-size: 1rem; touch-action: manipulation; transition: opacity 0.2s; }
-    .primary-btn { background: var(--primary); color: white; }
-    .success-btn { background: var(--success); color: white; }
-    .error-btn { background: var(--error); color: white; }
-    button:active { opacity: 0.8; }
-    .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 4px; display: none; }
-    .amount-summary { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-    .total-amount { font-size: 1.1rem; text-align: right; font-weight: 500; }
-    .total-amount span { color: var(--error); }
-    .ancestor-group { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; transition: all 0.3s ease; }
-    .remove-ancestor-btn { position: absolute; right: 10px; top: 10px; padding: 6px 12px; font-size: 0.9rem; border-radius: 20px; }
-    .fixed-submit-btn { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
-    @media (max-width: 480px) { .row { flex-direction: column; } button { padding: 12px; } }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 16px;
+      color: #222;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1.5px solid #aaa;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #d0021b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    button:hover {
+      background: #a90016;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 14px;
+      white-space: pre-wrap;
+      font-size: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 0 12px;
+        font-size: 15px;
+      }
+      h2 {
+        font-size: 20px;
+      }
+      button {
+        font-size: 15px;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- 時間戳隱藏字段 -->
-  <input type="hidden" id="timestamp">
-
-  <div class="form-page">
-    <h2>報名信息</h2>
-    
-    <!-- 基本信息 -->
-    <div class="form-group">
-      <label class="required">聯繫方式</label>
-      <input type="tel" id="phone" required placeholder="請輸入手機號碼">
-      <div class="error-msg" id="phone-error">此為必填項</div>
-    </div>
-    
-    <div class="form-group">
-      <label class="required">陽上報恩人</label>
-      <input type="text" id="applicant" required placeholder="請輸入姓名">
-      <div class="error-msg" id="applicant-error">此為必填項</div>
-    </div>
-    
-    <div class="form-group">
-      <label class="required">聯繫地址</label>
-      <input type="text" id="address" required placeholder="請輸入詳細地址">
-      <div class="error-msg" id="address-error">此為必填項</div>
-    </div>
-
-    <!-- 祖先信息容器 -->
-    <h2 style="margin-top:30px;">超度祖先信息</h2>
-    <div id="ancestor-container">
-      <!-- 初始祖先区块 -->
-      <div class="ancestor-group">
-        <button class="remove-ancestor-btn error-btn" onclick="removeAncestor(this)" style="display:none;">× 刪除</button>
-        <div class="ancestor-header">祖先 1</div>
-        
-        <div class="form-group">
-          <label class="required">祖先姓名</label>
-          <input type="text" class="ancestor-name" required>
-          <div class="error-msg">此為必填項</div>
-        </div>
-        
-        <div class="form-group">
-          <label class="required">超度類別</label>
-          <select class="ceremony-type" required>
-            <option value="">請選擇類別</option>
-            <option value="地藏殿牌位">地藏殿牌位</option>
-            <option value="靈骨殿福位">靈骨殿福位</option>
-            <option value="墓園">墓園</option>
-            <option value="牌位">牌位</option>
-          </select>
-          <div class="error-msg">此為必填項</div>
-        </div>
-        
-        <div class="code-field" style="display:none;">
-          <label class="required">專屬編號</label>
-          <input type="text" class="location-code" required>
-          <div class="error-msg">此為必填項</div>
-        </div>
-        
-        <div class="row">
-          <div class="form-group">
-            <label>超度令牌 (5元)</label>
-            <input type="number" class="amount-item" data-price="5" placeholder="數量">
-          </div>
-          <div class="form-group">
-            <label>法船配套 (30元)</label>
-            <input type="number" class="amount-item" data-price="30" placeholder="數量">
-          </div>
-        </div>
-        
-        <div class="row">
-          <div class="form-group">
-            <label>蓮花 (6元)</label>
-            <input type="number" class="amount-item" data-price="6" placeholder="數量">
-          </div>
-          <div class="form-group">
-            <label>紙金 (3元)</label>
-            <input type="number" class="amount-item" data-price="3" placeholder="數量">
-          </div>
-        </div>
-        
-        <div class="row">
-          <div class="form-group">
-            <label>紙金 (6元)</label>
-            <input type="number" class="amount-item" data-price="6" placeholder="數量">
-          </div>
-          <div class="form-group">
-            <label>紙金 (27元)</label>
-            <input type="number" class="amount-item" data-price="27" placeholder="數量">
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>配套令牌備註</label>
-          <input type="text" class="special-item" placeholder="特殊要求">
-        </div>
-      </div>
-    </div>
-
-    <!-- 添加按钮 -->
-    <div class="btn-group">
-      <button class="success-btn" onclick="addAncestor()" id="add-ancestor-btn">+ 添加祖先（還可添加7位）</button>
-    </div>
-
-    <!-- 金额汇总 -->
-    <div class="amount-summary">
-      <div class="total-amount">總計金額：<span id="total-amount">0</span> 元</div>
-    </div>
-  </div>
-
-  <!-- 固定提交按钮 -->
-  <div class="fixed-submit-btn">
-    <button class="primary-btn" onclick="submitForm()" id="submit-btn">提交申請</button>
-  </div>
+  <h2>祈福项目编号查询</h2>
+  <input type="text" id="searchNameInput" placeholder="请输入姓名进行查询">
+  <button onclick="handleSearch()">🔍 查询</button>
+  <pre id="resultBox">📦 正在加载数据，请稍候...</pre>
 
   <script>
-    (() => {
-      const MAX_ANCESTORS = 8;
-      const ITEM_MAP = [
-        { price: 5,  name: '超度令牌' },
-        { price: 30, name: '法船配套' },
-        { price: 6,  name: '蓮花' },
-        { price: 3,  name: '紙金(3元)' },
-        { price: 6,  name: '紙金(6元)' },
-        { price: 27, name: '紙金(27元)' }
-      ];
-      
-      let ancestorCount = 1;
+    const gasUrl = "https://script.google.com/macros/s/AKfycbzhnu9_lxiG31C2NndfeSjO0GpGiwFKNcvpazAQ7YC7F8V8jfVJARowlyKE9x9bcbQjbg/exec";
+    const registrationLookup = {};
 
-      // 初始化事件監聽
-      function init() {
-        document.addEventListener('change', e => {
-          if(e.target.classList.contains('ceremony-type')) handleTypeChange(e.target);
-        });
-        document.addEventListener('input', e => {
-          if(e.target.classList.contains('amount-item')) handleAmountInput(e.target);
-        });
-      }
-
-      // 類別選擇處理
-      function handleTypeChange(select) {
-        const codeField = select.closest('.ancestor-group').querySelector('.code-field');
-        const typeMap = {
-          '地藏殿牌位': '牌位編號',
-          '靈骨殿福位': '靈骨殿編號',
-          '墓園': '墓園編號',
-          '牌位': '牌位編號'
-        };
-        codeField.style.display = typeMap[select.value] ? 'block' : 'none';
-        if(typeMap[select.value]) {
-          codeField.querySelector('label').textContent = typeMap[select.value];
-          codeField.querySelector('input').placeholder = `請輸入${typeMap[select.value]}`;
-        }
-      }
-
-      // 金額計算
-      function handleAmountInput(input) {
-        input.value = input.value.replace(/[^0-9]/g, '');
-        calculateTotal();
-      }
-
-      // 祖先操作函數
-      window.addAncestor = () => {
-        if(ancestorCount >= MAX_ANCESTORS) return;
-        const template = document.querySelector('.ancestor-group').cloneNode(true);
-        ancestorCount++;
-        template.querySelector('.ancestor-header').textContent = `祖先 ${ancestorCount}`;
-        template.querySelector('.remove-ancestor-btn').style.display = 'block';
-        template.querySelectorAll('input').forEach(i => i.value = '');
-        template.querySelector('select').selectedIndex = 0;
-        template.querySelector('.code-field').style.display = 'none';
-        document.getElementById('ancestor-container').appendChild(template);
-        updateAddButton();
-        calculateTotal();
+    function buildGlobalLookup(data) {
+      const map = {
+        taiSui: '太岁',
+        longevity: '长生禄位',
+        wisdom: '文昌帝君',
+        arhat: '十六罗汉',
+        light: '光明灯'
       };
+      for (const key in map) {
+        const label = map[key];
+        const list = data[key];
+        if (!list) continue;
 
-      window.removeAncestor = btn => {
-        if(ancestorCount <= 1) return;
-        btn.closest('.ancestor-group').remove();
-        ancestorCount--;
-        updateAddButton();
-        updateAncestorNumbers();
-        calculateTotal();
-      };
-
-      function updateAddButton() {
-        const btn = document.getElementById('add-ancestor-btn');
-        const remaining = MAX_ANCESTORS - ancestorCount;
-        btn.textContent = `+ 添加祖先（還可添加${remaining}位）`;
-        btn.disabled = remaining <= 0;
-      }
-
-      function updateAncestorNumbers() {
-        document.querySelectorAll('.ancestor-group').forEach((group, index) => {
-          group.querySelector('.ancestor-header').textContent = `祖先 ${index + 1}`;
-        });
-      }
-
-      // 金額總計
-      function calculateTotal() {
-        let total = 0;
-        document.querySelectorAll('.amount-item').forEach(input => {
-          total += parseInt(input.dataset.price) * (parseInt(input.value) || 0);
-        });
-        document.getElementById('total-amount').textContent = total;
-      }
-
-      // 表單驗證
-      function validateForm() {
-        let isValid = true;
-        ['phone', 'applicant', 'address'].forEach(id => {
-          const field = document.getElementById(id);
-          const error = document.getElementById(`${id}-error`);
-          if(!field.value.trim()) {
-            error.style.display = 'block';
-            isValid = false;
-          } else error.style.display = 'none';
-        });
-
-        document.querySelectorAll('.ancestor-group').forEach(group => {
-          const name = group.querySelector('.ancestor-name');
-          const type = group.querySelector('.ceremony-type');
-          const code = group.querySelector('.location-code');
-          const errors = group.querySelectorAll('.error-msg');
-
-          [name, type, code].forEach((field, i) => {
-            if((i < 2 && !field.value) || (i === 2 && type.value && !code.value)) {
-              errors[i].style.display = 'block';
-              isValid = false;
-            } else errors[i].style.display = 'none';
-          });
-        });
-
-        return isValid;
-      }
-
-      // 提交處理
-      window.submitForm = async () => {
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        
-        try {
-          if(!validateForm()) throw new Error('請填寫所有必填欄位');
-
-          // 組裝數據
-          const formData = {
-            timestamp: new Date().toISOString(), // 第一列
-            contact: {
-              phone: document.getElementById('phone').value.trim(),    // 第二列
-              applicant: document.getElementById('applicant').value.trim(), // 第三列
-              address: document.getElementById('address').value.trim() // 第四列
-            },
-            ancestors: []
-          };
-
-          // 收集祖先數據
-          const filledAncestors = Array.from(document.querySelectorAll('.ancestor-group')).map(group => ({
-            name: group.querySelector('.ancestor-name').value.trim() || '', // 第五列
-            type: group.querySelector('.ceremony-type').value.trim() || '', // 第六列
-            code: group.querySelector('.location-code').value.trim() || '', // 第七列
-            items: ITEM_MAP.map(({price}) => { // 第八到十三列
-              const input = group.querySelector(`[data-price="${price}"]`);
-              return parseInt(input.value) || 0;
-            }),
-            special: group.querySelector('.special-item').value.trim() || '' // 第十四列
-          }));
-
-          // 補足8位空數據
-          while(filledAncestors.length < MAX_ANCESTORS) {
-            filledAncestors.push({
-              name: '',
-              type: '',
-              code: '',
-              items: ITEM_MAP.map(() => 0),
-              special: ''
-            });
+        if (label === '光明灯') {
+          const limits = { A: 627, B: 627, C: 756, D: 756, E: 644, F: 644, G: 644, H: 644 };
+          let index = 0;
+          for (const group in limits) {
+            for (let i = 0; i < limits[group]; i++) {
+              const name = list[index++];
+              if (!name) continue;
+              const code = `${group}${i + 1}`;
+              if (!registrationLookup[name]) registrationLookup[name] = {};
+              registrationLookup[name][label] = code;
+            }
           }
-
-          formData.ancestors = filledAncestors;
-
-          // 轉換為84列數組
-          const csvData = [
-            formData.timestamp,
-            formData.contact.phone,
-            formData.contact.applicant,
-            formData.contact.address,
-            ...formData.ancestors.flatMap(ancestor => [
-              ancestor.name,
-              ancestor.type,
-              ancestor.code,
-              ...ancestor.items,
-              ancestor.special
-            ])
-          ];
-
-          console.log('完整數據結構:', csvData);
-          alert(`提交成功！共${csvData.length}列數據\n總金額：${document.getElementById('total-amount').textContent}元`);
-          resetForm();
-
-        } catch(error) {
-          alert(error.message);
-        } finally {
-          btn.disabled = false;
+        } else {
+          for (let i = 0; i < list.length; i++) {
+            const name = list[i];
+            if (!name) continue;
+            if (!registrationLookup[name]) registrationLookup[name] = {};
+            registrationLookup[name][label] = i + 1;
+          }
         }
-      };
-
-      // 表單重置
-      function resetForm() {
-        document.querySelectorAll('input').forEach(i => i.value = '');
-        document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-        document.querySelectorAll('.code-field').forEach(c => c.style.display = 'none');
-        document.getElementById('total-amount').textContent = '0';
-        
-        const container = document.getElementById('ancestor-container');
-        while(container.children.length > 1) container.lastChild.remove();
-        ancestorCount = 1;
-        updateAddButton();
-        updateAncestorNumbers();
       }
+    }
 
-      init();
-    })();
+    function handleSearch() {
+      const name = document.getElementById('searchNameInput').value.trim();
+      const output = document.getElementById('resultBox');
+      if (!name) return output.textContent = '⚠️ 请输入姓名';
+      const result = registrationLookup[name];
+      if (!result) return output.textContent = `❌ 未找到姓名【${name}】的报名记录`;
+
+      let text = `✅ 查询结果：\n\n姓名：${name}\n`;
+      for (const [project, number] of Object.entries(result)) {
+        text += `${project}: ${number}\n`;
+      }
+      output.textContent = text;
+    }
+
+    fetch(gasUrl)
+      .then(res => res.json())
+      .then(data => {
+        buildGlobalLookup(data);
+        document.getElementById('resultBox').textContent = '✅ 数据已加载，请输入姓名查询';
+      })
+      .catch(() => {
+        document.getElementById('resultBox').textContent = '❌ 数据加载失败，请检查网络连接';
+      });
   </script>
 </body>
 </html>
