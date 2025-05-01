@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>2025 太岁光明灯 查询系统</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(to bottom, #fff8f0, #ffe4d4);
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+      color: #5b2400;
+      font-size: 18px;
+    }
+    h1 {
+      text-align: center;
+      color: #c9302c;
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+    .centered-input {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 12px;
+      font-size: 18px;
+      margin: 8px 0;
+      width: 80%;
+      max-width: 400px;
+      border: 2px solid #d2691e;
+      border-radius: 5px;
+      box-sizing: border-box;
+      background-color: #fff8f0;
+      color: #5b2400;
+    }
+    button {
+      background-color: #c9302c;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a91f1a;
+    }
+    .card {
+      background-color: #fffaf5;
+      border: 2px solid #ffd699;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      font-weight: bold;
+      font-size: 18px;
+      color: #a52a2a;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #d9b38c;
+      padding-bottom: 5px;
+    }
+    .person-block {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-left: 4px solid #ffcc80;
+      background-color: #fff4e6;
+    }
+    .person-block span {
+      display: block;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .match-count {
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #c9302c;
+    }
+    .not-found {
+      margin-top: 20px;
+      color: #a00;
+      text-align: center;
+      font-size: 18px;
+    }
+    .loading {
+      text-align: center;
+      color: #a0522d;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>2025 太岁光明灯 查询系统</h1>
+
+  <div class="centered-input">
+    <input type="text" id="searchInput" placeholder="请输入电话、编号或填写者">
+    <button onclick="search()">🔍 查询</button>
+  </div>
+
+  <div id="loading" class="loading">📦 正在载入数据，请稍候...</div>
+  <div id="result"></div>
+
+  <script>
+    let cachedData = [];
+
+    async function preloadData() {
+      const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
+      try {
+        const res = await fetch(url);
+        cachedData = await res.json();
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("result").innerHTML = '<div class="loading">✅ 数据已缓存，可开始查询。</div>';
+      } catch (err) {
+        document.getElementById("loading").innerText = "❌ 无法加载资料，请稍后重试。";
+        console.error("预载失败：", err);
+      }
+    }
+
+function normalizePhone(phone) {
+  return phone.replace(/^'/, '').replace(/\+\d+$/, '');
+}
+
+function search() {
+  const keyword = document.getElementById('searchInput').value.trim();
+
+  if (!keyword || keyword.length < 6) {
+    alert("为保障他人资料隐私，请输入（如手机号后6位数字）进行查询。");
+    return;
+  }
+
+  const matched = cachedData.filter(record => {
+    const rawPhone = record.phone || "";
+    const cleanPhone = normalizePhone(rawPhone);
+    const tail6 = cleanPhone.slice(-6);
+    return tail6 === keyword;
+  });
+
+  const resultEl = document.getElementById("result");
+
+  if (matched.length === 0) {
+    resultEl.innerHTML = '<div class="not-found">❌ 没有找到对应资料</div>';
+    return;
+  }
+
+  let html = `<div class="match-count">🔎 共找到 ${matched.length} 笔符合资料</div>`;
+
+  matched.forEach(record => {
+    html += `<div class="card">
+      <div class="card-header">🧾 填写者：${record.mainName}　📱 电话：${record.phone}</div>`;
+
+    record.entries.forEach(entry => {
+      html += `<div class="person-block">
+        <span>🙏 姓名：${entry.name}</span>
+        <span>生肖：${entry.zodiac}</span>`;
+
+if (entry.taiSui) {
+  html += `<span>太岁：是　纸金：${entry.paperGold1 || "无"}</span>`;
+}
+if (entry.light) {
+  html += `<span>光明灯：是　纸金：${entry.paperGold2 || "无"}</span>`;
+}
+if (entry.longevity) {
+  html += `<span>长生禄位：是　纸金：${entry.paperGold3 || "无"}</span>`;
+}
+if (entry.wisdom) {
+  html += `<span>文昌帝君：是　纸金：${entry.paperGold4 || "无"}</span>`;
+}
+if (entry.arhat) {
+  html += `<span>十六罗汉：是　纸金：${entry.paperGold5 || "无"}</span>`;
+}
+if (entry.donation) {
+  html += `<span>安奉功德金：${entry.donation}</span>`;
+}
+
+      
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  resultEl.innerHTML = html;
+}
+
+// ✅ 放在最外层
+window.onload = preloadData;
+
+
+  </script>
+</body>
+</html>
