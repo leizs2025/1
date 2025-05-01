@@ -103,20 +103,55 @@
   <div id="result"></div>
 
   <script>
-    let cachedData = [];
+let cachedData = [];
+const registrationLookup = {
+  taiSui: {}, longevity: {}, wisdom: {}, arhat: {}, light: {}
+};
 
-    async function preloadData() {
-      const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
-      try {
-        const res = await fetch(url);
-        cachedData = await res.json();
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("result").innerHTML = '<div class="loading">✅ 数据已缓存，可开始查询。</div>';
-      } catch (err) {
-        document.getElementById("loading").innerText = "❌ 无法加载资料，请稍后重试。";
-        console.error("预载失败：", err);
+async function preloadData() {
+  const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
+
+  try {
+    const res = await fetch(url);
+    cachedData = await res.json();
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("result").innerHTML = '<div class="loading">✅ 数据已缓存，可开始查询。</div>';
+  } catch (err) {
+    document.getElementById("loading").innerText = "❌ 无法加载资料，请稍后重试。";
+    console.error("预载失败：", err);
+  }
+
+  // ✅ 加入这段拉取编号资料的逻辑
+  try {
+    const fullRes = await fetch("https://script.google.com/macros/s/AKfycbzhnu9_lxiG31C2NndfeSjO0GpGiwFKNcvpazAQ7YC7F8V8jfVJARowlyKE9x9bcbQjbg/exec");
+    const fullData = await fullRes.json();
+
+    const orderAndAssign = (list, targetMap, prefix = "") => {
+      list.forEach((name, idx) => {
+        if (name) targetMap[name] = prefix + (idx + 1);
+      });
+    };
+
+    orderAndAssign(fullData.taiSui || [], registrationLookup.taiSui);
+    orderAndAssign(fullData.longevity || [], registrationLookup.longevity);
+    orderAndAssign(fullData.wisdom || [], registrationLookup.wisdom);
+    orderAndAssign(fullData.arhat || [], registrationLookup.arhat);
+
+    const lightList = fullData.light || [];
+    const limits = { A: 627, B: 627, C: 756, D: 756, E: 644, F: 644, G: 644, H: 644 };
+    let i = 0;
+    for (const group in limits) {
+      for (let j = 0; j < limits[group]; j++) {
+        const name = lightList[i++];
+        if (name) registrationLookup.light[name] = `${group}${j + 1}`;
       }
     }
+
+  } catch (e) {
+    console.error("载入编号数据失败：", e);
+  }
+}
+
 
 function normalizePhone(phone) {
   return phone.replace(/^'/, '').replace(/\+\d+$/, '');
@@ -150,34 +185,38 @@ function search() {
     html += `<div class="card">
       <div class="card-header">🧾 填写者：${record.mainName}　📱 电话：${record.phone}</div>`;
 
-    record.entries.forEach(entry => {
-      html += `<div class="person-block">
-        <span>🙏 姓名：${entry.name}</span>
-        <span>生肖：${entry.zodiac}</span>`;
+      record.entries.forEach(entry => {
+  html += `<div class="person-block">
+    <span>🙏 姓名：${entry.name}</span>
+    <span>生肖：${entry.zodiac}</span>`;
 
-if (entry.taiSui) {
-  html += `<span>太岁：是　纸金：${entry.paperGold1 || "无"}</span>`;
-}
-if (entry.light) {
-  html += `<span>光明灯：是　纸金：${entry.paperGold2 || "无"}</span>`;
-}
-if (entry.longevity) {
-  html += `<span>长生禄位：是　纸金：${entry.paperGold3 || "无"}</span>`;
-}
-if (entry.wisdom) {
-  html += `<span>文昌帝君：是　纸金：${entry.paperGold4 || "无"}</span>`;
-}
-if (entry.arhat) {
-  html += `<span>十六罗汉：是　纸金：${entry.paperGold5 || "无"}</span>`;
-}
-if (entry.donation) {
-  html += `<span>安奉功德金：${entry.donation}</span>`;
-}
+  if (entry.taiSui) {
+    const code = registrationLookup.taiSui[entry.name] || "无编号";
+    html += `<span>太岁：是　编号：${code}　纸金：${entry.paperGold1 || "无"}</span>`;
+  }
+  if (entry.light) {
+    const code = registrationLookup.light[entry.name] || "无编号";
+    html += `<span>光明灯：是　编号：${code}　纸金：${entry.paperGold2 || "无"}</span>`;
+  }
+  if (entry.longevity) {
+    const code = registrationLookup.longevity[entry.name] || "无编号";
+    html += `<span>长生禄位：是　编号：${code}　纸金：${entry.paperGold3 || "无"}</span>`;
+  }
+  if (entry.wisdom) {
+    const code = registrationLookup.wisdom[entry.name] || "无编号";
+    html += `<span>文昌帝君：是　编号：${code}　纸金：${entry.paperGold4 || "无"}</span>`;
+  }
+  if (entry.arhat) {
+    const code = registrationLookup.arhat[entry.name] || "无编号";
+    html += `<span>十六罗汉：是　编号：${code}　纸金：${entry.paperGold5 || "无"}</span>`;
+  }
+  if (entry.donation) {
+    html += `<span>安奉功德金：${entry.donation}</span>`;
+  }
 
-      
+  html += `</div>`;
+});
 
-      html += `</div>`;
-    });
 
     html += `</div>`;
   });
