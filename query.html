@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>2025年 太岁光明灯查询记录</title>
+  <title>2025 太岁光明灯 查询系统</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -18,9 +18,7 @@
       text-align: center;
       color: #c9302c;
       font-size: 28px;
-      border-bottom: 2px solid #c9302c;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     .centered-input {
       display: flex;
@@ -86,81 +84,109 @@
       text-align: center;
       font-size: 18px;
     }
+    .loading {
+      text-align: center;
+      color: #a0522d;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>2025年 太岁光明灯查询记录</h1>
+  <h1>2025 太岁光明灯 查询系统</h1>
 
   <div class="centered-input">
-    <input type="text" id="searchInput" placeholder="请输入电话或编号进行查询">
+    <input type="text" id="searchInput" placeholder="请输入电话、编号或填写者">
     <button onclick="search()">🔍 查询</button>
   </div>
 
+  <div id="loading" class="loading">📦 正在载入数据，请稍候...</div>
   <div id="result"></div>
 
   <script>
-    async function search() {
-      const keyword = document.getElementById('searchInput').value.trim();
-      const resultEl = document.getElementById("result");
-      resultEl.innerHTML = '';
+    let cachedData = [];
 
-      if (!keyword) {
-        alert("请输入电话号码或编号！");
-        return;
+    async function preloadData() {
+      const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
+      try {
+        const res = await fetch(url);
+        cachedData = await res.json();
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("result").innerHTML = '<div class="loading">✅ 数据已缓存，可开始查询。</div>';
+      } catch (err) {
+        document.getElementById("loading").innerText = "❌ 无法加载资料，请稍后重试。";
+        console.error("预载失败：", err);
       }
-
-      const res = await fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/prayers.json");
-      const data = await res.json();
-
-      const matched = [];
-
-      for (const [key, entry] of Object.entries(data)) {
-        if (!Array.isArray(entry)) continue;
-        const phone = (entry[2] || "").toString();
-        const serial = (entry[0] || "").toString();
-        const combined = phone + serial + key;
-        if (combined.includes(keyword)) {
-          matched.push(entry);
-        }
-      }
-
-      if (matched.length === 0) {
-        resultEl.innerHTML = '<div class="not-found">❌ 未找到资料，请确认号码或编号是否正确。</div>';
-        return;
-      }
-
-      let html = `<div class="match-count">🔎 共找到 ${matched.length} 笔符合资料</div>`;
-
-      matched.forEach((found) => {
-        const submitter = found[1] || "未填写";
-        const phone = found[2] || "无";
-
-        html += `<div class="card">
-          <div class="card-header">🧾 填写者：${submitter}　📱 电话：${phone}</div>`;
-
-        for (let i = 0; i < 15; i++) {
-          const base = 4 + i * 13;
-          const name = found[base];
-          if (!name) continue;
-
-          html += `<div class="person-block">
-            <span>🙏 姓名：${name}</span>
-            <span>生肖：${found[base + 1] || ""}</span>
-            <span>太岁灯：${found[base + 2] || ""}　纸金：${found[base + 3] || ""}</span>
-            <span>光明灯：${found[base + 4] || ""}　纸金：${found[base + 5] || ""}</span>
-            <span>长生禄位：${found[base + 6] || ""}　纸金：${found[base + 7] || ""}</span>
-            <span>文昌帝君：${found[base + 8] || ""}　纸金：${found[base + 9] || ""}</span>
-            <span>十六罗汉：${found[base + 10] || ""}　纸金：${found[base + 11] || ""}</span>
-            <span>安奉功德金：${found[base + 12] || ""}</span>
-          </div>`;
-        }
-
-        html += `</div>`; // end card
-      });
-
-      resultEl.innerHTML = html;
     }
-  </script>
 
+function normalizePhone(phone) {
+  return phone.replace(/^'/, '').replace(/\+\d+$/, '');
+}
+
+function search() {
+  const keyword = document.getElementById('searchInput').value.trim();
+
+  if (!keyword || keyword.length < 6) {
+    alert("为保障他人资料隐私，请输入（如手机号后6位数字）进行查询。");
+    return;
+  }
+
+  const matched = cachedData.filter(record => {
+    const rawPhone = record.phone || "";
+    const cleanPhone = normalizePhone(rawPhone);
+    const tail6 = cleanPhone.slice(-6);
+    return tail6 === keyword;
+  });
+
+  const resultEl = document.getElementById("result");
+
+  if (matched.length === 0) {
+    resultEl.innerHTML = '<div class="not-found">❌ 没有找到对应资料</div>';
+    return;
+  }
+
+  let html = `<div class="match-count">🔎 共找到 ${matched.length} 笔符合资料</div>`;
+
+  matched.forEach(record => {
+    html += `<div class="card">
+      <div class="card-header">🧾 填写者：${record.mainName}　📱 电话：${record.phone}</div>`;
+
+    record.entries.forEach(entry => {
+      html += `<div class="person-block">
+        <span>🙏 姓名：${entry.name}</span>
+        <span>生肖：${entry.zodiac}</span>`;
+
+      if (entry.taiSui) {
+        html += `<span>太岁灯：是　纸金：${entry.paperGold1 || "无"}</span>`;
+      }
+      if (entry.light) {
+        html += `<span>光明灯：是　纸金：${entry.paperGold2 || "无"}</span>`;
+      }
+      if (entry.longevity) {
+        html += `<span>长生禄位：是　纸金：${entry.paperGold3 || "无"}</span>`;
+      }
+      if (entry.wisdom) {
+        html += `<span>文昌帝君：是　纸金：${entry.paperGold4 || "无"}</span>`;
+      }
+      if (entry.arhat) {
+        html += `<span>十六罗汉：是　纸金：${entry.paperGold5 || "无"}</span>`;
+      }
+      if (entry.donation) {
+        html += `<span>安奉功德金：${entry.donation}</span>`;
+      }
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  resultEl.innerHTML = html;
+}
+
+// ✅ 放在最外层
+window.onload = preloadData;
+
+
+  </script>
 </body>
 </html>
