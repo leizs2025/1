@@ -93,12 +93,10 @@
 </head>
 <body>
   <h1>2025 太岁光明灯 查询系统</h1>
-
   <div class="centered-input">
     <input type="text" id="searchInput" placeholder="请输入电话、编号或填写者">
     <button onclick="search()">🔍 查询</button>
   </div>
-
   <div id="loading" class="loading">📦 正在载入数据，请稍候...</div>
   <div id="result"></div>
 
@@ -107,6 +105,10 @@ let cachedData = [];
 const registrationLookup = {
   taiSui: {}, longevity: {}, wisdom: {}, arhat: {}, light: {}
 };
+
+function getCode(map, name) {
+  return map[(name || '').trim().toUpperCase()] || '无编号';
+}
 
 async function preloadData() {
   const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
@@ -121,14 +123,13 @@ async function preloadData() {
     console.error("预载失败：", err);
   }
 
-  // ✅ 加入这段拉取编号资料的逻辑
   try {
     const fullRes = await fetch("https://script.google.com/macros/s/AKfycbzhnu9_lxiG31C2NndfeSjO0GpGiwFKNcvpazAQ7YC7F8V8jfVJARowlyKE9x9bcbQjbg/exec");
     const fullData = await fullRes.json();
 
     const orderAndAssign = (list, targetMap, prefix = "") => {
       list.forEach((name, idx) => {
-        if (name) targetMap[name] = prefix + (idx + 1);
+        if (name) targetMap[name.trim().toUpperCase()] = prefix + (idx + 1);
       });
     };
 
@@ -143,15 +144,13 @@ async function preloadData() {
     for (const group in limits) {
       for (let j = 0; j < limits[group]; j++) {
         const name = lightList[i++];
-        if (name) registrationLookup.light[name] = `${group}${j + 1}`;
+        if (name) registrationLookup.light[name.trim().toUpperCase()] = `${group}${j + 1}`;
       }
     }
-
   } catch (e) {
     console.error("载入编号数据失败：", e);
   }
 }
-
 
 function normalizePhone(phone) {
   return phone.replace(/^'/, '').replace(/\+\d+$/, '');
@@ -185,38 +184,31 @@ function search() {
     html += `<div class="card">
       <div class="card-header">🧾 填写者：${record.mainName}　📱 电话：${record.phone}</div>`;
 
-      record.entries.forEach(entry => {
-  html += `<div class="person-block">
-    <span>🙏 姓名：${entry.name}</span>
-    <span>生肖：${entry.zodiac}</span>`;
+    record.entries.forEach(entry => {
+      html += `<div class="person-block">
+        <span>🙏 姓名：${entry.name}</span>
+        <span>生肖：${entry.zodiac}</span>`;
 
-  if (entry.taiSui) {
-    const code = registrationLookup.taiSui[entry.name] || "无编号";
-    html += `<span>太岁：是　编号：${code}　纸金：${entry.paperGold1 || "无"}</span>`;
-  }
-  if (entry.light) {
-    const code = registrationLookup.light[entry.name] || "无编号";
-    html += `<span>光明灯：是　编号：${code}　纸金：${entry.paperGold2 || "无"}</span>`;
-  }
-  if (entry.longevity) {
-    const code = registrationLookup.longevity[entry.name] || "无编号";
-    html += `<span>长生禄位：是　编号：${code}　纸金：${entry.paperGold3 || "无"}</span>`;
-  }
-  if (entry.wisdom) {
-    const code = registrationLookup.wisdom[entry.name] || "无编号";
-    html += `<span>文昌帝君：是　编号：${code}　纸金：${entry.paperGold4 || "无"}</span>`;
-  }
-  if (entry.arhat) {
-    const code = registrationLookup.arhat[entry.name] || "无编号";
-    html += `<span>十六罗汉：是　编号：${code}　纸金：${entry.paperGold5 || "无"}</span>`;
-  }
-  if (entry.donation) {
-    html += `<span>安奉功德金：${entry.donation}</span>`;
-  }
-
-  html += `</div>`;
-});
-
+      if (entry.taiSui) {
+        html += `<span>太岁：是　编号：${getCode(registrationLookup.taiSui, entry.name)}　纸金：${entry.paperGold1 || "无"}</span>`;
+      }
+      if (entry.light) {
+        html += `<span>光明灯：是　编号：${getCode(registrationLookup.light, entry.name)}　纸金：${entry.paperGold2 || "无"}</span>`;
+      }
+      if (entry.longevity) {
+        html += `<span>长生禄位：是　编号：${getCode(registrationLookup.longevity, entry.name)}　纸金：${entry.paperGold3 || "无"}</span>`;
+      }
+      if (entry.wisdom) {
+        html += `<span>文昌帝君：是　编号：${getCode(registrationLookup.wisdom, entry.name)}　纸金：${entry.paperGold4 || "无"}</span>`;
+      }
+      if (entry.arhat) {
+        html += `<span>十六罗汉：是　编号：${getCode(registrationLookup.arhat, entry.name)}　纸金：${entry.paperGold5 || "无"}</span>`;
+      }
+      if (entry.donation) {
+        html += `<span>安奉功德金：${entry.donation}</span>`;
+      }
+      html += `</div>`;
+    });
 
     html += `</div>`;
   });
@@ -224,10 +216,7 @@ function search() {
   resultEl.innerHTML = html;
 }
 
-// ✅ 放在最外层
 window.onload = preloadData;
-
-
-  </script>
+</script>
 </body>
 </html>
