@@ -155,23 +155,25 @@ function search() {
         <span>🙏 姓名：${entry.name}</span>
         <span>生肖：${entry.zodiac}</span>`;
 
-      if (entry.taiSui) {
-        html += `<span>太岁灯：是　纸金：${entry.paperGold1 || "无"}</span>`;
-      }
-      if (entry.light) {
-        html += `<span>光明灯：是　纸金：${entry.paperGold2 || "无"}</span>`;
-      }
-      if (entry.longevity) {
-        html += `<span>长生禄位：是　纸金：${entry.paperGold3 || "无"}</span>`;
-      }
-      if (entry.wisdom) {
-        html += `<span>文昌帝君：是　纸金：${entry.paperGold4 || "无"}</span>`;
-      }
-      if (entry.arhat) {
-        html += `<span>十六罗汉：是　纸金：${entry.paperGold5 || "无"}</span>`;
-      }
-      if (entry.donation) {
-        html += `<span>安奉功德金：${entry.donation}</span>`;
+if (entry.taiSui) {
+  html += `<span>太岁：是　纸金：${entry.paperGold1 || "无"}</span>`;
+}
+if (entry.light) {
+  html += `<span>光明灯：是　纸金：${entry.paperGold2 || "无"}</span>`;
+}
+if (entry.longevity) {
+  html += `<span>长生禄位：是　纸金：${entry.paperGold3 || "无"}</span>`;
+}
+if (entry.wisdom) {
+  html += `<span>文昌帝君：是　纸金：${entry.paperGold4 || "无"}</span>`;
+}
+if (entry.arhat) {
+  html += `<span>十六罗汉：是　纸金：${entry.paperGold5 || "无"}</span>`;
+}
+if (entry.donation) {
+  html += `<span>安奉功德金：${entry.donation}</span>`;
+}
+
       }
 
       html += `</div>`;
