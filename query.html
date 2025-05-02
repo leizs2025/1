@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>太岁/光明灯 查询系统</title>
+  <title>2025 太岁光明灯 查询系统</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -92,15 +92,16 @@
   </style>
 </head>
 <body>
-  <h1>2025 太岁/光明灯 查询系统</h1>
+  <h1>2025 太岁光明灯 查询系统</h1>
   <div class="centered-input">
-    <input type="text" id="searchInput" placeholder="请输入手机后6位号码 查询">
+    <input type="text" id="searchInput" placeholder="请输入电话、编号或填写者">
     <button onclick="search()">🔍 查询</button>
   </div>
   <div id="loading" class="loading">📦 正在载入数据，请稍候...</div>
   <div id="result"></div>
 
-  <script>
+ 
+<script>
 let cachedData = [];
 const registrationLookup = {
   taiSui: {}, longevity: {}, wisdom: {}, arhat: {}, light: {}
@@ -108,6 +109,22 @@ const registrationLookup = {
 
 function getCode(map, name) {
   return map[(name || '').trim().toUpperCase()] || '无编号';
+}
+
+function normalizeName(name) {
+  return (name || '').trim().toUpperCase();
+}
+
+function extractMobileNumber(phone) {
+  if (!phone) return '';
+  const raw = phone.toString().trim()
+    .replace(/^'/, '')        // 去除撇号
+    .replace(/\s+/g, '')      // 去空格
+    .replace(/\+\d+$/, '')    // 去除尾部 +数字
+    .replace(/[^\d]/g, '');   // 去除非数字字符
+
+  const match = raw.match(/(\d{10})$/);  // 提取最后10位
+  return match ? match[1] : raw;
 }
 
 async function preloadData() {
@@ -152,23 +169,21 @@ async function preloadData() {
   }
 }
 
-function normalizePhone(phone) {
-  return phone.replace(/^'/, '').replace(/\+\d+$/, '');
-}
-
 function search() {
   const keyword = document.getElementById('searchInput').value.trim();
 
   if (!keyword || keyword.length < 6) {
-    alert("为保障他人资料隐私，请输入（如手机号后6位数字）进行查询。");
+    alert("请输入手机号码的后6位，或完整号码进行查询。");
     return;
   }
 
+  const userInput = keyword;
+  const userTail6 = userInput.slice(-6);
+
   const matched = cachedData.filter(record => {
-    const rawPhone = record.phone || "";
-    const cleanPhone = normalizePhone(rawPhone);
-    const tail6 = cleanPhone.slice(-6);
-    return tail6 === keyword;
+    const cleaned = extractMobileNumber(record.phone);
+    const recordTail6 = cleaned.slice(-6);
+    return cleaned === userInput || recordTail6 === userTail6;
   });
 
   const resultEl = document.getElementById("result");
