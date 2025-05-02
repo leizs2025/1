@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>太岁光明灯结算报表</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #fff;
+      font-family: "Segoe UI", sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px dashed #aaa;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .admin-summary {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 16px;
+    }
+    .btn-print {
+      display: block;
+      margin: 30px auto 0;
+    }
+    .selector {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📅 太岁光明灯结算报表</h2>
+
+  <div class="selector">
+    <label for="yearSelect" class="form-label fw-bold">选择年份：</label>
+    <select id="yearSelect" class="form-select d-inline-block w-auto" onchange="loadReport()">
+      <option value="" selected>全部年份</option>
+      <option value="5">2025</option>
+      <option value="6">2026</option>
+      <option value="7">2027</option>
+    </select>
+  </div>
+
+  <div id="report" class="fs-5">
+    <div class="section" id="goldStats">📦 正在加载纸金资料...</div>
+    <div class="section" id="donationStats">🎁 正在加载功德金资料...</div>
+    <div class="section" id="totalStats">💰 正在计算总金额...</div>
+    <div class="section admin-summary" id="adminStats">👤 收款人经手金额统计加载中...</div>
+  </div>
+
+  <button class="btn btn-secondary btn-print" onclick="window.print()">🖨️ 打印此报表</button>
+
+  <script>
+    function cleanNumber(val) {
+      return Number(val) || 0;
+    }
+
+    async function loadReport() {
+      const url = "https://lucky-cloud-f9c3.gealarm2012.workers.dev?list=1";
+      try {
+        const res = await fetch(url);
+        const entries = await res.json();
+
+        const selectedDigit = document.getElementById("yearSelect").value;
+
+        let totalPaperCount = 0;
+        let totalDonation = 0;
+        const adminMap = {};
+
+        entries.forEach(entry => {
+          const phone = String(entry.phoneNumber || '').trim();
+          if (selectedDigit && phone[0] !== selectedDigit) return;
+
+          let paperCount = cleanNumber(entry.wishPaper);
+          let donationSum = 0;
+
+          (entry.data || []).forEach(p => {
+            paperCount += cleanNumber(p.paperGold1);
+            paperCount += cleanNumber(p.paperGold2);
+            paperCount += cleanNumber(p.paperGold3);
+            paperCount += cleanNumber(p.paperGold4);
+            paperCount += cleanNumber(p.paperGold5);
+            donationSum += cleanNumber(p.donation);
+          });
+
+          const paperAmount = paperCount * 3;
+          const total = paperAmount + donationSum;
+          totalPaperCount += paperCount;
+          totalDonation += donationSum;
+
+          const who = entry.admin || "无名";
+          if (!adminMap[who]) adminMap[who] = 0;
+          adminMap[who] += total;
+        });
+
+        const paperAmountTotal = totalPaperCount * 3;
+        const totalAmount = paperAmountTotal + totalDonation;
+
+        document.getElementById("goldStats").innerHTML =
+          `📦 累计纸金：${totalPaperCount} 份<br><br>🧾 累计纸金金额：${paperAmountTotal.toLocaleString()} 元`;
+
+        document.getElementById("donationStats").textContent =
+          `🎁 累计功德金金额：${totalDonation.toLocaleString()} 元`;
+
+        document.getElementById("totalStats").textContent =
+          `💰 总金额：${totalAmount.toLocaleString()} 元`;
+
+        let adminStr = "👤 收款人经手金额统计：\n";
+        Object.entries(adminMap).forEach(([admin, amt]) => {
+          adminStr += `  - ${admin}：${amt.toLocaleString()} 元\n`;
+        });
+        document.getElementById("adminStats").textContent = adminStr;
+      } catch (err) {
+        document.getElementById("report").textContent = "❌ 报表加载失败，请稍后再试。";
+        console.error("加载错误：", err);
+      }
+    }
+
+   
+  </script>
+</body>
+</html>
