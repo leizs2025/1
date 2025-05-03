@@ -19,23 +19,12 @@
     .header-block .logo { width: 120px; height: auto; object-fit: contain; }
     .header-center { flex: 1; text-align: center; }
     .header-center h2 { margin: 0; font-size: 28px; color: #000; line-height: 1.4; }
-    .header-line { font-size: 13px; line-height: 1.4; margin: 2px 0; }
+    .header-line { font-size: 13px; line-height: 1.2; margin: 2px 0; }
     .taishui { text-align: center; font-size: 18px; font-weight: bold; margin: 5px 0 10px; }
     .info { margin-top: 12px; font-size: 14px; }
     .info span { display: inline-block; margin-right: 20px; margin-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; table-layout: fixed; }
-    th, td {
-     
-      border: 1px solid #000;
-      padding: 3px 4px;
-      text-align: center;
-      word-break: break-word;
-      white-space: nowrap;
-      height: 28px;
-      vertical-align: middle;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    th, td { border: 1px solid #000; padding: 3px 4px; text-align: center; word-break: break-word; white-space: nowrap; height: 28px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
     .name-cell { max-width: 120px; overflow: break-word; word-break: break-word; white-space: normal; font-size: 14px; }
     .name-cell.long-name { font-size: 12px; line-height: 1.2;}
     .footer-wrap {display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; gap: 20px; page-break-inside: avoid; }
@@ -55,8 +44,8 @@
     <div class="header-line">Persatuan Miao Li Tang Sibu</div>
     <div class="header-line">No.22N, Taman Damai, Off Brooke Drive 33,</div>
     <div class="header-line">Jalan Tun Abang Haji Openg, 96000, Sibu, Sarawak, Malaysia.</div>
-    <div class="header-line">Tel: 6-084-342986 / 013-980-4461</div>
-    <div class="header-line">Fax: 6-084-319961</div>
+    <div class="header-line">Tel: 6-084-342986 / 0167472986 / 0139804461</div>
+    <div class="header-line">Jalan Oya Batu 25, Teku Pasai Siong Sibu. </div>
   </div>
   <img src="right-logo.jpg" class="logo" alt="右 Logo">
 </div>
@@ -180,14 +169,15 @@ const taiSuiData = {
     const nameClass = (pData.name && pData.name.length > 8) ? "name-cell long-name" : "name-cell";
 
     row.innerHTML = `
-      <td class="${nameClass}">${safe(pData.name)}</td>
-      <td>${pData.taiSui === "是" ? "✔" : "&nbsp;"}</td><td>${safe(pData.paperGold1)}</td>
-      <td>${pData.light === "是" ? "✔" : "&nbsp;"}</td><td>${safe(pData.paperGold2)}</td>
-      <td>${pData.longevity === "是" ? "✔" : "&nbsp;"}</td><td>${safe(pData.paperGold3)}</td>
-      <td>${pData.wisdom === "是" ? "✔" : "&nbsp;"}</td><td>${safe(pData.paperGold4)}</td>
-      <td>${pData.arhat === "是" ? "✔" : "&nbsp;"}</td><td>${safe(pData.paperGold5)}</td>
-      <td>${(currentMode === 'normal') ? safe(pData.donation) : "&nbsp;"}</td>
-    `;
+  <td class="${nameClass}">${safe(pData.name)}</td>
+  <td>${pData.taiSui === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold1)}</td>
+  <td>${pData.light === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold2)}</td>
+  <td>${pData.longevity === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold3)}</td>
+  <td>${pData.wisdom === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold4)}</td>
+  <td>${pData.arhat === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold5)}</td>
+  <td>${(currentMode === 'normal') ? safe(pData.donation) : "&nbsp;"}</td>
+`;
+
 
     paperTotal += (parseFloat(pData.paperGold1 || 0) + parseFloat(pData.paperGold2 || 0) + parseFloat(pData.paperGold3 || 0) + parseFloat(pData.paperGold4 || 0) + parseFloat(pData.paperGold5 || 0));
     donationTotal += parseFloat(pData.donation || 0);
