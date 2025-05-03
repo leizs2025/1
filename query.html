@@ -94,7 +94,7 @@
 <body>
   <h1>2025 太岁光明灯 查询系统</h1>
   <div class="centered-input">
-    <input type="text" id="searchInput" placeholder="请输入手机号码的后6位，或完整号码进行查询">
+    <input type="text" id="searchInput" placeholder="请输入手机号码的后7位，或完整号码进行查询。">
     <button onclick="search()">🔍 查询</button>
   </div>
   <div id="loading" class="loading">📦 正在载入数据，请稍候...</div>
@@ -172,18 +172,18 @@ async function preloadData() {
 function search() {
   const keyword = document.getElementById('searchInput').value.trim();
 
-  if (!keyword || keyword.length < 6) {
-    alert("请输入手机号码的后6位，或完整号码进行查询。");
+  if (!keyword || keyword.length < 7) {
+    alert("请输入手机号码的后7位，或完整号码进行查询。");
     return;
   }
 
   const userInput = keyword;
-  const userTail6 = userInput.slice(-6);
+  const userTail7 = userInput.slice(-7);
 
   const matched = cachedData.filter(record => {
     const cleaned = extractMobileNumber(record.phone);
-    const recordTail6 = cleaned.slice(-6);
-    return cleaned === userInput || recordTail6 === userTail6;
+    const recordTail7 = cleaned.slice(-7);
+    return cleaned === userInput || recordTail7 === userTail7;
   });
 
   const resultEl = document.getElementById("result");
