@@ -46,6 +46,17 @@
       "缠身灵1": ["缠身灵灵编號", "阳上报恩人 中文姓名"]
     };
 
+    const zhMap = {
+      "靈": "灵", "臺": "台", "聯": "联", "顯": "显", "戶": "户", "點": "点",
+      "張": "张", "黃": "黄", "蘇": "苏", "劉": "刘", "馬": "马", "馮": "冯", "許": "许",
+      "謝": "谢", "鄧": "邓", "葉": "叶", "龔": "龚", "應": "应", "親": "亲", "書": "书", "師": "师",
+      "萬": "万", "兒": "儿", "國": "国", "學": "学", "體": "体", "風": "风", "東": "东", "龍": "龙"
+    };
+
+    function toSimplified(str) {
+      return str.split('').map(ch => zhMap[ch] || ch).join('');
+    }
+
     let cacheData = [];
     let dataLoaded = false;
 
@@ -73,11 +84,12 @@
 
       if (!query) return alert('请输入查询内容');
 
+      const simpQuery = toSimplified(query);
       const result = cacheData.filter(item => {
-        const values = Object.values(item).map(v => v?.toString());
+        const values = Object.values(item).map(v => toSimplified(v?.toString() || ''));
         const phone = values.find(v => /^1\d{10}$/.test(v)) || '';
         const last6 = phone.slice(-6);
-        return values.includes(query) || phone === query || last6 === query;
+        return values.includes(simpQuery) || phone === query || last6 === query;
       });
 
       if (result.length === 0) {
