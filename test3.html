@@ -1,426 +1,412 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在线祈福报名系统</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        :root {
-            --bg-color: #FFF8E7;
-            --primary-color: #FF4444;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>快递查询与批量提交系统</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0 auto;
+      max-width: 860px;
+      padding: 30px 20px;
+      background-color: #ffffff;
+      color: #333;
+    }
 
-        body {
-            background: var(--bg-color);
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-        }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
 
-        .page {
-            display: block;
-            opacity: 1;
-            transition: opacity 0.3s;
-        }
-        .page.hidden {
-            display: none !important;
-            opacity: 0;
-        }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+    }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
 
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin: 8px 0;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
+    .input-label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
 
-        button {
-            background: var(--primary-color);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 25px;
-            width: 100%;
-            font-size: 16px;
-            margin: 8px 0;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
 
-        .participant-card {
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-            box-sizing: border-box;
-        }
+    button {
+      padding: 10px 16px;
+      font-size: 1rem;
+      color: #fff;
+      background-color: #007acc;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-        .item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            gap: 10px;
-        }
+    button:hover {
+      background-color: #005fa3;
+    }
 
-        .item-row input[type="number"] {
-            width: 80px;
-            padding: 8px;
-            text-align: right;
-        }
+    .data-line {
+      font-size: 0.95rem;
+      margin: 6px 0;
+    }
 
-        #totalAmount {
-            color: var(--primary-color);
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-        }
+    .data-label {
+      font-weight: 600;
+      margin-right: 10px;
+      color: #555;
+    }
 
-        .delete-btn {
-            background: #ff4444 !important;
-            padding: 5px 10px !important;
-            font-size: 12px !important;
-            width: auto !important;
-            margin-left: 10px;
-        }
-    </style>
+    #previewList div {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .del-btn {
+      background: none;
+      color: red;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .status-bar {
+      padding: 10px;
+      font-weight: bold;
+      border-left: 4px solid;
+      margin: 16px 0;
+    }
+
+    .success {
+      background: #e0f8e9;
+      color: #2c7a3f;
+      border-color: #2c7a3f;
+    }
+
+    .error {
+      background: #fdecea;
+      color: #c0392b;
+      border-color: #c0392b;
+    }
+
+    #ticketPreview {
+      margin-top: 15px;
+      padding: 12px;
+      border: 1px dashed #bbb;
+      background: #fafafa;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .ticket-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    .ticket-table td {
+      padding: 4px 0;
+      vertical-align: top;
+    }
+
+    .ticket-header {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .ticket-summary {
+      text-align: right;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .inline-input {
+      display: flex;
+      gap: 10px;
+    }
+
+    .inline-input input,
+    .inline-input select {
+      flex: 1;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <!-- 第一页：基本信息 -->
-    <div id="page1" class="page card">
-        <h2>基本信息</h2>
-        <input type="tel" id="phone" placeholder="手机号" required>
-        <input type="text" id="registrant" placeholder="填写人姓名" required>
-        <select id="blessType">
-            <option value="消灾">消灾法会</option>
-            <option value="超度">超度法会</option>
-        </select>
-        <button id="nextBtn">下一步</button>
-    </div>
 
-    <!-- 第二页：祈福信息 -->
-    <div id="page2" class="page card hidden">
-        <h2>祈福信息</h2>
-        <div id="participants"></div>
-        <button id="addParticipantBtn" style="background:#4CAF50;">+ 添加祈福者</button>
-        <div id="totalAmount">总金额：0 元</div>
-        <button id="previewBtn">预览提交</button>
-    </div>
+  <h1>快递查询与批量提交系统</h1>
 
-    <!-- 第三页：预览页 -->
-    <div id="previewPage" class="page card hidden">
-        <h2>信息预览</h2>
-        <div id="previewContent"></div>
-        <button id="backBtn" style="background:#666;">返回修改</button>
-        <button id="downloadBtn">下载PDF</button>
-        <button id="submitBtn">确认提交</button>
-    </div>
+  <div class="input-label">快递单号</div>
+  <div class="inline-input">
+    <input type="text" id="trackingNumber" placeholder="输入快递单号或后5位">
+    <button onclick="queryData()">🔍 查询</button>
+  </div>
+
+  <div class="data-line"><span class="data-label">快递公司:</span> <span id="companyData">-</span></div>
+  <div class="data-line"><span class="data-label">货物名称:</span> <span id="productData">-</span></div>
+  <div class="data-line"><span class="data-label">客户名称:</span> <span id="customerData">-</span></div>
+  <div class="data-line"><span class="data-label">已知运费:</span> <span id="knownPrice">-</span></div>
+
+  <div class="input-group">
+    <label class="input-label">运费金额</label>
+    <input type="number" id="enteredPrice" placeholder="输入运费金额">
+  </div>
+
+  <div class="button-group">
+    <button onclick="addToCache()">➕ 加入缓存</button>
+    <button onclick="loadCache()">📥 加载缓存</button>
+    <button onclick="submitAll()">📤 提交全部记录</button>
+    <button onclick="clearCache()" style="background:#e74c3c">🗑️ 清空缓存</button>
+  </div>
+
+  <div id="statusBar" class="status-bar" style="display:none;"></div>
+
+  <div class="section-title">📋 已缓存记录</div>
+  <div id="previewList"></div>
+
+  <div class="section-title">🧾 筛选客户生成小票</div>
+  <div class="inline-input">
+    <select id="ticketSelector" onchange="renderTicket()"><option value="">请选择客户</option></select>
+    <button onclick="downloadTicketAsImage()">📸 下载小票截图</button>
+  </div>
+  <div id="ticketPreview"></div>
 
 <script>
-// 系统数据存储
-let formData = {
-    phone: '',
-    registrant: '',
-    type: '消灾',
-    participants: [{
-        name: '',
-        address: '',
-        items: { 
-            token: 0,
-            homa: 0,
-            paper3: 0,
-            paper6: 0
-        }
-    }]
-};
+const API_URL = "https://wandering-moon-bdc2.jeenty.workers.dev/gas1";
+let allRecords = [];
+let pendingSubmissions = [], lastFetched = {}, matchedTrackingNumber = "";
 
-// 初始化应用
-function initializeApp() {
-    bindEventListeners();
-    renderParticipants();
+function loadCache() {
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "all" })
+  })
+  .then(res => res.json())
+  .then(data => {
+    allRecords = data;
+    showStatus("✅ 缓存加载成功，共 " + allRecords.length + " 条记录", "success");
+  })
+  .catch(() => showStatus("缓存加载失败", "error"));
 }
 
-// 事件绑定
-function bindEventListeners() {
-    document.getElementById('nextBtn').addEventListener('click', nextPage);
-    document.getElementById('addParticipantBtn').addEventListener('click', addParticipant);
-    document.getElementById('previewBtn').addEventListener('click', showPreview);
-    document.getElementById('backBtn').addEventListener('click', goBack);
-    document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
-    document.getElementById('submitBtn').addEventListener('click', submitData);
+function queryData() {
+  const input = document.getElementById("trackingNumber").value.trim();
+  if (!input) return alert("请输入快递单号");
+  if (allRecords.length === 0) return showStatus("请先加载缓存", "error");
+
+  let match = allRecords.find(item => item.trackingNumber === input);
+  if (!match && input.length === 5) {
+    match = allRecords.find(item => item.trackingNumber?.slice(-5) === input);
+  }
+  if (match) {
+    lastFetched = match;
+    matchedTrackingNumber = match.trackingNumber;
+    updateDisplay(match);
+  } else {
+    showStatus("未在缓存中找到该快递单号", "error");
+  }
 }
 
-// 页面切换
-function nextPage() {
-    const phone = document.getElementById('phone').value.trim();
-    const registrant = document.getElementById('registrant').value.trim();
-    
-    if (!phone || !registrant) {
-        alert('请填写手机号和填写人姓名');
-        return;
-    }
-
-    formData.phone = phone;
-    formData.registrant = registrant;
-    formData.type = document.getElementById('blessType').value;
-
-    document.getElementById('page1').classList.add('hidden');
-    document.getElementById('page2').classList.remove('hidden');
+function updateDisplay(data) {
+  document.getElementById("companyData").textContent = data.company || "-";
+  document.getElementById("productData").textContent = data.product || "-";
+  document.getElementById("customerData").textContent = data.customer || "-";
+  document.getElementById("knownPrice").textContent = data.price || "-";
+  showStatus("✅ 查询成功", "success");
 }
 
-// 添加参与者
-function addParticipant() {
-    if (formData.participants.length >= 13) {
-        alert('最多添加13位祈福者');
-        return;
-    }
-    formData.participants.push({
-        name: '',
-        address: '',
-        items: { 
-            token: 0,
-            homa: 0,
-            paper3: 0,
-            paper6: 0
-        }
-    });
-    renderParticipants();
+function addToCache() {
+  const price = document.getElementById("enteredPrice").value.trim();
+  const number = matchedTrackingNumber || document.getElementById("trackingNumber").value.trim();
+  if (!price || !lastFetched.company || !number) return showStatus("请查询并填写金额", "error");
+
+  const alreadyExists = pendingSubmissions.some(item => item.trackingNumber === number);
+  if (alreadyExists) return showStatus("该快递单号已存在于缓存中", "error");
+
+  pendingSubmissions.push({
+    trackingNumber: number,
+    company: lastFetched.company,
+    customer: lastFetched.customer,
+    product: lastFetched.product,
+    enteredPrice: price
+  });
+  clearForm();
+  renderPreview();
+  showStatus("✅ 已加入缓存", "success");
 }
 
-// 删除参与者
-function removeParticipant(index) {
-    index = parseInt(index);
-    if (index > 0 && index < formData.participants.length) {
-        formData.participants.splice(index, 1);
-        renderParticipants();
-    }
+function renderPreview() {
+  const box = document.getElementById("previewList");
+  box.innerHTML = "";
+  pendingSubmissions.forEach((item, i) => {
+    const line = document.createElement("div");
+    line.innerHTML = `<div>${item.trackingNumber} - ${item.customer} - ${parseFloat(item.enteredPrice).toFixed(2)}</div><button class='del-btn' onclick='removeItem(${i})'>×</button>`;
+    box.appendChild(line);
+  });
+
+  updateCustomerDropdown();
+
+  const sel = document.getElementById("ticketSelector");
+  const selectedCustomer = sel.value;
+  const stillExists = pendingSubmissions.some(r => r.customer === selectedCustomer);
+  if (!stillExists) sel.value = "";
+
+  renderTicket();
 }
 
-// 渲染参与者
-function renderParticipants() {
-    const container = document.getElementById('participants');
-    container.innerHTML = formData.participants.map((p, index) => `
-        <div class="participant-card">
-            <h3>祈福者 ${index+1} 
-                ${index > 0 ? `<button class="delete-btn" data-index="${index}">删除</button>` : ''}
-            </h3>
-            <input placeholder="姓名（可选）" 
-                value="${p.name}" 
-                data-index="${index}" 
-                data-field="name">
-            <input placeholder="地址（可选）" 
-                value="${p.address}" 
-                data-index="${index}" 
-                data-field="address">
-            
-            <div class="item-row">
-                <span>祈福令牌（5元）</span>
-                <input type="number" min="0" value="${p.items.token}"
-                    data-index="${index}" 
-                    data-field="token">
-            </div>
-            <div class="item-row">
-                <span>小护摩片（1元）</span>
-                <input type="number" min="0" value="${p.items.homa}"
-                    data-index="${index}" 
-                    data-field="homa">
-            </div>
-            <div class="item-row">
-                <span>纸金（3元）</span>
-                <input type="number" min="0" value="${p.items.paper3}"
-                    data-index="${index}" 
-                    data-field="paper3">
-            </div>
-            <div class="item-row">
-                <span>纸金（6元）</span>
-                <input type="number" min="0" value="${p.items.paper6}"
-                    data-index="${index}" 
-                    data-field="paper6">
-            </div>
-        </div>
-    `).join('');
-
-    // 绑定动态元素事件
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => removeParticipant(btn.dataset.index));
-    });
-    
-    document.querySelectorAll('[data-field]').forEach(input => {
-        input.addEventListener('input', handleInputChange);
-    });
-    
-    updateTotal();
+function updateCustomerDropdown() {
+  const uniqueNames = [...new Set(pendingSubmissions.map(r => r.customer))];
+  const sel = document.getElementById("ticketSelector");
+  sel.innerHTML = '<option value="">请选择客户</option>';
+  uniqueNames.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
 }
 
-// 处理输入变更
-function handleInputChange(e) {
-    const index = parseInt(e.target.dataset.index);
-    const field = e.target.dataset.field;
-    const value = e.target.value;
+function removeItem(i) {
+  pendingSubmissions.splice(i, 1);
+  renderPreview();
+}
 
-    if (['token', 'homa', 'paper3', 'paper6'].includes(field)) {
-        const numValue = Math.max(0, parseInt(value) || 0);
-        formData.participants[index].items[field] = numValue;
+function clearCache() {
+  pendingSubmissions = [];
+  renderPreview();
+  clearForm();
+  document.getElementById("ticketSelector").value = "";
+  renderTicket();
+  document.getElementById("ticketPreview").innerHTML = "";
+  showStatus("缓存与表单清除成功", "success");
+}
+
+function clearForm() {
+  document.getElementById("trackingNumber").value = "";
+  document.getElementById("enteredPrice").value = "";
+  document.getElementById("companyData").textContent = "-";
+  document.getElementById("productData").textContent = "-";
+  document.getElementById("customerData").textContent = "-";
+  document.getElementById("knownPrice").textContent = "-";
+  matchedTrackingNumber = "";
+  lastFetched = {};
+}
+
+function submitAll() {
+  if (pendingSubmissions.length === 0) return showStatus("缓存为空", "error");
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "submitBatch", list: pendingSubmissions })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.message) {
+      showStatus(res.message, "success");
+      pendingSubmissions = [];
+      renderPreview();
+      clearForm();
+      document.getElementById("ticketSelector").value = "";
+      renderTicket();
     } else {
-        formData.participants[index][field] = value;
+      showStatus("提交失败", "error");
     }
-    updateTotal();
+  })
+  .catch(() => showStatus("提交异常", "error"));
 }
 
-// 更新总金额
-function updateTotal() {
-    const total = formData.participants.reduce((sum, p) => 
-        sum + p.items.token*5 + p.items.homa*1 + p.items.paper3*3 + p.items.paper6*6, 0);
-    document.getElementById('totalAmount').textContent = `总金额：${total} 元`;
+function renderTicket() {
+  const name = document.getElementById("ticketSelector").value;
+  const area = document.getElementById("ticketPreview");
+  const filtered = pendingSubmissions.filter(r => r.customer === name);
+
+  if (!name || filtered.length === 0) {
+    area.innerHTML = "";
+    area.style.display = "none";
+    return;
+  }
+
+  area.style.display = "block";
+  let total = 0;
+  const date = new Date().toLocaleDateString();
+
+  let rowsHtml = "";
+  filtered.forEach((r, i) => {
+    const price = parseFloat(r.enteredPrice).toFixed(2);
+    total += parseFloat(price);
+    rowsHtml += `<tr>
+      <td style='width:5%'>${i + 1}.</td>
+      <td style='width:55%'>${r.trackingNumber}</td>
+      <td style='width:20%;text-align:left;'>${r.company}</td>
+      <td style='width:20%;text-align:right;'>${price}</td>
+    </tr>
+    <tr>
+      <td></td><td colspan='3'>${r.product}</td>
+    </tr>`;
+  });
+
+  const contentHeight = 400;
+  const rowHeight = 50;
+  const requiredRows = Math.floor((contentHeight - 120) / rowHeight);
+  const emptyRows = Math.max(0, requiredRows - filtered.length);
+
+  let fillerRows = "";
+  for (let i = 0; i < emptyRows; i++) {
+    fillerRows += `<tr><td colspan='4'>&nbsp;</td></tr>`;
+  }
+
+  let html = `<div class='ticket-header'>体积费 & 包裹号<br>日期：${date}<br>客户：${name}</div><br><table class='ticket-table'>`;
+  html += rowsHtml + fillerRows;
+  html += `<tr><td colspan='4'><hr></td></tr>
+           <tr><td colspan='4' class='ticket-summary'>合计：${filtered.length} 单，${total.toFixed(2)}</td></tr>`;
+  html += `</table>`;
+  area.innerHTML = html;
 }
 
-// 预览功能
-function showPreview() {
-    document.getElementById('page2').classList.add('hidden');
-    document.getElementById('previewPage').classList.remove('hidden');
-    
-    document.getElementById('previewContent').innerHTML = `
-        <div class="preview-section">
-            <h3>基本信息</h3>
-            <p>📱 手机号：${formData.phone}</p>
-            <p>📝 填写人：${formData.registrant}</p>
-            <p>🏮 法会类别：${formData.type}</p>
-        </div>
-        
-        ${formData.participants.map((p, i) => `
-            <div class="preview-item">
-                <h4>🙏 祈福者 #${i+1}：${p.name || '匿名祈福者'}</h4>
-                ${p.address ? `<p>📍 地址：${p.address}</p>` : ''}
-                <div class="preview-items">
-                    <p>🛒 物品清单：</p>
-                    <ul>
-                        <li>🎫 祈福令牌：${p.items.token} 个</li>
-                        <li>🔥 小护摩片：${p.items.homa} 片</li>
-                        <li>💰 3元纸金：${p.items.paper3} 份</li>
-                        <li>💰 6元纸金：${p.items.paper6} 份</li>
-                    </ul>
-                </div>
-            </div>
-        `).join('')}
-        
-        <div class="total-preview">
-            <h3>💰 总金额：${document.getElementById('totalAmount').textContent}</h3>
-        </div>
-    `;
+function downloadTicketAsImage() {
+  const target = document.getElementById("ticketPreview");
+  html2canvas(target).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "ticket.jpg";
+    link.href = canvas.toDataURL("image/jpeg");
+    link.click();
+  });
 }
 
-// PDF生成
-async function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    try {
-        // 加载中文字体
-        const fontUrl = 'https://cdn.jsdelivr.net/npm/@jspdf-community/fontregistry-free@1.0.0/fonts/SourceHanSansCN-Normal.ttf';
-        const fontData = await fetch(fontUrl).then(r => r.arrayBuffer());
-        
-        // 注册字体
-        doc.addFileToVFS('SourceHanSansCN.ttf', arrayBufferToBase64(fontData));
-        doc.addFont('SourceHanSansCN.ttf', 'SourceHanSansCN', 'normal');
-        doc.setFont('SourceHanSansCN');
-
-        // 设置基础样式
-        doc.setFontSize(18);
-        doc.text(`祈福报名表（${new Date().toLocaleDateString()}）`, 20, 20);
-
-        // 基本信息
-        let y = 40;
-        doc.setFontSize(12);
-        doc.text(`▪ 手机号：${formData.phone}`, 20, y);
-        doc.text(`▪ 填写人：${formData.registrant}`, 20, y + 10);
-        doc.text(`▪ 法会类别：${formData.type}`, 20, y + 20);
-        y += 40;
-
-        // 祈福者信息
-        formData.participants.forEach((p, index) => {
-            doc.setFontSize(14);
-            doc.text(`祈福者 ${index + 1}：${p.name || '匿名'}`, 20, y);
-            doc.setFontSize(12);
-            
-            if (p.address) {
-                doc.text(`地址：${p.address}`, 30, y + 10);
-                y += 10;
-            }
-
-            const items = [
-                ["祈福令牌", p.items.token, 5],
-                ["小护摩片", p.items.homa, 1],
-                ["3元纸金", p.items.paper3, 3],
-                ["6元纸金", p.items.paper6, 6]
-            ];
-
-            items.forEach(([name, qty, price], i) => {
-                const yPos = y + 20 + (i * 10);
-                doc.text(`${name}：${qty} × ${price}元 = ${qty * price}元`, 30, yPos);
-            });
-
-            y += 60 + (items.length * 10);
-        });
-
-        // 总金额
-        doc.setFontSize(16);
-        doc.text(`赞助总金额：${document.getElementById('totalAmount').textContent}`, 20, y + 20);
-        
-        doc.save('祈福报名表.pdf');
-    } catch (error) {
-        console.error('PDF生成失败:', error);
-        alert('PDF生成失败，请检查网络连接');
-    }
+function showStatus(msg, type = "success") {
+  const bar = document.getElementById("statusBar");
+  bar.textContent = msg;
+  bar.className = "status-bar " + type;
+  bar.style.display = "block";
 }
-
-// ArrayBuffer转Base64工具函数
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
-// 返回修改
-function goBack() {
-    document.getElementById('previewPage').classList.add('hidden');
-    document.getElementById('page2').classList.remove('hidden');
-}
-
-// 提交数据
-async function submitData() {
-    try {
-        const response = await fetch('YOUR_GOOGLE_APPS_SCRIPT_URL', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(formData)
-        });
-        alert(response.ok ? '提交成功！' : '提交失败');
-        if(response.ok) window.location.reload();
-    } catch (error) {
-        console.error('提交错误:', error);
-        alert('网络连接错误');
-    }
-}
-
-// 启动应用
-document.addEventListener('DOMContentLoaded', initializeApp);
 </script>
 </body>
 </html>
