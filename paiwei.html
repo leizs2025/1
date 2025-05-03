@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资料查询系统</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; margin: 0; }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; box-sizing: border-box; }
+    .module-title { text-align: center; margin-top: 20px; font-weight: bold; font-size: 18px; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    .result { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin-top: 12px; background: #f9f9f9; }
+    .notfound { margin-top: 20px; color: red; text-align: center; }
+    .loading { margin-top: 12px; color: #555; text-align: center; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h2>资料查询</h2>
+  <input id="query" type="text" placeholder="请输入姓名或手机号">
+  <button onclick="search()">查询</button>
+  <div id="status" class="loading">📦 正在加载资料，请稍候...</div>
+  <div id="results"></div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbysJuT69SxBM-NM0WIVNO_6tCJNpLftaUTOLHVPN8_E__9FUIsmXMO6BeD3qDYW56Pa/exec?q=*";
+    const SHEET_LABELS = {
+      "祖先1": "祖先莲位查询",
+      "水子灵1": "水子灵莲位查询",
+      "缠身灵1": "缠身牌位查询",
+      "data1": "靈骨殿福位查询"
+    };
+
+    const FIELD_ALIASES = {
+      "安奉者 中文姓名": "安奉者 姓名",
+      "安奉者 1 中文姓名": "安奉者1 姓名",
+      "安奉者1  中文姓名": "安奉者1 姓名",
+      "阳上报恩人 中文姓名": "阳上报恩人 姓名",
+      "親屬 1 中文姓名": "親屬 1 姓名",
+      "親屬 2 中文姓名": "親屬 2 姓名",
+      "功德主 中文姓名": "功德主 姓名"
+    };
+
+    const SHEET_FIELDS = {
+      "data1": ["福位编號", "安奉者 中文姓名", "安奉者1  中文姓名"],
+      "水子灵1": ["水子灵编號", "水子灵姓名", "親屬 1 中文姓名", "親屬 2 中文姓名", "功德主 中文姓名"],
+      "祖先1": ["祖先编號", "安奉者 中文姓名", "安奉者 1 中文姓名"],
+      "缠身灵1": ["缠身灵灵编號", "阳上报恩人 中文姓名"]
+    };
+
+    let cacheData = [];
+    let dataLoaded = false;
+
+    async function preloadData() {
+      try {
+        const res = await fetch(API_URL);
+        cacheData = await res.json();
+        dataLoaded = true;
+        document.getElementById('status').textContent = '✅ 数据加载完成，可以开始查询';
+        console.log('数据缓存成功，共计:', cacheData.length, '条');
+      } catch (err) {
+        document.getElementById('status').textContent = '❌ 数据加载失败，请刷新页面';
+      }
+    }
+
+    function search() {
+      const query = document.getElementById('query').value.trim();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      if (!dataLoaded) {
+        alert('数据尚未加载完成，请稍后再试');
+        return;
+      }
+
+      if (!query) return alert('请输入查询内容');
+
+      const result = cacheData.filter(item => {
+        const values = Object.values(item).map(v => v?.toString());
+        const phone = values.find(v => /^1\d{10}$/.test(v)) || '';
+        const last6 = phone.slice(-6);
+        return values.includes(query) || phone === query || last6 === query;
+      });
+
+      if (result.length === 0) {
+        resultsDiv.innerHTML = '<div class="notfound">未找到对应信息</div>';
+        return;
+      }
+
+      const grouped = {};
+      result.forEach(item => {
+        const source = item['来源'] || '未分类';
+        if (!grouped[source]) grouped[source] = [];
+        grouped[source].push(item);
+      });
+
+      for (const [sheet, items] of Object.entries(grouped)) {
+        const label = SHEET_LABELS[sheet] || sheet;
+        const fields = SHEET_FIELDS[sheet] || Object.keys(items[0]);
+
+        const title = document.createElement('div');
+        title.className = 'module-title';
+        title.textContent = label;
+        resultsDiv.appendChild(title);
+
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'result';
+          const html = fields.map(key => {
+            const actualKey = Object.keys(item).find(k => k.trim() === key.trim());
+            const label = FIELD_ALIASES[actualKey] || actualKey || key;
+            return actualKey ? `<b>${label}</b>: ${item[actualKey]}` : '';
+          }).join('<br>');
+          div.innerHTML = html;
+          resultsDiv.appendChild(div);
+        });
+      }
+    }
+
+    window.onload = preloadData;
+  </script>
+</body>
+</html>
