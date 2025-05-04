@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>牌位/蓮位/福位/查询系统</title>
+  <title>资料查询系统</title>
   <style>
     body { font-family: sans-serif; padding: 16px; margin: 0; }
     input, button { width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; box-sizing: border-box; }
@@ -14,165 +14,129 @@
   </style>
 </head>
 <body>
-  <h2>牌位/蓮位/福位/查询系统</h2>
+  <h2>资料查询</h2>
   <input id="query" type="text" placeholder="请输入姓名或手机号">
   <button onclick="search()">查询</button>
   <div id="status" class="loading">📦 正在加载资料，请稍候...</div>
   <div id="results"></div>
 
-<script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbyB9lwM0LhJ3w201jHYloD0KDdMHu9vd1ykR__q_7RiRe0_FYEGtqQo7oBGlcNThe03/exec?q=*";
+  <script>
+   const API_URL = "https://script.google.com/macros/s/AKfycbyB9lwM0LhJ3w201jHYloD0KDdMHu9vd1ykR__q_7RiRe0_FYEGtqQo7oBGlcNThe03/exec?q=*";
+    const SHEET_LABELS = {
+      "祖先1": "祖先莲位查询",
+      "水子灵1": "水子灵莲位查询",
+      "缠身灵1": "缠身牌位查询",
+      "data1": "靈骨殿福位查询"
+    };
 
-  const SHEET_LABELS = {
-    "祖先1": "祖先莲位查询",
-    "水子灵1": "水子灵莲位查询",
-    "缠身灵1": "缠身牌位查询",
-    "data1": "靈骨殿福位查询"
-  };
+    const FIELD_ALIASES = {
+      "安奉者 中文姓名": "安奉者 姓名",
+      "安奉者 1 中文姓名": "安奉者1 姓名",
+      "安奉者1  中文姓名": "安奉者1 姓名",
+      "阳上报恩人 中文姓名": "阳上报恩人 姓名",
+      "親屬 1 中文姓名": "親屬 1 姓名",
+      "親屬 2 中文姓名": "親屬 2 姓名",
+      "功德主 中文姓名": "功德主 姓名"
+    };
 
-  const FIELD_ALIASES = {
-    "安奉者 中文姓名": "安奉者 姓名",
-    "安奉者 1 中文姓名": "安奉者1 姓名",
-    "安奉者1  中文姓名": "安奉者1 姓名",
-    "阳上报恩人 中文姓名": "阳上报恩人 姓名",
-    "親屬 1 中文姓名": "親屬 1 姓名",
-    "親屬 2 中文姓名": "親屬 2 姓名",
-    "功德主 中文姓名": "功德主 姓名"
-  };
+    const SHEET_FIELDS = {
+      "data1": ["福位编號", "安奉者 中文姓名", "安奉者1  中文姓名"],
+      "水子灵1": ["水子灵编號", "水子灵姓名", "親屬 1 中文姓名", "親屬 2 中文姓名", "功德主 中文姓名"],
+      "祖先1": ["祖先编號", "安奉者 中文姓名", "安奉者 1 中文姓名"],
+      "缠身灵1": ["缠身灵灵编號", "阳上报恩人 中文姓名"]
+    };
 
-  const SHEET_FIELDS = {
-    "data1": ["福位编號", "安奉者 中文姓名", "安奉者1  中文姓名"],
-    "水子灵1": ["水子灵编號", "水子灵姓名", "親屬 1 中文姓名", "親屬 2 中文姓名", "功德主 中文姓名"],
-    "祖先1": ["祖先编號", "安奉者 中文姓名", "安奉者 1 中文姓名"],
-    "缠身灵1": ["缠身灵灵编號", "阳上报恩人 中文姓名"]
-  };
+    const zhMap = {
+      "陳": "陈", "張": "张", "黃": "黄", "蘇": "苏", "劉": "刘", "馬": "马",
+      "馮": "冯", "許": "许", "謝": "谢", "鄧": "邓", "葉": "叶", "龔": "龚",
+      "應": "应", "親": "亲", "靈": "灵", "臺": "台", "聯": "联", "顯": "显",
+      "戶": "户", "點": "点", "書": "书", "萬": "万", "兒": "儿", "國": "国",
+      "體": "体", "風": "风", "東": "东", "龍": "龙"
+    };
 
-  const zhMap = {
-    "陳": "陈", "張": "张", "黃": "黄", "蘇": "苏", "劉": "刘", "馬": "马",
-    "馮": "冯", "許": "许", "謝": "谢", "鄧": "邓", "葉": "叶", "龔": "龚",
-    "應": "应", "親": "亲", "靈": "灵", "臺": "台", "聯": "联", "顯": "显",
-    "戶": "户", "點": "点", "書": "书", "萬": "万", "兒": "儿", "國": "国",
-    "體": "体", "風": "风", "東": "东", "龍": "龙"
-  };
-
-  function toSimplified(str) {
-    return str.split('').map(ch => zhMap[ch] || ch).join('');
-  }
-
-  let cacheData = [];
-  let dataLoaded = false;
-
-  async function preloadData() {
-    try {
-      const res = await fetch(API_URL);
-      cacheData = await res.json();
-      dataLoaded = true;
-      document.getElementById('status').textContent = '✅ 数据加载完成，可以开始查询';
-      console.log('数据缓存成功，共计:', cacheData.length, '条');
-    } catch (err) {
-      document.getElementById('status').textContent = '❌ 数据加载失败，请刷新页面';
-    }
-  }
-
-  function search() {
-    const query = document.getElementById('query').value.trim();
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = '';
-
-    if (!dataLoaded) {
-      alert('数据尚未加载完成，请稍后再试');
-      return;
+    function toSimplified(str) {
+      return str.split('').map(ch => zhMap[ch] || ch).join('');
     }
 
-    if (!query) return alert('请输入查询内容');
+    let cacheData = [];
+    let dataLoaded = false;
 
-    const simpQuery = toSimplified(query);
-    const result = cacheData.filter(item => {
-      const values = Object.values(item).map(v => toSimplified(v?.toString() || '').trim());
-
-      return values.some(v => {
-        if (!v) return false;
-
-        // 完全匹配
-        if (v === simpQuery) return true;
-
-        // 后四位数字匹配（不限长度、不限开头）
-        const digits = v.replace(/\D/g, '');
-        if (digits.length >= 4 && simpQuery.length === 4 && digits.slice(-4) === simpQuery) {
-          return true;
-        }
-
-        return false;
-      });
-    });
-
-    if (result.length === 0) {
-      resultsDiv.innerHTML = '<div class="notfound">未找到对应信息</div>';
-      return;
-    }
-
-    const grouped = {};
-    result.forEach(item => {
-      const source = item['来源'] || '未分类';
-      if (!grouped[source]) grouped[source] = [];
-      grouped[source].push(item);
-    });
-
-    for (const [sheet, items] of Object.entries(grouped)) {
-      const label = SHEET_LABELS[sheet] || sheet;
-      const fields = SHEET_FIELDS[sheet] || Object.keys(items[0]);
-
-      const title = document.createElement('div');
-      title.className = 'module-title';
-      title.textContent = label;
-      resultsDiv.appendChild(title);
-
-      items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'result';
-        const html = fields.map(key => {
-          const actualKey = Object.keys(item).find(k => k.trim() === key.trim());
-          const label = FIELD_ALIASES[actualKey] || actualKey || key;
-          return actualKey ? `<b>${label}</b>: ${item[actualKey]}` : '';
-        }).join('<br>');
-        div.innerHTML = html;
-        resultsDiv.appendChild(div);
-      });
-    }
-  }
-
-  // 微信环境检测 + 弹窗询问跳转
-  function detectWeChat() {
-    const ua = navigator.userAgent.toLowerCase();
-    return ua.includes("micromessenger");
-  }
-
-  function promptOpenInBrowser() {
-    if (detectWeChat()) {
-      const confirmJump = confirm("您当前在微信中打开，部分功能可能受限。\n是否尝试跳转到系统浏览器打开？");
-
-      if (confirmJump) {
-        const url = window.location.href;
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        alert("若未自动跳转，请点击右上角菜单 → 选择『在浏览器中打开』。");
+    async function preloadData() {
+      try {
+        const res = await fetch(API_URL);
+        cacheData = await res.json();
+        dataLoaded = true;
+        document.getElementById('status').textContent = '✅ 数据加载完成，可以开始查询';
+        console.log('数据缓存成功，共计:', cacheData.length, '条');
+      } catch (err) {
+        document.getElementById('status').textContent = '❌ 数据加载失败，请刷新页面';
       }
     }
-  }
 
-  // 页面加载时执行
-  window.onload = function() {
-    preloadData();
-    promptOpenInBrowser();
-  };
-</script>
+    function search() {
+      const query = document.getElementById('query').value.trim();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
 
+      if (!dataLoaded) {
+        alert('数据尚未加载完成，请稍后再试');
+        return;
+      }
+
+      if (!query) return alert('请输入查询内容');
+
+      const simpQuery = toSimplified(query);
+const result = cacheData.filter(item => {
+  const values = Object.values(item).map(v => toSimplified(v?.toString() || '').trim());
+
+  return values.some(v => {
+    if (!v) return false;
+
+    // 全字段全匹配
+    if (v === simpQuery) return true;
+
+    // 提取所有数字
+    const digits = v.replace(/\D/g, '');
+    if (digits.length >= 4 && simpQuery.length === 4 && digits.slice(-4) === simpQuery) {
+      return true;
+    }
+
+    return false;
+  });
+});
+
+
+      const grouped = {};
+      result.forEach(item => {
+        const source = item['来源'] || '未分类';
+        if (!grouped[source]) grouped[source] = [];
+        grouped[source].push(item);
+      });
+
+      for (const [sheet, items] of Object.entries(grouped)) {
+        const label = SHEET_LABELS[sheet] || sheet;
+        const fields = SHEET_FIELDS[sheet] || Object.keys(items[0]);
+
+        const title = document.createElement('div');
+        title.className = 'module-title';
+        title.textContent = label;
+        resultsDiv.appendChild(title);
+
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'result';
+          const html = fields.map(key => {
+            const actualKey = Object.keys(item).find(k => k.trim() === key.trim());
+            const label = FIELD_ALIASES[actualKey] || actualKey || key;
+            return actualKey ? `<b>${label}</b>: ${item[actualKey]}` : '';
+          }).join('<br>');
+          div.innerHTML = html;
+          resultsDiv.appendChild(div);
+        });
+      }
+    }
+
+    window.onload = preloadData;
+  </script>
 </body>
 </html>
