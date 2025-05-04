@@ -89,7 +89,7 @@
       const result = cacheData.filter(item => {
         const values = Object.values(item).map(v => toSimplified(v?.toString() || ''));
         const phone = values.find(v => /^1\d{10}$/.test(v)) || '';
-        const last6 = phone.slice(-4);
+        const last4 = phone.slice(-4);
         return values.includes(simpQuery) || phone === query || last4 === query;
       });
 
