@@ -86,17 +86,25 @@
       if (!query) return alert('请输入查询内容');
 
       const simpQuery = toSimplified(query);
-      const result = cacheData.filter(item => {
-        const values = Object.values(item).map(v => toSimplified(v?.toString() || ''));
-        const phone = values.find(v => /^1\d{10}$/.test(v)) || '';
-        const last4 = phone.slice(-4);
-        return values.includes(simpQuery) || phone === query || last4 === query;
-      });
+const result = cacheData.filter(item => {
+  const values = Object.values(item).map(v => toSimplified(v?.toString() || '').trim());
 
-      if (result.length === 0) {
-        resultsDiv.innerHTML = '<div class="notfound">未找到对应信息</div>';
-        return;
-      }
+  return values.some(v => {
+    if (!v) return false;
+
+    // 全字段全匹配
+    if (v === simpQuery) return true;
+
+    // 提取所有数字
+    const digits = v.replace(/\D/g, '');
+    if (digits.length >= 4 && simpQuery.length === 4 && digits.slice(-4) === simpQuery) {
+      return true;
+    }
+
+    return false;
+  });
+});
+
 
       const grouped = {};
       result.forEach(item => {
