@@ -95,6 +95,35 @@ window.deleteEntry = function () {
     });
 };
 
+function generateTempReceiptNumber() {
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); // 20250512
+
+  // 使用 Local Storage 记录流水号
+  const key = "globalTempReceiptCounter";
+  let currentSerial = localStorage.getItem(key);
+  if (!currentSerial) {
+      currentSerial = 1;
+  } else {
+      currentSerial = parseInt(currentSerial) + 1;
+  }
+
+  // 保存新的流水号
+  localStorage.setItem(key, currentSerial);
+
+  // 返回完整的小票号
+  const serialPart = currentSerial.toString().padStart(4, "0");
+  return `TMP${datePart}-${serialPart}`;
+}
+
+function resetTempReceiptCounter() {
+  const confirmReset = confirm("⚠️ 确定要清除小票计数吗？这将重置所有临时收据号！");
+  if (confirmReset) {
+      localStorage.removeItem("globalTempReceiptCounter");
+      alert("✅ 小票计数已清除！");
+  }
+}
+
 window.startNewEntry = function () {
   selectedEntry = null;
   document.getElementById("adminForm").classList.remove("hidden");
@@ -187,6 +216,13 @@ window.saveChanges = function () {
     // 确定是更新还是新增
     const isPhoneUpdated = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
     const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
+   // 确保收据号不为空
+    const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
+    }
 
     const body = {
         method: "PUT",
@@ -307,7 +343,13 @@ window.forceInsertNewEntry = function () {
     paperGold5: +div.querySelector(".pg5").value || 0,
     donation: +div.querySelector(".donate").value || 0
   }));
-
+  
+   const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
+    }
   const body = {
     phoneNumber: newPhone,
     mainName: document.getElementById("mainName").value.trim(),
@@ -366,16 +408,6 @@ function updateTotalBox() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
 function getCurrentFormData() {
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
@@ -429,3 +461,26 @@ window.printEntry = function () {
   }, 100);
 };
 
+window.printTempReceipt = function () {
+  const receiptInput = document.getElementById("receiptNumber");
+
+  // 如果没有收据编号，先生成临时编号
+  if (!receiptInput.value.trim()) {
+      const tempReceiptNumber = generateTempReceiptNumber();
+      receiptInput.value = tempReceiptNumber;
+      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
+  }
+
+  // 获取当前表单数据
+  const currentData = getCurrentFormData();
+
+  // 打开小票打印模板
+  const win = window.open("receipt-print.html", "_blank");
+
+  const interval = setInterval(() => {
+      if (win && win.document.readyState === "complete") {
+          clearInterval(interval);
+          win.postMessage(JSON.stringify(currentData), "*");
+      }
+  }, 100);
+};
