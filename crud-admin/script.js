@@ -124,6 +124,7 @@ function resetTempReceiptCounter() {
   }
 }
 
+
 window.startNewEntry = function () {
   selectedEntry = null;
   document.getElementById("adminForm").classList.remove("hidden");
@@ -186,37 +187,37 @@ function renderForm() {
     container.appendChild(createPrayerBlock({}, 1));
   }
 }
-
 window.saveChanges = function () {
-    const phoneInput = document.getElementById("phoneNumber").value.trim();
-    const mainName = document.getElementById("mainName").value.trim();
+  const phoneInput = document.getElementById("phoneNumber").value.trim();
+  const mainName = document.getElementById("mainName").value.trim();
 
-    if (!mainName || !phoneInput) {
-        alert("主祈者姓名和电话都不能为空！");
-        return;
-    }
+  if (!mainName || !phoneInput) {
+      alert("主祈者姓名和电话都不能为空！");
+      return;
+  }
 
-    const prayers = document.getElementById("prayersContainer").children;
-    const updatedData = Array.from(prayers).map(div => ({
-        name: div.querySelector(".pName").value,
-        zodiac: div.querySelector(".pZodiac").value,
-        taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-        light: div.querySelector('input.pLight:checked')?.value || "",
-        longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-        wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-        arhat: div.querySelector('input.pArhat:checked')?.value || "",
-        paperGold1: +div.querySelector(".pg1").value || 0,
-        paperGold2: +div.querySelector(".pg2").value || 0,
-        paperGold3: +div.querySelector(".pg3").value || 0,
-        paperGold4: +div.querySelector(".pg4").value || 0,
-        paperGold5: +div.querySelector(".pg5").value || 0,
-        donation: +div.querySelector(".donate").value || 0
-    }));
+  const prayers = document.getElementById("prayersContainer").children;
+  const updatedData = Array.from(prayers).map(div => ({
+      name: div.querySelector(".pName").value,
+      zodiac: div.querySelector(".pZodiac").value,
+      taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+      light: div.querySelector('input.pLight:checked')?.value || "",
+      longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+      wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+      arhat: div.querySelector('input.pArhat:checked')?.value || "",
+      paperGold1: +div.querySelector(".pg1").value || 0,
+      paperGold2: +div.querySelector(".pg2").value || 0,
+      paperGold3: +div.querySelector(".pg3").value || 0,
+      paperGold4: +div.querySelector(".pg4").value || 0,
+      paperGold5: +div.querySelector(".pg5").value || 0,
+      donation: +div.querySelector(".donate").value || 0
+  }));
 
-    // 确定是更新还是新增
-    const isPhoneUpdated = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
-    const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
-   // 确保收据号不为空
+  // 确定是更新还是新增
+  const isPhoneUpdated = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
+  const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
+  
+    // 确保收据号不为空
     const receiptInput = document.getElementById("receiptNumber");
     if (!receiptInput.value.trim()) {
         const tempReceiptNumber = generateTempReceiptNumber();
@@ -224,39 +225,41 @@ window.saveChanges = function () {
         console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
     }
 
-    const body = {
-        method: "PUT",
-        oldPhoneNumber: oldPhoneNumber, // 传递旧的电话号码以便后端识别
-        phoneNumber: phoneInput,        // 传递新的电话号码
-        mainName,
-        data: updatedData,
-        receiptNumber: document.getElementById("receiptNumber").value.trim(),
-        receiptDate: document.getElementById("receiptDate").value.trim(),
-        wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-        offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-        wishPaper: document.getElementById("wishPaper").value.trim(),
-        admin: localStorage.getItem("admin") || "未登录"
-    };
 
-    fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                alert("✅ 更新成功！");
-                selectedEntry = null; // 清空已选择的记录
-                startNewEntry();      // 重置表单
-            } else {
-                alert("❌ 更新失败：" + result.message);
-            }
-        })
-        .catch(err => {
-            alert("❌ 更新出错：" + err.message);
-        });
+  const body = {
+      method: "PUT",
+      oldPhoneNumber: oldPhoneNumber, // 传递旧的电话号码以便后端识别
+      phoneNumber: phoneInput,        // 传递新的电话号码
+      mainName,
+      data: updatedData,
+      receiptNumber: document.getElementById("receiptNumber").value.trim(),
+      receiptDate: document.getElementById("receiptDate").value.trim(),
+      wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
+      offering: document.querySelector('input[name="offering"]:checked')?.value || "",
+      wishPaper: document.getElementById("wishPaper").value.trim(),
+      admin: localStorage.getItem("admin") || "未登录"
+  };
+
+  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+  })
+      .then(res => res.json())
+      .then(result => {
+          if (result.success) {
+              alert("✅ 更新成功！");
+              selectedEntry = null; // 清空已选择的记录
+              startNewEntry();      // 重置表单
+          } else {
+              alert("❌ 更新失败：" + result.message);
+          }
+      })
+      .catch(err => {
+          alert("❌ 更新出错：" + err.message);
+      });
 };
+
 
 
 
@@ -343,13 +346,14 @@ window.forceInsertNewEntry = function () {
     paperGold5: +div.querySelector(".pg5").value || 0,
     donation: +div.querySelector(".donate").value || 0
   }));
-  
-   const receiptInput = document.getElementById("receiptNumber");
+
+  const receiptInput = document.getElementById("receiptNumber");
     if (!receiptInput.value.trim()) {
         const tempReceiptNumber = generateTempReceiptNumber();
         receiptInput.value = tempReceiptNumber;
         console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
     }
+    
   const body = {
     phoneNumber: newPhone,
     mainName: document.getElementById("mainName").value.trim(),
