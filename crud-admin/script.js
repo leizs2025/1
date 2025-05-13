@@ -113,7 +113,7 @@ function generateTempReceiptNumber() {
 
   // 返回完整的小票号
   const serialPart = currentSerial.toString().padStart(4, "0");
-  return `TMP${datePart}-${serialPart}`;
+  return `TSR${datePart}-${serialPart}`;
 }
 
 function resetTempReceiptCounter() {
