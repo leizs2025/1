@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打印小票</title>
+    <style>
+        body {
+            width: 80mm;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 16px;
+        }
+        .receipt-info {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.2; /* 设置更紧凑的行距 */
+        }
+
+        .receipt-info p {
+            margin: 4px 0; /* 减小段落间距 */
+        }
+        
+        .total-section {
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: left;
+        }
+        .item-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            font-style: italic;
+            color: #555;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .print-button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none; /* 默认隐藏 */
+        }
+        .print-button.show {
+            display: block;
+        }
+        @media print {
+            .print-button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>PERSATUAN MIAO LI TANG SIBU</h2>
+        <p>Tel: 013980446 (寺)</p>
+        <p>JALAN PASAI SIONG OFF 25TH MILE</p>
+        <p>JALAN OYA, SIBU SARAWAK</p>
+        <h2>DONATION</h2>
+        <p>CASH</p>
+    </div>
+
+    <div id="receiptInfo" class="receipt-info"></div>
+
+    <div id="paperGoldSection" class="total-section"></div>
+    <div id="donationSection" class="total-section"></div>
+
+    <div class="footer">
+        <p>🙏 愿一切吉祥如意，功德圆满 🙏</p>
+        <p>欢迎再次光临</p>
+    </div>
+
+    <button id="printBtn" class="print-button">🖨️ 打印小票</button>
+
+    <script>
+    window.addEventListener("message", function (event) {
+    const data = JSON.parse(event.data);
+
+    // 自动生成小票编号
+    const receiptNumber = data.receiptNumber || generateReceiptNumber();
+    const mainName = data.mainName || "未填写";
+    const phoneNumber = data.phoneNumber || "未填写";
+    const receiptDate = new Date().toLocaleDateString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    const receiptInfo = `
+        <div>
+            <p><strong>收据编号:</strong> ${receiptNumber}</p>
+            <p><strong>时间:</strong> ${receiptDate}</p>
+            <p><strong>主祈者:</strong> ${mainName}</p>
+            <p><strong>电话:</strong> ${phoneNumber}</p>
+        </div>
+    `;
+    document.getElementById("receiptInfo").innerHTML = receiptInfo;
+
+    // 填充祈福者信息和金额
+    let prayerTotal = 0;
+    let prayerDetails = "";
+    (data.prayers || []).forEach((prayer, index) => {
+        const tokenTotal = (prayer.token || 0) * 5;
+        const fireTotal = (prayer.fire || 0) * 1;
+        const pg3Total = (prayer.pg3 || 0) * 3;
+        const pg6Total = (prayer.pg6 || 0) * 6;
+        const subtotal = tokenTotal + fireTotal + pg3Total + pg6Total;
+        prayerTotal += subtotal;
+
+        prayerDetails += `
+            <div class="item-label">祈福者 ${index + 1} - ${prayer.name || "未填写"}</div>
+            <div class="item-row">
+                <span>令牌: ${prayer.token || 0} × RM 5.00</span>
+                <span>RM ${tokenTotal.toFixed(2)}</span>
+            </div>
+            <div class="item-row">
+                <span>小护摩片: ${prayer.fire || 0} × RM 1.00</span>
+                <span>RM ${fireTotal.toFixed(2)}</span>
+            </div>
+            <div class="item-row">
+                <span>纸金 3: ${prayer.pg3 || 0} × RM 3.00</span>
+                <span>RM ${pg3Total.toFixed(2)}</span>
+            </div>
+            <div class="item-row">
+                <span>纸金 6: ${prayer.pg6 || 0} × RM 6.00</span>
+                <span>RM ${pg6Total.toFixed(2)}</span>
+            </div>
+        `;
+    });
+
+    document.getElementById("prayerSection").innerHTML = prayerDetails;
+
+    // 功德金
+    const sponsorTotal = data.sponsor || 0;
+    const grandTotal = prayerTotal + sponsorTotal;
+    const donationSection = `
+        <div class="item-label">功德金</div>
+        <div class="item-row">
+            <span>随喜赞助:</span>
+            <span>RM ${sponsorTotal.toFixed(2)}</span>
+        </div>
+        <div class="item-row" style="font-weight: bold; margin-top: 5px;">
+            <span>总计</span>
+            <span>RM ${grandTotal.toFixed(2)}</span>
+        </div>
+    `;
+    document.getElementById("donationSection").innerHTML = donationSection;
+
+    // 显示打印按钮
+    document.getElementById("printBtn").classList.add("show");
+
+    // 打印按钮事件
+    document.getElementById("printBtn").addEventListener("click", () => {
+        window.print();
+        window.close();
+    });
+});
+
+    </script>
+</body>
+</html>
