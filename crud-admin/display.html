@@ -103,20 +103,21 @@
         return matchPhone && matchWish && matchOffering;
       });
 
-      filtered.forEach((item, index) => {
-        const paid = item.receiptNumber?.trim();
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${item.mainName || "-"}</td>
-          <td>${item.phoneNumber || "-"}</td>
-          <td>${item.wishReturn || "-"}</td>
-          <td>${item.offering || "-"}</td>
-          <td class="${paid ? 'paid' : 'unpaid'}">${paid ? "✔ 已付款" : "❌ 未付款"}</td>
-          <td>${paid ? (item.admin || "—") : "—"}</td>
-        `;
-        tbody.appendChild(row);
-      });
+filtered.forEach((item, index) => {
+    const paid = !!item.receiptNumber;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.mainName || "-"}</td>
+      <td>${item.phoneNumber || "-"}</td>
+      <td>${item.wishReturn || "-"}</td>
+      <td>${item.offering || "-"}</td>
+      <td class="${paid ? 'paid' : 'unpaid'}">${paid ? "✔ 已付款" : "❌ 未付款"}</td>
+      <td>${paid ? (item.admin || "—") : "—"}</td>
+    `;
+    tbody.appendChild(row);
+});
+
     }
 
     function resetFilters() {
