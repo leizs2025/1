@@ -1,4 +1,3 @@
-
 if (!localStorage.getItem("admin")) {
   alert("请先登录");
   window.location.href = "login.html";
@@ -6,38 +5,33 @@ if (!localStorage.getItem("admin")) {
 
 let fullData = [];
 let selectedEntry = null;
+let selectedKey = null; // Firebase push ID
 
 window.searchPhone = function () {
   const keyword = document.getElementById("searchInput").value.trim();
   if (!keyword) return alert("请输入手机号关键字！");
 
-  fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(keyword)}`)
-    .then(res => res.text())
-    .then(text => {
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        alert("查询失败：返回的不是有效 JSON");
-        return;
-      }
-
-      if (!Array.isArray(data)) {
-        alert("查询失败：格式错误（不是数组）");
-        return;
-      }
-
-      fullData = data;
+  fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records.json")
+    .then(res => res.json())
+    .then(data => {
+      fullData = [];
       const selector = document.getElementById("resultSelector");
       selector.innerHTML = "";
 
-      if (data.length === 0) {
+      for (const key in data) {
+        if (data[key].phoneNumber.includes(keyword)) {
+          fullData.push({ ...data[key], __key: key });
+        }
+      }
+
+      if (fullData.length === 0) {
         selector.textContent = "未找到资料";
         return;
       }
 
-      if (data.length === 1) {
-        selectedEntry = data[0];
+      if (fullData.length === 1) {
+        selectedEntry = fullData[0];
+        selectedKey = selectedEntry.__key;
         renderForm();
       } else {
         const select = document.createElement("select");
@@ -47,10 +41,11 @@ window.searchPhone = function () {
           const index = select.selectedIndex - 1;
           if (index >= 0) {
             selectedEntry = fullData[index];
+            selectedKey = selectedEntry.__key;
             renderForm();
           }
         };
-        data.forEach(item => {
+        fullData.forEach(item => {
           const option = document.createElement("option");
           option.textContent = item.phoneNumber;
           select.appendChild(option);
@@ -62,6 +57,61 @@ window.searchPhone = function () {
       alert("查询失败：" + err.message);
     });
 };
+
+window.deleteEntry = function () {
+  if (!selectedKey) {
+    alert("⚠️ 当前资料没有 key，无法删除。");
+    return;
+  }
+  if (!confirm("确定要删除这笔资料吗？此操作无法恢复！")) return;
+
+  fetch(`https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records/${selectedKey}.json`, {
+    method: "DELETE"
+  })
+    .then(res => {
+      if (res.ok) {
+        alert("✅ 删除成功");
+        selectedKey = null;
+        selectedEntry = null;
+        document.getElementById("resultSelector").innerHTML = "";
+        startNewEntry();
+      } else {
+        throw new Error("删除失败");
+      }
+    })
+    .catch(err => alert("❌ 删除失败：" + err.message));
+};
+
+
+function generateTempReceiptNumber() {
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); // 20250512
+
+  // 使用 Local Storage 记录流水号
+  const key = "globalTempReceiptCounter";
+  let currentSerial = localStorage.getItem(key);
+  if (!currentSerial) {
+      currentSerial = 1;
+  } else {
+      currentSerial = parseInt(currentSerial) + 1;
+  }
+
+  // 保存新的流水号
+  localStorage.setItem(key, currentSerial);
+
+  // 返回完整的小票号
+  const serialPart = currentSerial.toString().padStart(4, "0");
+  return `TMP${datePart}-${serialPart}`;
+}
+
+function resetTempReceiptCounter() {
+  const confirmReset = confirm("⚠️ 确定要清除小票计数吗？这将重置所有临时收据号！");
+  if (confirmReset) {
+      localStorage.removeItem("globalTempReceiptCounter");
+      alert("✅ 小票计数已清除！");
+  }
+}
+
 
 window.startNewEntry = function () {
   selectedEntry = null;
@@ -126,6 +176,14 @@ function renderForm() {
   }
 }
 window.saveChanges = function () {
+  const phoneInput = document.getElementById("phoneNumber").value.trim();
+  const mainName = document.getElementById("mainName").value.trim();
+
+  if (!mainName || !phoneInput) {
+    alert("主祈者姓名和电话都不能为空！");
+    return;
+  }
+
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
     name: div.querySelector(".pName").value,
@@ -143,38 +201,80 @@ window.saveChanges = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
-  const phoneInput = document.getElementById("phoneNumber").value.trim();
-  const isPhoneModified = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
-  const method = selectedEntry && !isPhoneModified ? "PUT" : "POST";
+  const receiptInput = document.getElementById("receiptNumber");
+  if (!receiptInput.value.trim()) {
+    const tempReceiptNumber = generateTempReceiptNumber();
+    receiptInput.value = tempReceiptNumber;
+    console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
+  }
 
-  const body = {
-    method,
+  const entry = {
+    mainName,
     phoneNumber: phoneInput,
-    mainName: document.getElementById("mainName").value.trim(),
     data: updatedData,
     receiptNumber: document.getElementById("receiptNumber").value.trim(),
     receiptDate: document.getElementById("receiptDate").value.trim(),
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
     wishPaper: document.getElementById("wishPaper").value.trim(),
+    totalAmount: calculateTotalAmount(updatedData),
     admin: localStorage.getItem("admin") || "未登录"
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
+  if (!selectedKey) {
+    alert("⚠️ 当前资料没有 key，无法更新。");
+    return;
+  }
+
+  fetch(`https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records/${selectedKey}.json`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(entry)
   })
     .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("保存成功！");
+    .then(data => {
+      alert("✅ 更新成功！");
+      selectedKey = null;
+      selectedEntry = null;
+      startNewEntry();
+    })
+    .catch(err => alert("❌ 更新失败：" + err.message));
+};
+
+function calculateTotalAmount(data) {
+  let total = 0;
+  data.forEach(entry => {
+    const sumPaper = entry.paperGold1 + entry.paperGold2 + entry.paperGold3 + entry.paperGold4 + entry.paperGold5;
+    total += (sumPaper * 3) + entry.donation;
+  });
+  return total.toString();
+}
+
+window.deleteEntry = function () {
+  if (!selectedKey) {
+    alert("⚠️ 当前资料没有 key，无法删除。");
+    return;
+  }
+  if (!confirm("确定要删除这笔资料吗？此操作无法恢复！")) return;
+
+  fetch(`https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records/${selectedKey}.json`, {
+    method: "DELETE"
+  })
+    .then(res => {
+      if (res.ok) {
+        alert("✅ 删除成功");
+        selectedKey = null;
+        selectedEntry = null;
+        document.getElementById("resultSelector").innerHTML = "";
         startNewEntry();
       } else {
-        alert("保存失败：" + result.message);
+        throw new Error("删除失败");
       }
-    });
+    })
+    .catch(err => alert("❌ 删除失败：" + err.message));
 };
+
+
 
 
 function createRadioGroup(name, className, checkedVal) {
@@ -234,90 +334,16 @@ function checkMin() {
 }
 
 
-function actuallySave() {
-  const prayers = document.getElementById("prayersContainer").children;
-  const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
-  }));
+window.forceInsertNewEntry = function () {
+  const newPhone = document.getElementById("phoneNumber").value.trim();
+  if (!newPhone) return alert("请填写电话号码！");
 
-  const body = {
-    method: selectedEntry ? "PUT" : "POST",
-    phoneNumber: document.getElementById("phoneNumber").value.trim(),
-    mainName: document.getElementById("mainName").value.trim(),
-    data: updatedData,
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录"
-  };
-
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 保存成功！");
-        startNewEntry(); // 清空表单回到新增模式
-      } else {
-        alert("❌ 保存失败：" + result.message);
-      }
-    });
-}
-
-
-window.deleteEntry = function () {
-  if (!selectedEntry) {
-    alert("⚠️ 请先查询一笔资料再删除！");
+  const exists = fullData.some(entry => entry.phoneNumber === newPhone);
+  if (exists) {
+    alert("❌ 该电话号码已存在，不能重复新增！");
     return;
   }
 
-  const confirmed = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
-  if (!confirmed) return;
-
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      method: "DELETE",
-      phoneNumber: selectedEntry.phoneNumber
-    })
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 删除成功！");
-        // 清除界面
-        selectedEntry = null;
-        document.getElementById("adminForm").classList.add("hidden");
-        document.getElementById("searchInput").value = "";
-        document.getElementById("resultSelector").innerHTML = "";
-      } else {
-        alert("❌ 删除失败：" + result.message);
-      }
-    })
-    .catch(err => {
-      alert("❌ 删除请求出错：" + err.message);
-    });
-};
-
-window.saveChanges = function () {
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
     name: div.querySelector(".pName").value,
@@ -335,13 +361,15 @@ window.saveChanges = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
-  const phoneInput = document.getElementById("phoneNumber").value.trim();
-  const isPhoneModified = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
-  const method = selectedEntry && !isPhoneModified ? "PUT" : "POST";
+  const receiptInput = document.getElementById("receiptNumber");
+  if (!receiptInput.value.trim()) {
+    const tempReceiptNumber = generateTempReceiptNumber();
+    receiptInput.value = tempReceiptNumber;
+    console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
+  }
 
-  const body = {
-    method,
-    phoneNumber: phoneInput,
+  const entry = {
+    phoneNumber: newPhone,
     mainName: document.getElementById("mainName").value.trim(),
     data: updatedData,
     receiptNumber: document.getElementById("receiptNumber").value.trim(),
@@ -349,24 +377,51 @@ window.saveChanges = function () {
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
     wishPaper: document.getElementById("wishPaper").value.trim(),
+    totalAmount: calculateTotalAmount(updatedData),
     admin: localStorage.getItem("admin") || "未登录"
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+  fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records.json", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(entry)
   })
     .then(res => res.json())
     .then(result => {
-      if (result.success) {
-        alert("保存成功！");
-        startNewEntry();
-      } else {
-        alert("保存失败：" + result.message);
-      }
-    });
+      alert("✅ 新增成功！");
+      startNewEntry();
+    })
+    .catch(err => alert("❌ 新增失败：" + err.message));
 };
+
+function updateTotalBox() {
+  const prayers = document.getElementById("prayersContainer").children;
+
+  const sum = {
+    pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0
+  };
+
+  Array.from(prayers).forEach(div => {
+    sum.pg1 += +div.querySelector(".pg1").value || 0;
+    sum.pg2 += +div.querySelector(".pg2").value || 0;
+    sum.pg3 += +div.querySelector(".pg3").value || 0;
+    sum.pg4 += +div.querySelector(".pg4").value || 0;
+    sum.pg5 += +div.querySelector(".pg5").value || 0;
+    sum.donation += +div.querySelector(".donate").value || 0;
+  });
+
+  const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+  const paperMoney = paperTotal * 3;
+  const total = paperMoney + sum.donation;
+
+  const totalBox = document.getElementById("totalBox");
+  totalBox.innerHTML = `
+    安奉功德金：RM ${sum.donation.toFixed(2)}<br/>
+    真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
+    总计：RM ${total.toFixed(2)}
+  `;
+}
+
 
 function getCurrentFormData() {
   const prayers = document.getElementById("prayersContainer").children;
@@ -409,15 +464,38 @@ function getCurrentFormData() {
     `;
 }
 window.printEntry = function () {
-  if (!selectedEntry) return alert("请先查出一笔资料");
+  const currentData = getCurrentFormData(); // 获取当前表单中填写的数据
 
   const win = window.open("form-print.html", "_blank");
 
   const interval = setInterval(() => {
     if (win && win.document.readyState === "complete") {
       clearInterval(interval);
-      win.postMessage(JSON.stringify(selectedEntry), "*");
+      win.postMessage(JSON.stringify(currentData), "*");
     }
   }, 100);
 };
 
+window.printTempReceipt = function () {
+  const receiptInput = document.getElementById("receiptNumber");
+
+  // 如果没有收据编号，先生成临时编号
+  if (!receiptInput.value.trim()) {
+      const tempReceiptNumber = generateTempReceiptNumber();
+      receiptInput.value = tempReceiptNumber;
+      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
+  }
+
+  // 获取当前表单数据
+  const currentData = getCurrentFormData();
+
+  // 打开小票打印模板
+  const win = window.open("receipt-print.html", "_blank");
+
+  const interval = setInterval(() => {
+      if (win && win.document.readyState === "complete") {
+          clearInterval(interval);
+          win.postMessage(JSON.stringify(currentData), "*");
+      }
+  }, 100);
+};

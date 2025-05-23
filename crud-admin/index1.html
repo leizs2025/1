@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>后台资料管理</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+body {
+  background-color: #fff8e7;
+  font-family: 'Segoe UI', sans-serif;
+  padding: 20px;
+}
+
+    .title {
+      text-align: center;
+      color: #b30000;
+      margin-bottom: 30px;
+      text-shadow: 1px 1px #fff;
+    }
+
+    .result-box select {
+      font-size: 16px;
+      padding: 8px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .card .row + .row {
+      margin-top: 15px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    .form-control,
+    .btn {
+      height: 45px;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(145deg, #d0021b, #ff5e62);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #c00;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .admin-info {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: #666;
+      font-size: 14px;
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- 当前管理员提示 -->
+  <div class="admin-info">
+    👤 当前管理员：<span id="whoLogin"></span>
+  </div>
+
+  <h2 class="title">🙏 太岁光明灯后台资料管理</h2>
+
+  <!-- 查询/新增 -->
+  <div class="mb-4 d-flex justify-content-center">
+    <div class="input-group" style="max-width: 700px;">
+      <input type="text" id="searchInput" class="form-control" placeholder="请输入手机号进行查找，例如：0146..." />
+      <button onclick="searchPhone()" class="btn btn-danger">🔍 查询</button>
+      <button onclick="startNewEntry()" class="btn btn-success">➕ 新表单</button>
+    </div>
+    
+  </div>
+
+  <div id="resultSelector" class="mb-3 result-box text-center"></div>
+
+  <div id="adminForm" class="hidden">
+    <div class="card">
+      <div class="row">
+        <div class="col-md-6">
+          <label>注册日期</label>
+          <input id="serialNumber" class="form-control" disabled />
+        </div>
+        <div class="col-md-6">
+          <label>主祈者</label>
+          <input id="mainName" class="form-control" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label>电话</label>
+          <input id="phoneNumber" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label>收据号码</label>
+          <input id="receiptNumber" class="form-control" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label>收款日期</label>
+          <input id="receiptDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label d-block">还愿</label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="wishReturn" id="wishReturnYes" value="是">
+              <label class="form-check-label" for="wishReturnYes">是</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="wishReturn" id="wishReturnNo" value="" checked>
+              <label class="form-check-label" for="wishReturnNo">否</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label>还愿纸金</label>
+          <input id="wishPaper" class="form-control" type="number" min="0" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label d-block">安奉供养</label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="offering" id="offeringYes" value="是">
+              <label class="form-check-label" for="offeringYes">是</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="offering" id="offeringNo" value="" checked>
+              <label class="form-check-label" for="offeringNo">否</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h5 class="mt-4">🧍‍♂️ 祈福者列表（最多15位）</h5>
+    <div id="prayersContainer" class="mb-3"></div>
+
+    <div class="d-flex justify-content-end mb-3">
+      <button onclick="addPrayer()" class="btn btn-outline-primary btn-sm">➕ 新增下一位祈福者</button>
+    </div>
+
+    <div class="d-flex justify-content-center gap-4 mt-4">
+    <button onclick="forceInsertNewEntry()" class="btn btn-success">➕ 新增保存</button>
+      <button onclick="saveChanges()" class="btn btn-primary">💾 更新保存</button>
+      <button onclick="deleteEntry()" class="btn btn-warning">🗑 删除</button>
+      <button onclick="printEntry()" class="btn btn-secondary">🖨️ 打印</button>
+      <button onclick="printTempReceipt()" class="btn btn-info">🖨️ 打印小票</button>
+      <button onclick="resetTempReceiptCounter()" class="btn btn-danger">🔄 清除小票计数</button>
+
+    </div>
+    <div id="totalBox" class="text-center mt-4 fs-5 fw-bold text-danger"></div>
+
+  </div>
+
+  <script src="script1.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const admin = localStorage.getItem("admin");
+      if (!admin) {
+        alert("请先登录");
+        window.location.href = "login.html";
+        return;
+      }
+      document.getElementById("whoLogin").textContent = admin;
+    });
+  </script>
+</body>
+</html>
