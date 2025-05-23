@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>太岁光明灯报名表单（正式修正版）</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 18px; background: linear-gradient(to bottom, #fff5e6, #ffeaea); margin: 0; padding: 20px; }
+    .container { width: 90%; max-width: 500px; margin: auto; text-align: center; }
+    h2, h3 { color: #b80000; text-shadow: 1px 1px 2px #ffd700; }
+    .field { margin-bottom: 10px; display: flex; flex-direction: column; align-items: flex-start; }
+    label { font-size: 16px; margin-bottom: 5px; }
+    input, select { font-size: 16px; padding: 8px; width: 100%; box-sizing: border-box; border: 2px solid #ccc; border-radius: 5px; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { appearance: textfield; }
+    button { margin: 8px; padding: 10px 15px; font-size: 16px; border: none; background: linear-gradient(145deg, #d0021b, #ff5e62); color: #fff9e3; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.3); transition: background 0.3s; }
+    button:hover { background: linear-gradient(145deg, #b80012, #e44c50); }
+    .card { background: #fff; margin: 10px 0; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .total { font-size: 20px; font-weight: bold; color: #b80000; margin-top: 20px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>太岁光明灯报名表单</h2>
+
+  <div id="mainInfo">
+    <div class="field">
+      <label>主祈者姓名:</label>
+      <input type="text" id="mainName">
+    </div>
+    <div class="field">
+      <label>电话:</label>
+      <input type="text" id="phoneNumber">
+    </div>
+    <button type="button" onclick="startForm()">开始填写</button>
+  </div>
+
+  <div id="cardSection" class="hidden">
+    <h3>填写资料</h3>
+    <div id="cardsContainer"></div>
+    <button type="button" onclick="addCard()">新增一位</button>
+    <div class="total" id="totalAmount">赞助总金额：0 元</div>
+    <button type="button" onclick="previewForm()">预览资料</button>
+    <button type="button" onclick="submitForm()">确认送出</button>
+    
+  </div>
+
+  <div id="previewSection" class="hidden">
+    <h3>资料预览</h3>
+    <div id="previewContent" style="text-align: center; font-size: 16px; padding: 10px; max-width: 380px; margin: 0 auto;"></div>
+    <button type="button" onclick="backToEdit()">返回填写</button>
+    <button onclick="downloadPdf()">下载PDF</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+let formData = [];
+let mainName = "";
+let phoneNumber = "";
+
+function startForm() {
+  mainName = document.getElementById("mainName").value.trim();
+  phoneNumber = document.getElementById("phoneNumber").value.trim();
+  if (!mainName || !phoneNumber) {
+    alert("\u8bf7\u586b\u5199\u4e3b\u7948\u8005\u59d3\u540d\u548c\u7535\u8bdd！");
+    return;
+  }
+  document.getElementById("mainInfo").classList.add("hidden");
+  document.getElementById("cardSection").classList.remove("hidden");
+  addCard();
+}
+
+function addCard() {
+  formData.push({ name: "", zodiac: "", taiSui: "", paperGold1: "", light: "", paperGold2: "", longevity: "", paperGold3: "", wisdom: "", paperGold4: "", arhat: "", paperGold5: "", donation: "" });
+  renderCards();
+  calculateTotal();
+}
+
+function removeCard(idx) {
+  if (confirm("\u786e\u5b9a\u5220\u9664\u8fd9\u4e00\u4f4d\u5417？")) {
+    formData.splice(idx, 1);
+    renderCards();
+    calculateTotal();
+  }
+}
+
+function renderCards() {
+  const container = document.getElementById("cardsContainer");
+  container.innerHTML = "";
+  formData.forEach((entry, idx) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-header">
+        <strong>第 ${idx + 1} 位</strong>
+        <button type="button" onclick="removeCard(${idx})">删除</button>
+      </div>
+      ${generateField("姓名", "name", idx, entry.name)}
+      ${generateField("生肖", "zodiac", idx, entry.zodiac)}
+      ${generateSelect("太岁", "taiSui", idx, entry.taiSui)}
+      ${generateField("纸金", "paperGold1", idx, entry.paperGold1, true)}
+      ${generateSelect("光明灯", "light", idx, entry.light)}
+      ${generateField("纸金", "paperGold2", idx, entry.paperGold2, true)}
+      ${generateSelect("长生禄位", "longevity", idx, entry.longevity)}
+      ${generateField("纸金", "paperGold3", idx, entry.paperGold3, true)}
+      ${generateSelect("文昌帝君", "wisdom", idx, entry.wisdom)}
+      ${generateField("纸金", "paperGold4", idx, entry.paperGold4, true)}
+      ${generateSelect("十六罗汉", "arhat", idx, entry.arhat)}
+      ${generateField("纸金", "paperGold5", idx, entry.paperGold5, true)}
+      ${generateField("安奉功德金", "donation", idx, entry.donation, true)}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function generateField(label, key, idx, value, isNumber = false) {
+  return `<div class="field"><label>${label}:</label><input type="${isNumber ? "number" : "text"}" value="${value || ""}" onchange="updateField(${idx}, '${key}', this.value)"></div>`;
+}
+
+function generateSelect(label, key, idx, value) {
+  return `<div class="field"><label>${label}:</label><select onchange="updateField(${idx}, '${key}', this.value)"><option value="" ${value === "" ? "selected" : ""}></option><option value="是" ${value === "是" ? "selected" : ""}>是</option></select></div>`;
+}
+
+function updateField(idx, key, value) {
+  formData[idx][key] = value;
+  calculateTotal();
+}
+
+function calculateTotal() {
+  let total = 0;
+  formData.forEach(entry => {
+    const sumPaper = (parseFloat(entry.paperGold1 || 0) + parseFloat(entry.paperGold2 || 0) + parseFloat(entry.paperGold3 || 0) + parseFloat(entry.paperGold4 || 0) + parseFloat(entry.paperGold5 || 0));
+    const donation = parseFloat(entry.donation || 0);
+    total += (sumPaper * 3) + donation;
+  });
+  document.getElementById("totalAmount").textContent = `赞助总金额：${total} 元`;
+}
+
+function previewForm() {
+  document.getElementById("cardSection").classList.add("hidden");
+  document.getElementById("previewSection").classList.remove("hidden");
+  let html = `<p><strong>主祈者：</strong>${mainName}</p><p><strong>电话：</strong>${phoneNumber}</p><hr>`;
+  formData.forEach((entry, idx) => {
+    html += `
+      <p><strong>第 ${idx + 1} 位</strong></p>
+      <p>姓名: ${entry.name || ""}｜生肖: ${entry.zodiac || ""}</p>
+      <p>太岁: ${entry.taiSui || ""}｜纸金: ${entry.paperGold1 || ""}</p>
+      <p>光明灯: ${entry.light || ""}｜纸金: ${entry.paperGold2 || ""}</p>
+      <p>长生禄位: ${entry.longevity || ""}｜纸金: ${entry.paperGold3 || ""}</p>
+      <p>文昌帝君: ${entry.wisdom || ""}｜纸金: ${entry.paperGold4 || ""}</p>
+      <p>十六罗汉: ${entry.arhat || ""}｜纸金: ${entry.paperGold5 || ""}</p>
+      <p>安奉功德金: ${entry.donation || ""}</p>
+      <hr>
+    `;
+  });
+  html += `<p><strong>${document.getElementById("totalAmount").textContent}</strong></p>`;
+  document.getElementById("previewContent").innerHTML = html;
+}
+
+
+function backToEdit() {
+  document.getElementById("previewSection").classList.add("hidden");
+  document.getElementById("cardSection").classList.remove("hidden");
+}
+
+function submitForm() {
+  calculateTotal();
+  const totalAmount = document.getElementById("totalAmount").textContent.match(/\d+/)[0];
+  const yearPrefix = (new Date().getFullYear() - 2020).toString();
+  const rawPhone = document.getElementById("phoneNumber").value.trim();
+  let basePhone = yearPrefix + rawPhone;
+
+  // 尝试递增方式查找唯一 key
+  findUniquePhone(basePhone, 0).then(uniquePhone => {
+    const payload = {
+      mainName: document.getElementById("mainName").value.trim(),
+      phoneNumber: uniquePhone,
+      totalAmount: totalAmount,
+      data: formData
+    };
+
+    fetch("https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert("提交成功！");
+      location.reload();
+    })
+    .catch(err => {
+      alert("提交失败：" + err.message);
+    });
+  });
+}
+
+function findUniquePhone(base, count) {
+  const trial = count === 0 ? base : base + "+" + count;
+  const url = `https://taisui-ed592-default-rtdb.asia-southeast1.firebasedatabase.app/records.json?orderBy=\"phoneNumber\"&equalTo=\"${trial}\"`;
+
+  return fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (!data || Object.keys(data).length === 0) {
+        return trial;
+      } else {
+        return findUniquePhone(base, count + 1);
+      }
+    });
+}
+
+
+</script>
+</body>
+</html>
