@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>打印太岁/光明灯资料</title>
+  <title>资料打印</title>
   <style>
     @page { size: A4; margin: 15mm; }
     body {
@@ -68,12 +68,13 @@
   <thead>
     <tr>
       <th style="width:20%">祈福者</th>
-      <th style="width:7%">太岁</th><th style="width:5%">纸金</th>
-      <th style="width:7%">光明灯</th><th style="width:5%">纸金</th>
-      <th style="width:7%">长生<br>禄位</th><th style="width:5%">纸金</th>
-      <th style="width:7%">文昌<br>帝君</th><th style="width:5%">纸金</th>
-      <th style="width:7%">十六<br>罗汉</th><th style="width:5%">纸金</th>
-      <th style="width:10%">安奉<br>功德金</th>
+      <th style="width:6%">生肖</th> <!-- ⬅️ 新增这行 -->
+      <th style="width:6%">太岁</th><th style="width:5%">纸金</th>
+      <th style="width:6%">光明灯</th><th style="width:5%">纸金</th>
+      <th style="width:6%">长生<br>禄位</th><th style="width:5%">纸金</th>
+      <th style="width:6%">文昌<br>帝君</th><th style="width:5%">纸金</th>
+      <th style="width:6%">十六<br>罗汉</th><th style="width:5%">纸金</th>
+      <th style="width:8%">安奉<br>功德金</th>
     </tr>
   </thead>
   <tbody id="prayerBody"></tbody>
@@ -170,6 +171,7 @@ const taiSuiData = {
 
     row.innerHTML = `
   <td class="${nameClass}">${safe(pData.name)}</td>
+  <td>${safe(pData.zodiac)}</td> <!-- ⬅️ 新增生肖栏 -->
   <td>${pData.taiSui === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold1)}</td>
   <td>${pData.light === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold2)}</td>
   <td>${pData.longevity === "是" ? "✔" : "&nbsp;"}</td><td>${currentMode === 'wish' ? "&nbsp;" : safe(pData.paperGold3)}</td>
@@ -192,6 +194,7 @@ const taiSuiData = {
       const emptyRow = document.createElement("tr");
       emptyRow.innerHTML = `
         <td class="name-cell">&nbsp;</td>
+        <td>&nbsp;</td> <!-- ⬅️ 新增空白生肖栏 -->
         <td>&nbsp;</td><td>&nbsp;</td>
         <td>&nbsp;</td><td>&nbsp;</td>
         <td>&nbsp;</td><td>&nbsp;</td>
