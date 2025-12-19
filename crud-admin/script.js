@@ -218,11 +218,11 @@ window.saveChanges = function () {
   const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
   
     // 确保收据号不为空
- //   const receiptInput = document.getElementById("receiptNumber");
- //   if (!receiptInput.value.trim()) {
- //       const tempReceiptNumber = generateTempReceiptNumber();
-  //      receiptInput.value = tempReceiptNumber;
- //       console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
+    const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
     }
 
 
@@ -347,11 +347,11 @@ window.forceInsertNewEntry = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
- // const receiptInput = document.getElementById("receiptNumber");
- //   if (!receiptInput.value.trim()) {
- //       const tempReceiptNumber = generateTempReceiptNumber();
- //       receiptInput.value = tempReceiptNumber;
- //       console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
+  const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
     }
     
   const body = {
@@ -488,6 +488,7 @@ window.printTempReceipt = function () {
       }
   }, 100);
 };
+
 
 
 
