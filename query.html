@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>2025 太岁光明灯 查询系统</title>
+  <title>2026 太岁光明灯 查询系统</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -92,7 +92,7 @@
   </style>
 </head>
 <body>
-  <h1>2025 太岁光明灯 查询系统</h1>
+  <h1>2026 太岁光明灯 查询系统</h1>
   <div class="centered-input">
     <input type="text" id="searchInput" placeholder="请输入手机号码的后7位，或完整号码进行查询。">
     <button onclick="search()">🔍 查询</button>
@@ -128,7 +128,7 @@ function extractMobileNumber(phone) {
 }
 
 async function preloadData() {
-  const url = "https://script.google.com/macros/s/AKfycbxU0pwJ_v7li9f274I5m23U2AV3YBDjZ_NUJ_TplrYb9Je3aIXytr8mD2bqozlAQPGuvQ/exec?mode=all";
+  const url = "https://script.google.com/macros/s/AKfycby4OfOpeID57yF-HcSl3CKODChlLPvgYH1TgZ02RXXkLO0YX9eRDbN6soSlKlaobvqhrg/exec?mode=all";
 
   try {
     const res = await fetch(url);
@@ -141,7 +141,7 @@ async function preloadData() {
   }
 
   try {
-    const fullRes = await fetch("https://script.google.com/macros/s/AKfycbzhnu9_lxiG31C2NndfeSjO0GpGiwFKNcvpazAQ7YC7F8V8jfVJARowlyKE9x9bcbQjbg/exec");
+    const fullRes = await fetch("https://script.google.com/macros/s/AKfycbyZ9Z33Cb3VJnyb-V0xvOrQwhIdcVFeLuY4L5IGG_kQ0ZjX9V6e1agsfz61CkANnO4Agw/exec");
     const fullData = await fullRes.json();
 
     const orderAndAssign = (list, targetMap, prefix = "") => {
