@@ -16,6 +16,13 @@
     input[type="number"] { appearance: textfield; }
     button { margin: 8px; padding: 10px 15px; font-size: 16px; border: none; background: linear-gradient(145deg, #d0021b, #ff5e62); color: #fff9e3; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 0, 0, 0.3); transition: background 0.3s; }
     button:hover { background: linear-gradient(145deg, #b80012, #e44c50); }
+    /* 新增：禁用状态的样式 */
+    button:disabled {
+      background: #cccccc;
+      color: #666666;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .card { background: #fff; margin: 10px 0; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left; }
     .card-header { display: flex; justify-content: space-between; align-items: center; }
     .total { font-size: 20px; font-weight: bold; color: #b80000; margin-top: 20px; }
@@ -44,7 +51,8 @@
     <button type="button" onclick="addCard()">新增一位</button>
     <div class="total" id="totalAmount">赞助总金额：0 元</div>
     <button type="button" onclick="previewForm()">预览资料</button>
-    <button type="button" onclick="submitForm()">确认送出</button>
+    <!-- 给确认送出按钮加一个ID方便控制 -->
+    <button type="button" id="submitBtn" onclick="submitForm()">确认送出</button>
     
   </div>
 
@@ -62,6 +70,8 @@
 let formData = [];
 let mainName = "";
 let phoneNumber = "";
+// 【新增】防止重复提交的锁
+let isSubmitting = false; 
 
 function startForm() {
   mainName = document.getElementById("mainName").value.trim();
@@ -169,6 +179,20 @@ function backToEdit() {
 }
 
 function submitForm() {
+  const submitBtn = document.getElementById("submitBtn");
+
+  // 【新增】如果正在提交中，阻止重复点击
+  if (isSubmitting) {
+    alert("系统正在处理中，请勿重复点击！");
+    return;
+  }
+
+  // 【新增】锁定状态，改变按钮外观
+  isSubmitting = true;
+  const originalText = submitBtn.innerText;
+  submitBtn.innerText = "提交中...";
+  submitBtn.disabled = true;
+
   calculateTotal();
   const totalAmount = document.getElementById("totalAmount").textContent.match(/\d+/)[0];
 
@@ -188,17 +212,29 @@ function submitForm() {
       const data = JSON.parse(text);
       if (data.success) {
         alert("提交成功！");
-        location.reload();
+        location.reload(); // 成功后刷新，自动重置所有状态
       } else {
         alert("提交失败：" + (data.error || "未知错误"));
+        // 失败则恢复按钮
+        isSubmitting = false;
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
       }
     } catch (err) {
       console.error("返回内容不是JSON：", text);
       alert("提交失败，服务器返回异常内容！");
+      // 异常则恢复按钮
+      isSubmitting = false;
+      submitBtn.innerText = originalText;
+      submitBtn.disabled = false;
     }
   })
   .catch(err => {
     alert("提交失败：" + err.message);
+    // 网络错误则恢复按钮
+    isSubmitting = false;
+    submitBtn.innerText = originalText;
+    submitBtn.disabled = false;
   });
 }
 
@@ -234,12 +270,6 @@ function downloadPdf() {
     });
   });
 }
-
-
-
-
-
-
 </script>
 </body>
 </html>
