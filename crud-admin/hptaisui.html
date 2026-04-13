@@ -19,23 +19,14 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             padding: 20px;
-            margin-bottom: 20px;
-            border: none;
+            margin-bottom: 15px;
             position: relative;
         }
 
         .form-label {
             font-weight: 600;
             color: #555;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #dee2e6;
+            margin-top: 10px;
         }
 
         /* 单选框横向排列优化 */
@@ -43,304 +34,323 @@
             display: flex;
             gap: 15px;
             align-items: center;
-            padding: 5px 0;
-            margin-bottom: 15px;
+            padding-top: 5px;
         }
-        .radio-item {
-            display: flex;
-            align-items: center;
-            margin: 0;
-            font-weight: normal;
-            cursor: pointer;
-        }
-        .radio-item input {
-            margin-right: 5px;
-            width: auto;
+        .radio-group .form-check {
+            margin-bottom: 0;
         }
 
         /* 删除按钮 */
-        .btn-delete {
+        .btn-remove {
             position: absolute;
             top: 10px;
             right: 10px;
+            color: #dc3545;
             background: none;
             border: none;
-            color: #dc3545;
             font-size: 1.2rem;
-            padding: 0;
-            line-height: 1;
+            cursor: pointer;
         }
 
-        /* 按钮样式 */
-        .btn-primary {
-            background-color: #0d6efd;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
+        /* 底部按钮 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .btn-add {
-            background-color: #198754;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        /* 查询区域 */
-        .search-box {
             background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
 
-    <div class="container p-0">
-        <!-- 1. 查询区域 -->
-        <div class="search-box">
-            <label class="form-label">🔍 输入手机号查询/登记</label>
-            <input type="tel" id="searchInput" class="form-control" placeholder="请输入手机号码...">
-            <button class="btn btn-primary mt-2" onclick="searchPhone()">查询</button>
+    <div class="container">
+        <!-- 顶部查询区 -->
+        <div class="card p-3 mb-3 shadow-sm">
+            <label class="form-label">🔍 输入手机号查询历史资料</label>
+            <div class="input-group">
+                <input type="number" id="searchInput" class="form-control" placeholder="请输入手机号">
+                <button class="btn btn-primary" type="button" onclick="searchPhone()">查询</button>
+            </div>
+            <!-- 查询结果选择器容器 -->
+            <div id="resultSelector" class="mt-3"></div>
         </div>
 
-        <!-- 2. 祈福者列表容器 -->
-        <div id="entriesContainer"></div>
+        <!-- 祈福者卡片容器 -->
+        <div id="prayerContainer"></div>
+    </div>
 
-        <!-- 3. 底部按钮 -->
-        <button class="btn btn-add" onclick="addEntry()">+ 添加一位祈福者</button>
-        <button class="btn btn-primary" onclick="submitData()">💾 提交数据</button>
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+        <button class="btn btn-outline-secondary flex-grow-1" onclick="addPrayer()">+ 新增祈福者</button>
+        <button class="btn btn-success flex-grow-1" onclick="submitData()">💾 提交登记</button>
     </div>
 
 <script>
-    // === 全局变量 ===
-    let fullData = []; // 存储所有查询回来的数据
-    let currentPhone = ""; // 当前查询的手机号
+    // ==========================================
+    // ⚙️ 配置区域
+    // ==========================================
+    // 请在此处填入您的 Google Apps Script Web App URL
+    const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
-    // === 1. 初始化 ===
-    document.addEventListener("DOMContentLoaded", () => {
-        addEntry(); // 默认添加一个空卡片
-    });
+    // ==========================================
+    // 📝 核心逻辑
+    // ==========================================
+    let fullData = [];       // 存储查询回来的所有数据
+    let selectedEntry = null; // 当前选中的那一条数据
 
-    // === 2. 辅助函数：创建单选框组 ===
-    function createRadioGroup(name, key, value) {
-        // 确保 value 是字符串 "是" 或 "否"
-        const val = value === "是" ? "是" : "否";
-        return `
-            <div class="radio-group">
-                <label class="radio-item">
-                    <input type="radio" name="${name}" value="是" ${val === "是" ? "checked" : ""}> 是
-                </label>
-                <label class="radio-item">
-                    <input type="radio" name="${name}" value="否" ${val === "否" ? "checked" : ""}> 否
-                </label>
-            </div>
-        `;
+    // --- 1. 查询功能 (完全还原您提供的逻辑) ---
+    window.searchPhone = function () {
+        const keyword = document.getElementById("searchInput").value.trim();
+        if (!keyword) return alert("请输入手机号！");
+
+        fetch(https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(keyword)}`)
+            .then(res => res.text())
+            .then(text => {
+                let data;
+                try { data = JSON.parse(text); }
+                catch (e) { alert("数据格式错误"); return; }
+
+                fullData = data;
+                const selector = document.getElementById("resultSelector");
+                selector.innerHTML = "";
+
+                if (data.length === 0) {
+                    selector.innerHTML = `<div class="alert alert-warning">未找到资料，请点击下方【开始登记】</div>`;
+                    return;
+                }
+
+                if (data.length === 1) {
+                    selectedEntry = data[0];
+                    renderForm();
+                } else {
+                    const select = document.createElement("select");
+                    select.className = "form-select";
+                    select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
+                    select.onchange = () => {
+                        selectedEntry = fullData[select.selectedIndex - 1];
+                        renderForm();
+                        selector.innerHTML = "";
+                    };
+                    data.forEach(item => {
+                        const opt = document.createElement("option");
+                        opt.textContent = `${item.mainName} (${item.phoneNumber})`;
+                        select.appendChild(opt);
+                    });
+                    selector.appendChild(select);
+                }
+            })
+            .catch(err => alert("查询出错：" + err.message));
+    };
+
+    // --- 2. 渲染表单 ---
+    function renderForm() {
+        const container = document.getElementById("prayerContainer");
+        container.innerHTML = ""; // 清空现有
+
+        if (!selectedEntry) return;
+
+        // 填充主信息（手机号、联系人、日期）
+        document.getElementById("searchInput").value = selectedEntry.phoneNumber;
+        // 如果有联系人和日期字段，也填上（假设后端返回这些字段）
+        // 注意：如果后端没返回这些，这里可能为空
+
+        // 渲染祈福者列表
+        selectedEntry.prayers.forEach((prayer, index) => {
+            const card = createPrayerBlock(prayer, index + 1);
+            container.appendChild(card);
+        });
     }
 
-    // === 3. 创建卡片 (垂直布局优化版) ===
+    // --- 3. 创建单个祈福者卡片 ---
     function createPrayerBlock(data = {}, index = 1) {
         const div = document.createElement("div");
         div.className = "prayer-card";
-        div.dataset.index = index; // 记录索引
+
+        // 生成单选框 HTML 的辅助函数
+        function createRadio(name, value, checkedVal) {
+            const isChecked = String(value) === String(checkedVal) ? "checked" : "";
+            // 如果是空值，默认选中“否”或者第一个
+            const defaultCheck = (!checkedVal && value === "否") ? "checked" : "";
+            return `
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio"
+                        name="${name}" value="${value}" ${isChecked || defaultCheck}>
+                    <label class="form-check-label">${value}</label>
+                </div>
+            `;
+        }
 
         div.innerHTML = `
-            <!-- 删除按钮 -->
-            <button class="btn-delete" onclick="this.parentElement.remove(); checkMin()">✕</button>
+            <button class="btn-remove" onclick="this.parentElement.remove()" title="删除此项">✕</button>
+            <h5 class="mb-3 text-primary">🧍‍♂️ 第 ${index} 位祈福者</h5>
 
-            <h5 class="mb-3 text-primary border-bottom pb-2">🧍‍♂️ 第 ${index} 位祈福者</h5>
+            <div class="mb-3">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-control pName" value="${data.name || ""}" placeholder="请输入姓名">
+            </div>
 
-            <!-- 姓名 -->
-            <label class="form-label">姓名</label>
-            <input type="text" class="form-control pName" value="${data.name || ""}" placeholder="请输入姓名">
-
-            <!-- 生肖 -->
-            <label class="form-label">生肖</label>
-            <input type="text" class="form-control pZodiac" value="${data.zodiac || ""}" placeholder="请输入生肖">
+            <div class="mb-3">
+                <label class="form-label">生肖</label>
+                <input type="text" class="form-control pZodiac" value="${data.zodiac || ""}" placeholder="请输入生肖">
+            </div>
 
             <hr class="my-3">
 
-            <!-- 太岁 -->
-            <label class="form-label">太岁</label>
-            ${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui)}
+            <div class="mb-3">
+                <label class="form-label">太岁</label>
+                <div class="radio-group">
+                    ${createRadio(`pTaiSui${index}`, "是", data.taiSui)}
+                    ${createRadio(`pTaiSui${index}`, "否", data.taiSui)}
+                </div>
+            </div>
 
-            <!-- 纸金1 -->
-            <label class="form-label">纸金1</label>
-            <input type="number" class="form-control pg1" value="${data.paperGold1 || ""}">
+            <div class="mb-3">
+                <label class="form-label">纸金1</label>
+                <input type="number" class="form-control pg1" value="${data.paperGold1 || ""}">
+            </div>
 
-            <!-- 光明灯 -->
-            <label class="form-label">光明灯</label>
-            ${createRadioGroup(`pLight${index}`, "pLight", data.light)}
+            <div class="mb-3">
+                <label class="form-label">光明灯</label>
+                <div class="radio-group">
+                    ${createRadio(`pLight${index}`, "是", data.light)}
+                    ${createRadio(`pLight${index}`, "否", data.light)}
+                </div>
+            </div>
 
-            <!-- 纸金2 -->
-            <label class="form-label">纸金2</label>
-            <input type="number" class="form-control pg2" value="${data.paperGold2 || ""}">
+            <div class="mb-3">
+                <label class="form-label">纸金2</label>
+                <input type="number" class="form-control pg2" value="${data.paperGold2 || ""}">
+            </div>
 
-            <!-- 长生禄位 -->
-            <label class="form-label">长生禄位</label>
-            ${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity)}
+            <div class="mb-3">
+                <label class="form-label">长生禄位</label>
+                <div class="radio-group">
+                    ${createRadio(`pLongevity${index}`, "是", data.longevity)}
+                    ${createRadio(`pLongevity${index}`, "否", data.longevity)}
+                </div>
+            </div>
 
-            <!-- 纸金3 -->
-            <label class="form-label">纸金3</label>
-            <input type="number" class="form-control pg3" value="${data.paperGold3 || ""}">
+            <div class="mb-3">
+                <label class="form-label">纸金3</label>
+                <input type="number" class="form-control pg3" value="${data.paperGold3 || ""}">
+            </div>
 
-            <!-- 文昌帝君 -->
-            <label class="form-label">文昌帝君</label>
-            ${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom)}
+            <div class="mb-3">
+                <label class="form-label">文昌帝君</label>
+                <div class="radio-group">
+                    ${createRadio(`pWisdom${index}`, "是", data.wisdom)}
+                    ${createRadio(`pWisdom${index}`, "否", data.wisdom)}
+                </div>
+            </div>
 
-            <!-- 纸金4 -->
-            <label class="form-label">纸金4</label>
-            <input type="number" class="form-control pg4" value="${data.paperGold4 || ""}">
+            <div class="mb-3">
+                <label class="form-label">纸金4</label>
+                <input type="number" class="form-control pg4" value="${data.paperGold4 || ""}">
+            </div>
 
-            <!-- 十六罗汉 -->
-            <label class="form-label">十六罗汉</label>
-            ${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat)}
+            <div class="mb-3">
+                <label class="form-label">十六罗汉</label>
+                <div class="radio-group">
+                    ${createRadio(`pArhat${index}`, "是", data.arhat)}
+                    ${createRadio(`pArhat${index}`, "否", data.arhat)}
+                </div>
+            </div>
 
-            <!-- 纸金5 -->
-            <label class="form-label">纸金5</label>
-            <input type="number" class="form-control pg5" value="${data.paperGold5 || ""}">
+            <div class="mb-3">
+                <label class="form-label">纸金5</label>
+                <input type="number" class="form-control pg5" value="${data.paperGold5 || ""}">
+            </div>
 
-            <!-- 安奉功德金 -->
-            <label class="form-label">安奉功德金</label>
-            <input type="number" class="form-control donate" value="${data.donation || ""}">
+            <div class="mb-3">
+                <label class="form-label">安奉功德金</label>
+                <input type="number" class="form-control donate" value="${data.donation || ""}">
+            </div>
         `;
-
         return div;
     }
 
-    // === 4. 添加新卡片 ===
-    function addEntry() {
-        const container = document.getElementById("entriesContainer");
-        const newIndex = container.children.length + 1;
-        const newBlock = createPrayerBlock({}, newIndex);
+    // --- 4. 新增祈福者 ---
+    window.addPrayer = function() {
+        const container = document.getElementById("prayerContainer");
+        const count = container.children.length + 1;
+        const newBlock = createPrayerBlock({}, count);
         container.appendChild(newBlock);
-        updateIndices();
-    }
+    };
 
-    // === 5. 更新索引 (删除时用) ===
-    function updateIndices() {
-        const cards = document.querySelectorAll(".prayer-card");
-        cards.forEach((card, idx) => {
-            const title = card.querySelector("h5");
-            if (title) title.innerHTML = `🧍‍♂️ 第 ${idx + 1} 位祈福者`;
-        });
-    }
-
-    // === 6. 检查最小数量 ===
-    function checkMin() {
-        const count = document.querySelectorAll(".prayer-card").length;
-        if (count === 0) addEntry();
-        else updateIndices();
-    }
-
-    // === 7. 查询功能 ===
-    async function searchPhone() {
-        const phoneInput = document.getElementById("searchInput");
-        const phone = phoneInput.value.trim();
-
-        if (!phone) return alert("请输入手机号！");
-
-        try {
-            // 注意：这里替换成你的 Worker 地址
-            const response = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(phone)}`);
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                fullData = result.data; // 保存原始数据
-                currentPhone = phone;
-
-                // 锁定手机号为只读
-                phoneInput.readOnly = true;
-                phoneInput.classList.add("bg-light");
-
-                // 清空现有卡片
-                const container = document.getElementById("entriesContainer");
-                container.innerHTML = "";
-
-                // 重新生成卡片
-                if (fullData.length === 0) {
-                    addEntry(); // 如果没数据，加个空的
-                } else {
-                    fullData.forEach((item, idx) => {
-                        const block = createPrayerBlock(item, idx + 1);
-                        container.appendChild(block);
-                    });
-                }
-                alert(`查询成功，找到 ${fullData.length} 条记录`);
-            } else {
-                alert("未找到相关记录，您可以直接填写新数据。");
-                fullData = [];
-                currentPhone = phone;
-                // 不清空卡片，允许用户直接填
-            }
-        } catch (err) {
-            console.error(err);
-            alert("查询出错，请检查网络或Worker地址");
-        }
-    }
-
-    // === 8. 提交功能 ===
-    async function submitData() {
+    // --- 5. 提交数据 ---
+    window.submitData = function() {
         const phone = document.getElementById("searchInput").value.trim();
-        if (!phone) return alert("请输入手机号！");
+        if (!phone) return alert("请填写手机号！");
 
         const cards = document.querySelectorAll(".prayer-card");
-        const submitData = [];
+        if (cards.length === 0) return alert("请至少添加一位祈福者！");
 
-        cards.forEach(card => {
-            const item = {
-                // 基础信息
-                phone: phone,
-                receiptId: "", // 隐藏字段，强制置空
-                receiptDate: "", // 隐藏字段，强制置空
+        const prayers = [];
+
+        cards.forEach((card, index) => {
+            const prayer = {
                 name: card.querySelector(".pName").value.trim(),
                 zodiac: card.querySelector(".pZodiac").value.trim(),
-
-                // 选项 (Radio)
-                taiSui: card.querySelector(`input[name="pTaiSui${card.dataset.index}"]:checked`)?.value || "否",
-                light: card.querySelector(`input[name="pLight${card.dataset.index}"]:checked`)?.value || "否",
-                longevity: card.querySelector(`input[name="pLongevity${card.dataset.index}"]:checked`)?.value || "否",
-                wisdom: card.querySelector(`input[name="pWisdom${card.dataset.index}"]:checked`)?.value || "否",
-                arhat: card.querySelector(`input[name="pArhat${card.dataset.index}"]:checked`)?.value || "否",
-
-                // 数字
+                taiSui: card.querySelector(`input[name="pTaiSui${index+1}"]:checked`)?.value || "否",
                 paperGold1: card.querySelector(".pg1").value,
+                light: card.querySelector(`input[name="pLight${index+1}"]:checked`)?.value || "否",
                 paperGold2: card.querySelector(".pg2").value,
+                longevity: card.querySelector(`input[name="pLongevity${index+1}"]:checked`)?.value || "否",
                 paperGold3: card.querySelector(".pg3").value,
+                wisdom: card.querySelector(`input[name="pWisdom${index+1}"]:checked`)?.value || "否",
                 paperGold4: card.querySelector(".pg4").value,
+                arhat: card.querySelector(`input[name="pArhat${index+1}"]:checked`)?.value || "否",
                 paperGold5: card.querySelector(".pg5").value,
-                donation: card.querySelector(".donate").value,
+                donation: card.querySelector(".donate").value
             };
-            submitData.push(item);
+
+            if (!prayer.name) {
+                alert(`第 ${index + 1} 位祈福者的姓名不能为空`);
+                throw new Error("Name missing");
+            }
+            prayers.push(prayer);
         });
 
-        try {
-            // 注意：这里替换成你的 Worker 地址
-            const response = await fetch("https://你的-worker-domain.workers.dev", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(submitData)
-            });
+        const payload = {
+            phoneNumber: phone,
+            prayers: prayers
+        };
 
-            const result = await response.json();
-            if (result.success) {
-                alert("提交成功！");
-            } else {
-                alert("提交失败：" + result.message);
-            }
-        } catch (err) {
-            console.error(err);
-            alert("提交出错");
-        }
-    }
+        // 按钮状态
+        const submitBtn = document.querySelector(".bottom-bar .btn-success");
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "提交中...";
+
+        fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.text())
+        .then(txt => {
+            alert("提交成功！");
+            // 可选：提交后清空或刷新
+        })
+        .catch(err => {
+            alert("提交失败：" + err.message);
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    };
+
+    // 初始化：默认添加一个空卡片
+    window.onload = function() {
+        addPrayer();
+    };
+
 </script>
 
 </body>
