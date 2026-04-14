@@ -335,22 +335,16 @@
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
             
-            if (!selectedYear) return;
+            if (!selectedYear || !phoneInput.value) return;
             
             currentRegistrationYear = selectedYear;
             const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
             
-            // 如果有原始手机号，使用它来构建新的带前缀号码
-            if (originalPhoneNumber) {
-                const newPhone = addPhonePrefix(originalPhoneNumber, selectedYear);
-                phoneInput.value = newPhone;
-            } else if (phoneInput.value) {
-                // 如果没有原始手机号，从当前显示的号码中提取真实号码
-                const realPhone = extractRealPhone(phoneInput.value);
-                originalPhoneNumber = realPhone; // 更新原始号码
-                const newPhone = addPhonePrefix(realPhone, selectedYear);
-                phoneInput.value = newPhone;
-            }
+            // 从当前显示的号码中提取真实号码
+            const realPhone = extractRealPhone(phoneInput.value);
+            originalPhoneNumber = realPhone; // 更新原始号码
+            const newPhone = addPhonePrefix(realPhone, selectedYear);
+            phoneInput.value = newPhone;
         }
 
         // 页面加载时初始化
