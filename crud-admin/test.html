@@ -174,6 +174,15 @@
             border-radius: 6px;
             border-left: 4px solid #007bff;
         }
+        
+        /* 年份选择器样式 */
+        .year-selector {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff9db;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+        }
     </style>
 </head>
 <body>
@@ -201,6 +210,15 @@
         <!-- 基本信息 -->
         <div class="card">
             <h6 class="border-bottom pb-2 mb-3">📝 基本信息</h6>
+            
+            <!-- 新增：年份选择器 -->
+            <div class="year-selector mb-3">
+                <label class="form-label">📅 报名太岁年份</label>
+                <select id="registrationYear" class="form-select" onchange="updatePhoneWithYearPrefix()">
+                    <!-- JS 动态生成年份选项 -->
+                </select>
+            </div>
+            
             <div class="mb-3">
                 <label class="form-label">主家姓名</label>
                 <input type="text" id="mainName" class="form-control" placeholder="姓名">
@@ -236,13 +254,122 @@
 
         let fullData = [];
         let selectedEntry = null;
+        let currentRegistrationYear = null; // 当前选择的年份
+
+        // 获取当前年份
+        const currentYear = new Date().getFullYear();
+
+        // 初始化年份选择器
+        function initYearSelector() {
+            const yearSelect = document.getElementById("registrationYear");
+            yearSelect.innerHTML = ""; // 清空现有选项
+            
+            // 生成从今年开始往后10年的选项
+            for (let year = currentYear; year <= currentYear + 10; year++) {
+                const option = document.createElement("option");
+                option.value = year;
+                option.textContent = year + "年";
+                if (year === currentYear) {
+                    option.selected = true; // 默认选中今年
+                    currentRegistrationYear = year;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+
+        // 验证马来西亚手机号格式
+        function isValidMalaysianPhone(phone) {
+            if (!phone) return false;
+            
+            // 移除所有非数字字符
+            const cleanPhone = phone.replace(/\D/g, '');
+            
+            // 马来西亚手机号格式：以0开头，总长度10-11位
+            // 例如：0123456789 (10位) 或 01234567890 (11位)
+            return /^0\d{9,10}$/.test(cleanPhone);
+        }
+
+        // 从带前缀的手机号中提取真实手机号（适用于马来西亚格式）
+        function extractRealPhone(phoneWithPrefix) {
+            if (!phoneWithPrefix) return phoneWithPrefix;
+            
+            // 如果长度大于11且第一位是数字，则认为是年份前缀
+            // 马来西亚手机号：0 + 9-10位数字 = 10-11位
+            // 加上前缀后：1位年份 + 0 + 9-10位 = 11-12位
+            if (phoneWithPrefix.length > 11 && /^[0-9]$/.test(phoneWithPrefix.charAt(0))) {
+                const withoutPrefix = phoneWithPrefix.substring(1); // 去掉第一位前缀
+                
+                // 验证剩余部分是否符合马来西亚手机号格式
+                if (isValidMalaysianPhone(withoutPrefix)) {
+                    return withoutPrefix;
+                }
+            }
+            
+            // 如果不符合前缀规则，但本身是有效手机号，直接返回
+            if (isValidMalaysianPhone(phoneWithPrefix)) {
+                return phoneWithPrefix;
+            }
+            
+            return phoneWithPrefix;
+        }
+
+        // 为手机号添加前缀（适用于马来西亚格式）
+        function addPhonePrefix(phone, year) {
+            if (!phone) return phone;
+            
+            const yearLastDigit = year % 10; // 获取年份最后一位数字
+            const realPhone = extractRealPhone(phone); // 先清洗一次
+            
+            // 验证是否是有效的马来西亚手机号
+            if (isValidMalaysianPhone(realPhone)) {
+                return yearLastDigit + realPhone; // 添加前缀
+            }
+            
+            return phone; // 如果不是有效手机号，返回原值
+        }
+
+        // 更新手机号显示（添加年份前缀）
+        function updatePhoneWithYearPrefix() {
+            const phoneInput = document.getElementById("phoneNumber");
+            const yearSelect = document.getElementById("registrationYear");
+            const selectedYear = parseInt(yearSelect.value);
+            
+            if (!selectedYear) return;
+            
+            currentRegistrationYear = selectedYear;
+            const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
+            
+            // 获取当前手机号（去掉旧前缀）
+            let currentPhone = phoneInput.value;
+            if (currentPhone) {
+                currentPhone = extractRealPhone(currentPhone);
+                
+                // 添加新前缀并更新显示
+                const newPhone = addPhonePrefix(currentPhone, selectedYear);
+                phoneInput.value = newPhone;
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener("DOMContentLoaded", function() {
+            initYearSelector();
+        });
 
         // 1. 查询功能（核心逻辑：有记录则编辑，无记录则新建）
         window.searchPhone = function () {
             const keyword = document.getElementById("searchInput").value.trim();
             if (!keyword) return alert("请输入手机号！");
 
-            fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(keyword)}`)
+            // 验证手机号格式
+            if (!isValidMalaysianPhone(keyword)) {
+                alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+                return;
+            }
+
+            // 去掉查询关键词的前缀
+            const realKeyword = extractRealPhone(keyword);
+
+            fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(realKeyword)}`)
                 .then(res => res.text())
                 .then(text => {
                     let data;
@@ -266,7 +393,7 @@
                         infoDiv.classList.remove("hidden");
                         
                         setTimeout(() => {
-                            startNewEntry(keyword); // 传入手机号作为默认值
+                            startNewEntry(realKeyword); // 传入清洗后的手机号
                         }, 1000); // 延迟1秒再开始新登记，让用户看到提示
                         
                         return;
@@ -310,7 +437,7 @@
                         newRecordBtn.textContent = "➕ 创建新记录";
                         newRecordBtn.onclick = () => {
                             selector.classList.add("hidden");
-                            startNewEntry(keyword); // 使用当前手机号
+                            startNewEntry(realKeyword); // 使用清洗后的手机号
                         };
                         selector.appendChild(newRecordBtn);
                     }
@@ -328,7 +455,12 @@
             document.getElementById("adminForm").scrollIntoView({ behavior: 'smooth' });
             
             document.getElementById("mainName").value = "";
-            document.getElementById("phoneNumber").value = defaultPhone || "";
+            
+            // 为新记录添加年份前缀
+            const yearSelect = document.getElementById("registrationYear");
+            const selectedYear = parseInt(yearSelect.value);
+            const phoneWithPrefix = addPhonePrefix(defaultPhone, selectedYear);
+            document.getElementById("phoneNumber").value = phoneWithPrefix;
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -352,7 +484,12 @@
             document.getElementById("adminForm").scrollIntoView({ behavior: 'smooth' });
 
             document.getElementById("mainName").value = selectedEntry.mainName || "";
-            document.getElementById("phoneNumber").value = selectedEntry.phoneNumber || "";
+            
+            // 渲染时添加当前年份的前缀
+            const yearSelect = document.getElementById("registrationYear");
+            const selectedYear = parseInt(yearSelect.value);
+            const phoneWithPrefix = addPhonePrefix(selectedEntry.phoneNumber, selectedYear);
+            document.getElementById("phoneNumber").value = phoneWithPrefix;
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -373,11 +510,19 @@
             document.getElementById("searchResultInfo").classList.add("hidden");
         }
 
-        // 5. 保存资料（用户版 - 强制清空备注信息）
+        // 5. 保存资料（用户版 - 强制清空备注信息，同时去除手机号前缀）
         window.saveChanges = function () {
-            const phone = document.getElementById("phoneNumber").value.trim();
+            const phoneWithPrefix = document.getElementById("phoneNumber").value.trim();
+            const phoneWithoutPrefix = extractRealPhone(phoneWithPrefix); // 去掉前缀用于提交
             const name = document.getElementById("mainName").value.trim();
-            if (!phone || !name) return alert("⚠️ 电话和姓名是必填项！");
+            
+            if (!phoneWithoutPrefix || !name) return alert("⚠️ 电话和姓名是必填项！");
+            
+            // 再次验证手机号格式
+            if (!isValidMalaysianPhone(phoneWithoutPrefix)) {
+                alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+                return;
+            }
 
             const prayers = document.getElementById("prayersContainer").children;
             const updatedData = Array.from(prayers).map(div => ({
@@ -400,9 +545,9 @@
             btn.innerHTML = "保存中...";
             btn.disabled = true;
 
-            // 构建要提交的数据 - 用户版：强制清空备注信息
+            // 构建要提交的数据 - 使用不带前缀的真实手机号
             const submitData = {
-                phoneNumber: phone,
+                phoneNumber: phoneWithoutPrefix, // 使用不带前缀的手机号提交
                 mainName: name,
                 data: updatedData,
                 receiptNumber: "", // 强制为空
@@ -451,6 +596,11 @@
             // 重置全局变量
             selectedEntry = null;
             fullData = [];
+            
+            // 重置年份选择器为今年
+            const yearSelect = document.getElementById("registrationYear");
+            yearSelect.value = currentYear;
+            currentRegistrationYear = currentYear;
         };
 
         // === 补全的辅助函数 ===
