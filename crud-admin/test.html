@@ -211,6 +211,13 @@
             padding-top: 10px;
             border-top: 2px solid rgba(255,255,255,0.3);
         }
+        
+        /* 加载状态样式 */
+        .loading-state {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -279,8 +286,8 @@
     <!-- 价格汇总卡片 -->
     <div id="priceSummary" class="price-summary hidden">
         <div class="price-item">
-            <span>纸金费用 (3元/份):</span>
-            <span id="paperGoldAmount">0元</span>
+            <span>纸金费用:</span>
+            <span id="paperGoldAmount">0份 (0元)</span>
         </div>
         <div class="price-item">
             <span>安奉功德金:</span>
@@ -417,8 +424,8 @@
             const paperGoldCost = totalPaperGold * 3;
             const total = paperGoldCost + totalDonation;
             
-            // 更新显示
-            document.getElementById("paperGoldAmount").textContent = paperGoldCost + "元";
+            // 更新显示 - 纸金费用现在显示份数和金额
+            document.getElementById("paperGoldAmount").textContent = `${totalPaperGold}份 (${paperGoldCost}元)`;
             document.getElementById("donationAmount").textContent = totalDonation + "元";
             document.getElementById("totalAmount").textContent = total + "元";
             
@@ -442,6 +449,11 @@
                 return;
             }
 
+            // 显示加载状态
+            const btn = document.querySelector("button[onclick='searchPhone()']");
+            btn.innerHTML = "🔍 查询中...";
+            btn.disabled = true;
+
             // 去掉查询关键词的前缀
             const realKeyword = extractRealPhone(keyword);
 
@@ -449,10 +461,13 @@
                 .then(res => res.text())
                 .then(text => {
                     let data;
-                    try { data = JSON.parse(text); } 
+                    try { 
+                        data = JSON.parse(text); 
+                    } 
                     catch (e) { 
-                        alert("数据格式错误"); 
-                        return; 
+                        console.error("解析JSON错误:", e);
+                        console.log("响应内容:", text);
+                        throw new Error("服务器返回的数据格式错误");
                     }
 
                     fullData = data;
@@ -471,12 +486,9 @@
                         setTimeout(() => {
                             startNewEntry(realKeyword); // 传入清洗后的手机号
                         }, 1000); // 延迟1秒再开始新登记，让用户看到提示
-                        
-                        return;
                     }
-
                     // 有资料的情况
-                    if (data.length === 1) {
+                    else if (data.length === 1) {
                         // 单条记录，直接编辑
                         infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
                         infoDiv.classList.remove("hidden");
@@ -485,27 +497,37 @@
                         setTimeout(() => {
                             renderForm();
                         }, 500); // 短暂延迟显示提示
-                    } else {
+                    } 
+                    else {
                         // 多条记录，让用户选择
                         infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
                         infoDiv.classList.remove("hidden");
                         
+                        // 创建选择器
                         const select = document.createElement("select");
                         select.className = "form-select mb-2";
+                        select.id = "entrySelector"; // 添加ID以便调试
                         select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
-                        select.onchange = () => {
-                            selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
-                            renderForm();
-                            
-                            // 隐藏选择器，显示表单
-                            selector.classList.add("hidden");
-                        };
+                        
+                        // 添加选项
                         data.forEach((item, index) => {
                             const opt = document.createElement("option");
                             opt.value = index;
                             opt.textContent = `${item.mainName} (${item.phoneNumber})`;
                             select.appendChild(opt);
                         });
+                        
+                        // 设置选择事件
+                        select.onchange = () => {
+                            if (select.selectedIndex > 0) { // 确保选择了有效选项
+                                selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
+                                renderForm();
+                                
+                                // 隐藏选择器，显示表单
+                                selector.classList.add("hidden");
+                            }
+                        };
+                        
                         selector.appendChild(select);
                         
                         // 添加"新建记录"选项
@@ -517,11 +539,24 @@
                             startNewEntry(realKeyword); // 使用清洗后的手机号
                         };
                         selector.appendChild(newRecordBtn);
+                        
+                        // 确保选择器可见
+                        selector.classList.remove("hidden");
                     }
                 })
                 .catch(err => {
                     console.error("查询出错:", err);
-                    alert("查询出错：" + err.message);
+                    const infoDiv = document.getElementById("searchResultInfo");
+                    infoDiv.innerHTML = `<div class="search-result-info" style="background-color: #f8d7da; border-left-color: #dc3545; color: #721c24;">❌ 查询出错：${err.message}</div>`;
+                    infoDiv.classList.remove("hidden");
+                    
+                    // 清空选择器
+                    document.getElementById("resultSelector").innerHTML = "";
+                })
+                .finally(() => {
+                    // 恢复按钮状态
+                    btn.innerHTML = "🔍 查询资料";
+                    btn.disabled = false;
                 });
         };
 
@@ -794,6 +829,7 @@
 
             return div;
         }
+//15/4/2026  7.21
     </script>
 </body>
 </html>
