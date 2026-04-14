@@ -83,26 +83,39 @@
 
         .hidden { display: none !important; }
         
-        /* 改进的radio-group样式 */
+        /* 改进的radio-group样式 - 确保水平排列 */
         .radio-group {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             align-items: center;
+            background-color: #f8f9fa; /* 添加浅色背景 */
+            border: 1px solid #ccc; /* 轻微边框 */
+            border-radius: 6px;
+            padding: 5px;
+            min-height: 35px;
         }
         .radio-group .form-check {
-            margin-bottom: 0;
+            margin: 0 !important;
             flex: 1;
             display: flex;
             align-items: center;
-        }
-        .radio-group .form-check label {
-            font-size: 12px;
-            margin: 0;
-            flex: 1;
-            text-align: center;
+            justify-content: center;
+            padding: 2px;
         }
         .radio-group .form-check-input {
             margin-right: 4px;
+            border: 2px solid #333 !important; /* 黑色边框 */
+            background-color: #fff !important;
+        }
+        .radio-group .form-check-input:checked {
+            background-color: #333 !important;
+            border-color: #333 !important;
+        }
+        .radio-group .form-check-label {
+            font-size: 11px;
+            margin: 0;
+            flex: 1;
+            text-align: center;
         }
         
         /* 特别为祈福者卡片中的单选按钮调整 */
@@ -111,18 +124,41 @@
             gap: 5px;
             min-height: 35px;
             align-items: center;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 5px;
         }
         .prayer-card .radio-group .form-check {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .prayer-card .radio-group .form-check-label {
-            font-size: 11px;
-            margin: 0;
-            padding: 2px;
-        }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    margin: 0 !important;
+    padding: 0 4px; /* 微调间距 */
+}
+  .prayer-card .form-check-input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    border: 2px solid #333 !important;
+    background-color: #fff !important;
+    flex-shrink: 0; /* 防止被压缩 */
+    margin: 0 !important;
+    vertical-align: middle;
+}
+
+.prayer-card .form-check-input[type="radio"]:checked {
+    background-color: #333 !important;
+    border-color: #333 !important;
+}
+
+.prayer-card .form-check-label {
+    font-size: 12px;
+    margin: 0 0 0 4px; /* 左侧留空隙，避免文字贴太近 */
+    line-height: 1.4;
+}
     </style>
 </head>
 <body>
@@ -204,7 +240,7 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+        const API_URL = "https://你的-worker-domain.workers.dev";
 
         let fullData = [];
         let selectedEntry = null;
@@ -368,13 +404,13 @@
         // 生成单选框组 - 修改版本，确保水平排列
         function createRadioGroup(name, className, checkedVal) {
             return `
-              <div class="form-check d-flex align-items-center">
+              <div class="form-check d-flex align-items-center justify-content-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""}>
-                <label class="form-check-label" style="font-size: 11px; margin-left: 2px;">是</label>
+                <label class="form-check-label ms-1" style="font-size: 11px;">是</label>
               </div>
-              <div class="form-check d-flex align-items-center">
+              <div class="form-check d-flex align-items-center justify-content-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""}>
-                <label class="form-check-label" style="font-size: 11px; margin-left: 2px;">否</label>
+                <label class="form-check-label ms-1" style="font-size: 11px;">否</label>
               </div>`;
         }
 
