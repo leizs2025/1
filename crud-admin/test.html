@@ -23,24 +23,33 @@
         .card-header {
             background-color: #fff;
             border-bottom: 1px solid #f0f0f0;
-            font-weight: 600;
-            font-size: 1.1rem;
             padding: 15px;
-            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+            color: #333;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
         }
 
         .form-label {
             font-weight: 500;
-            color: #333;
+            color: #555;
+            margin-bottom: 0.5rem;
         }
 
         .form-control, .form-select {
             border-radius: 8px;
-            padding: 10px;
-            height: auto;
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            height: 45px;
         }
 
-        /* --- 重点修改：强制单选框平行排列 --- */
+        .form-check-input {
+            margin-top: 0.3em;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* --- 核心修改：让是/否选项横向排列 --- */
         .radio-group {
             display: flex;
             gap: 20px; /* 选项之间的间距 */
@@ -48,336 +57,442 @@
             padding-top: 5px;
         }
 
-        .form-check {
+        .radio-item {
+            display: flex;
+            align-items: center;
             margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .radio-item .form-check-input {
+            margin-right: 6px;
+            margin-top: 0; /* 修正对齐 */
+        }
+        /* ------------------------------------ */
+
+        .btn-primary {
+            background-color: #d32f2f;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            height: 50px;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-secondary {
+            background-color: #757575;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            height: 50px;
+            font-size: 1.1rem;
+        }
+
+        .prayer-item {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ff4d4f;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            padding: 0;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            color: #d32f2f;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ffebee;
             display: flex;
             align-items: center;
         }
-
-        .form-check-input {
-            margin-top: 0;
-            margin-right: 8px;
-            width: 18px;
-            height: 18px;
-        }
-
-        /* 底部按钮区域 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #fff;
-            padding: 10px 15px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            gap: 10px;
-            z-index: 1000;
-        }
-
-        .btn-save {
-            background-color: #c0392b;
-            color: white;
-            flex: 2;
-            font-weight: bold;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-        }
-
-        .btn-cancel {
-            background-color: #7f8c8d;
-            color: white;
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
+        
+        .section-title i {
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
 
-    <!-- 查询区域 -->
+    <div class="page-header">
+        <i class="bi bi-lightning-charge-fill"></i> 太岁光明灯登记
+    </div>
+
+    <!-- 搜索区域 -->
     <div class="card">
         <div class="card-body">
-            <div class="input-group mb-3">
-                <input type="text" id="searchInput" class="form-control" placeholder="请输入手机号查询资料">
-                <button class="btn btn-primary" type="button" onclick="searchPhone()">🔍 查询</button>
+            <div class="mb-3">
+                <label for="phone" class="form-label">手机号查询</label>
+                <div class="input-group">
+                    <input type="tel" class="form-control" id="phone" placeholder="请输入登记的手机号">
+                    <button class="btn btn-primary" type="button" onclick="searchPhone()" style="width: 100px;">
+                        <i class="bi bi-search"></i> 查询
+                    </button>
+                </div>
             </div>
-            <div id="resultSelector"></div>
+            <button class="btn btn-secondary" onclick="startNewEntry()">
+                <i class="bi bi-plus-lg"></i> 新建登记
+            </button>
         </div>
     </div>
 
-    <!-- 主表单区域 -->
-    <form id="mainForm" style="display:none;">
-        <!-- 主家信息 -->
+    <!-- 登记表单 (默认隐藏) -->
+    <div id="entryForm" style="display: none;">
+        
+        <!-- 基本信息卡片 -->
         <div class="card">
-            <div class="card-header">👤 主家信息</div>
+            <div class="card-header">
+                <i class="bi bi-person-vcard"></i> 基本信息
+            </div>
             <div class="card-body">
+                <input type="hidden" id="id">
                 <div class="mb-3">
-                    <label class="form-label">主家姓名</label>
-                    <input type="text" class="form-control" id="mainName">
+                    <label for="mainName" class="form-label">主家姓名</label>
+                    <input type="text" class="form-control" id="mainName" placeholder="请输入主家姓名">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">手机号码</label>
-                    <input type="text" class="form-control" id="phoneNumber">
+                    <label for="mainPhone" class="form-label">联系电话</label>
+                    <input type="tel" class="form-control" id="mainPhone" placeholder="请输入联系电话">
                 </div>
             </div>
         </div>
 
-        <!-- 祈福者名单 -->
+        <!-- 祈福者名单卡片 -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>🙏 祈福者名单</span>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPrayer()">+ 添加</button>
+                <span><i class="bi bi-people"></i> 祈福者名单</span>
+                <button class="btn btn-sm btn-outline-primary" onclick="addPrayer()">
+                    <i class="bi bi-plus"></i> 添加
+                </button>
             </div>
             <div class="card-body" id="prayerList">
-                <!-- 动态生成祈福者 -->
+                <!-- 动态生成的祈福者列表 -->
             </div>
         </div>
 
-        <!-- 备注信息卡片已移除 -->
+        <!-- 核心修改：这里删除了原本的“备注信息”卡片 -->
 
-        <!-- 底部按钮 -->
-        <div class="bottom-nav">
-            <button type="button" class="btn-save" onclick="saveData()">💾 保存资料</button>
-            <button type="button" class="btn-cancel" onclick="cancelEdit()">取消</button>
+        <!-- 底部操作按钮 -->
+        <div class="fixed-bottom bg-white p-3 shadow-sm" style="left:0; right:0; bottom:0; z-index: 1000;">
+            <button class="btn btn-primary" onclick="saveData()">
+                <i class="bi bi-save"></i> 保存资料
+            </button>
         </div>
-    </form>
+    </div>
 
     <script>
-        // 请根据实际情况修改你的 API 地址
-        const API_URL = 'https://lucky-cloud-f9c3.gealarm2012.workers.dev/api/entries';
+        // 全局变量存储当前查询到的所有记录
+        let searchResults = [];
 
-        let fullData = [];
-        let selectedEntry = null;
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化一位祈福者
+            addPrayer();
+        });
 
-        // ==========================================
-        // 1. 查询功能 (完全保留您的原版逻辑)
-        // ==========================================
-        window.searchPhone = function () {
-            const keyword = document.getElementById("searchInput").value.trim();
-            if (!keyword) return alert("请输入手机号！");
+        // 查询手机号
+        async function searchPhone() {
+            const phone = document.getElementById('phone').value.trim();
+            if (!phone) {
+                alert('请输入手机号');
+                return;
+            }
 
-            fetch(`${API_URL}?search=${encodeURIComponent(keyword)}`)
-                .then(res => res.text())
-                .then(text => {
-                    let data;
-                    try { data = JSON.parse(text); }
-                    catch (e) { alert("数据格式错误"); return; }
+            try {
+                const response = await fetch(`/api/entry?phone=${phone}`);
+                const data = await response.json();
 
-                    fullData = data;
-                    const selector = document.getElementById("resultSelector");
-                    selector.innerHTML = "";
-
-                    if (data.length === 0) {
-                        selector.innerHTML = `<div class="alert alert-warning">未找到资料，请点击下方【开始登记】</div>`;
-                        return;
-                    }
-
-                    if (data.length === 1) {
-                        selectedEntry = data[0];
-                        renderForm();
+                if (data.success) {
+                    if (data.data && data.data.length > 0) {
+                        searchResults = data.data;
+                        if (data.data.length === 1) {
+                            // 只有一条记录，直接渲染
+                            renderForm(data.data[0]);
+                        } else {
+                            // 多条记录，让用户选择
+                            selectEntry(data.data);
+                        }
                     } else {
-                        const select = document.createElement("select");
-                        select.className = "form-select";
-                        select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
-                        select.onchange = () => {
-                            selectedEntry = fullData[select.selectedIndex - 1];
-                            renderForm();
-                            selector.innerHTML = "";
-                        };
-                        data.forEach(item => {
-                            const opt = document.createElement("option");
-                            opt.textContent = `${item.mainName} (${item.phoneNumber})`;
-                            select.appendChild(opt);
-                        });
-                        selector.appendChild(select);
+                        // 无记录，新建
+                        if(confirm('未找到该手机号的记录，是否新建登记？')) {
+                            startNewEntry();
+                        }
                     }
-                })
-                .catch(err => alert("查询出错：" + err.message));
-        };
-
-        // ==========================================
-        // 2. 渲染表单 (适配平行单选框)
-        // ==========================================
-        function renderForm() {
-            if (!selectedEntry) return;
-
-            document.getElementById('mainForm').style.display = 'block';
-            document.getElementById('mainName').value = selectedEntry.mainName || '';
-            document.getElementById('phoneNumber').value = selectedEntry.phoneNumber || '';
-
-            const listContainer = document.getElementById('prayerList');
-            listContainer.innerHTML = '';
-
-            (selectedEntry.prayers || []).forEach((prayer, index) => {
-                const prayerHtml = `
-                    <div class="p-3 mb-3 border rounded bg-light position-relative">
-                        <div class="row g-3">
-                            <div class="col-12"><h6 class="text-primary"><i class="bi bi-person"></i> 第 ${index + 1} 位祈福者</h6></div>
-                            <div class="col-6">
-                                <label class="form-label">姓名</label>
-                                <input type="text" class="form-control prayer-name" value="${prayer.name || ''}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">生肖</label>
-                                <input type="text" class="form-control prayer-zodiac" value="${prayer.zodiac || ''}">
-                            </div>
-
-                            <!-- 下面是平行排列的单选框 -->
-                            <div class="col-6">
-                                <label class="form-label">太岁</label>
-                                <div class="radio-group">
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="taisui_${index}" value="是" ${prayer.taisui === '是' ? 'checked' : ''}><span>是</span></div>
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="taisui_${index}" value="否" ${prayer.taisui === '否' ? 'checked' : ''}><span>否</span></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">纸金1</label>
-                                <input type="number" class="form-control prayer-paper1" value="${prayer.paper1 || ''}">
-                            </div>
-
-                            <div class="col-6">
-                                <label class="form-label">光明灯</label>
-                                <div class="radio-group">
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="light_${index}" value="是" ${prayer.light === '是' ? 'checked' : ''}><span>是</span></div>
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="light_${index}" value="否" ${prayer.light === '否' ? 'checked' : ''}><span>否</span></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">纸金2</label>
-                                <input type="number" class="form-control prayer-paper2" value="${prayer.paper2 || ''}">
-                            </div>
-
-                            <div class="col-6">
-                                <label class="form-label">长生禄</label>
-                                <div class="radio-group">
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="lu_${index}" value="是" ${prayer.lu === '是' ? 'checked' : ''}><span>是</span></div>
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="lu_${index}" value="否" ${prayer.lu === '否' ? 'checked' : ''}><span>否</span></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">纸金3</label>
-                                <input type="number" class="form-control prayer-paper3" value="${prayer.paper3 || ''}">
-                            </div>
-
-                            <div class="col-6">
-                                <label class="form-label">文昌</label>
-                                <div class="radio-group">
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="wenchang_${index}" value="是" ${prayer.wenchang === '是' ? 'checked' : ''}><span>是</span></div>
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="wenchang_${index}" value="否" ${prayer.wenchang === '否' ? 'checked' : ''}><span>否</span></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">纸金4</label>
-                                <input type="number" class="form-control prayer-paper4" value="${prayer.paper4 || ''}">
-                            </div>
-
-                            <div class="col-6">
-                                <label class="form-label">十六罗汉</label>
-                                <div class="radio-group">
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="luohan_${index}" value="是" ${prayer.luohan === '是' ? 'checked' : ''}><span>是</span></div>
-                                    <div class="form-check"><input class="form-check-input" type="radio" name="luohan_${index}" value="否" ${prayer.luohan === '否' ? 'checked' : ''}><span>否</span></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">纸金5</label>
-                                <input type="number" class="form-control prayer-paper5" value="${prayer.paper5 || ''}">
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">安奉功德金</label>
-                                <input type="number" class="form-control prayer-merit" value="${prayer.merit || ''}">
-                            </div>
-                        </div>
-                    </div>
-                `;
-                listContainer.insertAdjacentHTML('beforeend', prayerHtml);
-            });
+                } else {
+                    alert('查询失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('查询错误:', error);
+                alert('网络错误，查询失败');
+            }
         }
 
-        // ==========================================
-        // 3. 添加祈福者
-        // ==========================================
-        window.addPrayer = function() {
-            if (!selectedEntry) {
-                // 如果是新建模式，需要初始化
-                selectedEntry = { prayers: [] };
-                document.getElementById('mainForm').style.display = 'block';
-            }
-            if (!selectedEntry.prayers) selectedEntry.prayers = [];
-
-            selectedEntry.prayers.push({
-                name: '',
-                zodiac: '',
-                taisui: '否',
-                light: '否',
-                lu: '否',
-                wenchang: '否',
-                luohan: '否',
-                paper1: '',
-                paper2: '',
-                paper3: '',
-                paper4: '',
-                paper5: '',
-                merit: ''
+        // 选择记录（多条时）
+        function selectEntry(entries) {
+            let options = '找到多条记录，请选择：\n';
+            entries.forEach((entry, index) => {
+                options += `${index + 1}. ${entry.mainName} - ${entry.mainPhone}\n`;
             });
-            renderForm();
-        };
+            options += '\n输入序号选择，或取消新建';
 
-        // ==========================================
-        // 4. 保存数据
-        // ==========================================
-        window.saveData = function() {
-            if (!selectedEntry) return;
-
-            // 收集主家信息
-            selectedEntry.mainName = document.getElementById('mainName').value;
-            selectedEntry.phoneNumber = document.getElementById('phoneNumber').value;
-
-            // 收集祈福者信息
-            const prayerCards = document.querySelectorAll('#prayerList > div');
-            selectedEntry.prayers = [];
-
-            prayerCards.forEach(card => {
-                const prayer = {
-                    name: card.querySelector('.prayer-name').value,
-                    zodiac: card.querySelector('.prayer-zodiac').value,
-                    taisui: card.querySelector('input[name^="taisui_"]:checked')?.value || '否',
-                    light: card.querySelector('input[name^="light_"]:checked')?.value || '否',
-                    lu: card.querySelector('input[name^="lu_"]:checked')?.value || '否',
-                    wenchang: card.querySelector('input[name^="wenchang_"]:checked')?.value || '否',
-                    luohan: card.querySelector('input[name^="luohan_"]:checked')?.value || '否',
-                    paper1: card.querySelector('.prayer-paper1').value,
-                    paper2: card.querySelector('.prayer-paper2').value,
-                    paper3: card.querySelector('.prayer-paper3').value,
-                    paper4: card.querySelector('.prayer-paper4').value,
-                    paper5: card.querySelector('.prayer-paper5').value,
-                    merit: card.querySelector('.prayer-merit').value
-                };
-                selectedEntry.prayers.push(prayer);
-            });
-
-            // 发送保存请求
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(selectedEntry)
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert('保存成功！');
-                // 可选：刷新列表或清空表单
-            })
-            .catch(err => alert('保存失败：' + err.message));
-        };
-
-        window.cancelEdit = function() {
-            if(confirm("确定要取消吗？未保存的数据将丢失。")) {
-                location.reload();
+            const choice = prompt(options);
+            if (choice) {
+                const index = parseInt(choice) - 1;
+                if (index >= 0 && index < entries.length) {
+                    renderForm(entries[index]);
+                } else {
+                    startNewEntry();
+                }
             }
-        };
+        }
+
+        // 开始新登记
+        function startNewEntry() {
+            document.getElementById('entryForm').style.display = 'block';
+            document.getElementById('id').value = '';
+            document.getElementById('mainName').value = '';
+            document.getElementById('mainPhone').value = document.getElementById('phone').value;
+            
+            // 清空并重新添加一个祈福者
+            const list = document.getElementById('prayerList');
+            list.innerHTML = '';
+            addPrayer();
+            
+            // 滚动到顶部
+            window.scrollTo(0, 0);
+        }
+
+        // 渲染表单
+        function renderForm(entry) {
+            document.getElementById('entryForm').style.display = 'block';
+            document.getElementById('id').value = entry.id || '';
+            document.getElementById('mainName').value = entry.mainName || '';
+            document.getElementById('mainPhone').value = entry.mainPhone || '';
+
+            // 渲染祈福者列表
+            const list = document.getElementById('prayerList');
+            list.innerHTML = ''; // 清空现有
+
+            if (entry.prayers && entry.prayers.length > 0) {
+                entry.prayers.forEach(prayer => {
+                    addPrayer(prayer);
+                });
+            } else {
+                addPrayer();
+            }
+        }
+
+        // 添加祈福者
+        function addPrayer(data = {}) {
+            const list = document.getElementById('prayerList');
+            const id = 'prayer-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            
+            const div = document.createElement('div');
+            div.className = 'prayer-item';
+            div.id = id;
+            
+            // 检查是否是编辑模式，如果是，使用传入的数据，否则使用默认值
+            const name = data.name || '';
+            const zodiac = data.zodiac || '';
+            
+            // 核心逻辑：生成HTML，注意 class="radio-group" 和 "radio-item" 用于CSS控制横排
+            div.innerHTML = `
+                <button type="button" class="remove-btn" onclick="removePrayer('${id}')">&times;</button>
+                <div class="mb-3">
+                    <label class="form-label">姓名</label>
+                    <input type="text" class="form-control name-input" value="${name}" placeholder="请输入姓名">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">生肖</label>
+                    <select class="form-select zodiac-input">
+                        <option value="">请选择</option>
+                        <option value="鼠" ${zodiac === '鼠' ? 'selected' : ''}>鼠</option>
+                        <option value="牛" ${zodiac === '牛' ? 'selected' : ''}>牛</option>
+                        <option value="虎" ${zodiac === '虎' ? 'selected' : ''}>虎</option>
+                        <option value="兔" ${zodiac === '兔' ? 'selected' : ''}>兔</option>
+                        <option value="龙" ${zodiac === '龙' ? 'selected' : ''}>龙</option>
+                        <option value="蛇" ${zodiac === '蛇' ? 'selected' : ''}>蛇</option>
+                        <option value="马" ${zodiac === '马' ? 'selected' : ''}>马</option>
+                        <option value="羊" ${zodiac === '羊' ? 'selected' : ''}>羊</option>
+                        <option value="猴" ${zodiac === '猴' ? 'selected' : ''}>猴</option>
+                        <option value="鸡" ${zodiac === '鸡' ? 'selected' : ''}>鸡</option>
+                        <option value="狗" ${zodiac === '狗' ? 'selected' : ''}>狗</option>
+                        <option value="猪" ${zodiac === '猪' ? 'selected' : ''}>猪</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">太岁</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="taisui_${id}" value="1" ${data.taisui == 1 ? 'checked' : ''}> 是
+                        </label>
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="taisui_${id}" value="0" ${!data.taisui || data.taisui == 0 ? 'checked' : ''}> 否
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">光明灯</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="guangming_${id}" value="1" ${data.guangming == 1 ? 'checked' : ''}> 是
+                        </label>
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="guangming_${id}" value="0" ${!data.guangming || data.guangming == 0 ? 'checked' : ''}> 否
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">长生禄</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="changsheng_${id}" value="1" ${data.changsheng == 1 ? 'checked' : ''}> 是
+                        </label>
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="changsheng_${id}" value="0" ${!data.changsheng || data.changsheng == 0 ? 'checked' : ''}> 否
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">文昌</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="wenchang_${id}" value="1" ${data.wenchang == 1 ? 'checked' : ''}> 是
+                        </label>
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="wenchang_${id}" value="0" ${!data.wenchang || data.wenchang == 0 ? 'checked' : ''}> 否
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">十六罗汉</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="luohan_${id}" value="1" ${data.luohan == 1 ? 'checked' : ''}> 是
+                        </label>
+                        <label class="radio-item">
+                            <input class="form-check-input" type="radio" name="luohan_${id}" value="0" ${!data.luohan || data.luohan == 0 ? 'checked' : ''}> 否
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">安奉功德金</label>
+                    <input type="number" class="form-control gongde-input" value="${data.gongde || ''}" placeholder="选填">
+                </div>
+            `;
+            
+            list.appendChild(div);
+        }
+
+        // 删除祈福者
+        function removePrayer(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.remove();
+            }
+        }
+
+        // 保存数据
+        async function saveData() {
+            const id = document.getElementById('id').value;
+            const mainName = document.getElementById('mainName').value.trim();
+            const mainPhone = document.getElementById('mainPhone').value.trim();
+
+            if (!mainName || !mainPhone) {
+                alert('请填写主家姓名和电话');
+                return;
+            }
+
+            // 收集祈福者数据
+            const prayerItems = document.querySelectorAll('.prayer-item');
+            const prayers = [];
+            
+            for (let item of prayerItems) {
+                const name = item.querySelector('.name-input').value.trim();
+                if (!name) continue; // 跳过空姓名的项
+                
+                const zodiac = item.querySelector('.zodiac-input').value;
+                const gongde = item.querySelector('.gongde-input').value;
+                
+                // 获取单选框的值
+                const taisui = item.querySelector('input[name^="taisui_"]:checked')?.value || 0;
+                const guangming = item.querySelector('input[name^="guangming_"]:checked')?.value || 0;
+                const changsheng = item.querySelector('input[name^="changsheng_"]:checked')?.value || 0;
+                const wenchang = item.querySelector('input[name^="wenchang_"]:checked')?.value || 0;
+                const luohan = item.querySelector('input[name^="luohan_"]:checked')?.value || 0;
+                
+                prayers.push({
+                    name,
+                    zodiac,
+                    taisui: parseInt(taisui),
+                    guangming: parseInt(guangming),
+                    changsheng: parseInt(changsheng),
+                    wenchang: parseInt(wenchang),
+                    luohan: parseInt(luohan),
+                    gongde: gongde ? parseFloat(gongde) : 0
+                });
+            }
+
+            if (prayers.length === 0) {
+                alert('请至少添加一位祈福者');
+                return;
+            }
+
+            const data = {
+                id: id,
+                mainName,
+                mainPhone,
+                prayers
+            };
+
+            try {
+                const response = await fetch('/api/entry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('保存成功！');
+                    // 可以选择刷新页面或重置表单
+                    // location.reload();
+                } else {
+                    alert('保存失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('保存错误:', error);
+                alert('网络错误，保存失败');
+            }
+        }
     </script>
 </body>
 </html>
