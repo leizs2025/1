@@ -143,7 +143,7 @@
             padding: 2px;
         }
         
-        /* === 修复“出轨”问题的关键CSS === */
+        /* === 修复"出轨"问题的关键CSS === */
         .prayer-card .form-check-input[type="radio"] {
             width: 18px !important;
             height: 18px !important;
@@ -164,6 +164,16 @@
             margin: 0 0 0 4px; /* 左侧留空隙 */
             line-height: 1.4;
         }
+        
+        /* 查询结果提示样式 */
+        .search-result-info {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e7f3ff;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
     </style>
 </head>
 <body>
@@ -171,14 +181,16 @@
     <!-- 顶部标题 -->
     <h5 class="page-header">🙏 太岁光明灯登记</h5>
 
-    <!-- 搜索与操作区 -->
+    <!-- 搜索与操作区 - 移除"开始登记"按钮 -->
     <div class="card">
         <div class="mb-3">
             <input type="text" id="searchInput" class="form-control mb-2" placeholder="输入手机号查询资料" inputmode="tel">
-            <button onclick="searchPhone()" class="btn btn-primary w-100 mb-2">🔍 查询资料</button>
-            <button onclick="startNewEntry()" class="btn btn-success w-100">➕ 开始登记</button>
+            <button onclick="searchPhone()" class="btn btn-primary w-100">🔍 查询资料</button>
         </div>
     </div>
+
+    <!-- 查询结果提示信息 -->
+    <div id="searchResultInfo" class="hidden"></div>
 
     <!-- 结果选择器 -->
     <div id="resultSelector" class="mb-3"></div>
@@ -213,7 +225,7 @@
         <!-- 底部保存按钮 -->
         <div class="d-grid gap-2 mb-5">
             <button onclick="saveChanges()" class="btn btn-danger btn-lg">💾 保存资料</button>
-            <button onclick="document.getElementById('adminForm').classList.add('hidden')" class="btn btn-secondary">取消</button>
+            <button onclick="cancelEdit()" class="btn btn-secondary">取消</button>
         </div>
     </div>
 
@@ -225,7 +237,7 @@
         let fullData = [];
         let selectedEntry = null;
 
-        // 1. 查询功能
+        // 1. 查询功能（核心逻辑：有记录则编辑，无记录则新建）
         window.searchPhone = function () {
             const keyword = document.getElementById("searchInput").value.trim();
             if (!keyword) return alert("请输入手机号！");
@@ -235,28 +247,55 @@
                 .then(text => {
                     let data;
                     try { data = JSON.parse(text); } 
-                    catch (e) { alert("数据格式错误"); return; }
+                    catch (e) { 
+                        alert("数据格式错误"); 
+                        return; 
+                    }
 
                     fullData = data;
                     const selector = document.getElementById("resultSelector");
+                    const infoDiv = document.getElementById("searchResultInfo");
+                    
+                    // 清空之前的选择器和提示信息
                     selector.innerHTML = "";
+                    infoDiv.classList.add("hidden");
 
                     if (data.length === 0) {
-                        selector.innerHTML = `<div class="alert alert-warning">未找到资料，请点击下方【开始登记】</div>`;
+                        // 查无资料，直接开始新登记
+                        infoDiv.innerHTML = `<div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的登记表单</div>`;
+                        infoDiv.classList.remove("hidden");
+                        
+                        setTimeout(() => {
+                            startNewEntry(keyword); // 传入手机号作为默认值
+                        }, 1000); // 延迟1秒再开始新登记，让用户看到提示
+                        
                         return;
                     }
 
+                    // 有资料的情况
                     if (data.length === 1) {
+                        // 单条记录，直接编辑
+                        infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
+                        infoDiv.classList.remove("hidden");
+                        
                         selectedEntry = data[0];
-                        renderForm();
+                        setTimeout(() => {
+                            renderForm();
+                        }, 500); // 短暂延迟显示提示
                     } else {
+                        // 多条记录，让用户选择
+                        infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
+                        infoDiv.classList.remove("hidden");
+                        
                         const select = document.createElement("select");
-                        select.className = "form-select";
+                        select.className = "form-select mb-2";
                         select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
                         select.onchange = () => {
                             selectedEntry = fullData[select.selectedIndex - 1];
                             renderForm();
-                            selector.innerHTML = "";
+                            
+                            // 隐藏选择器，显示表单
+                            selector.classList.add("hidden");
                         };
                         data.forEach(item => {
                             const opt = document.createElement("option");
@@ -264,23 +303,40 @@
                             select.appendChild(opt);
                         });
                         selector.appendChild(select);
+                        
+                        // 添加"新建记录"选项
+                        const newRecordBtn = document.createElement("button");
+                        newRecordBtn.className = "btn btn-outline-secondary w-100 mt-2";
+                        newRecordBtn.textContent = "➕ 创建新记录";
+                        newRecordBtn.onclick = () => {
+                            selector.classList.add("hidden");
+                            startNewEntry(keyword); // 使用当前手机号
+                        };
+                        selector.appendChild(newRecordBtn);
                     }
                 })
-                .catch(err => alert("查询出错：" + err.message));
+                .catch(err => {
+                    console.error("查询出错:", err);
+                    alert("查询出错：" + err.message);
+                });
         };
 
-        // 2. 开始新登记
-        window.startNewEntry = function () {
+        // 2. 开始新登记（带默认手机号）
+        window.startNewEntry = function (defaultPhone = "") {
             selectedEntry = null;
             document.getElementById("adminForm").classList.remove("hidden");
             document.getElementById("adminForm").scrollIntoView({ behavior: 'smooth' });
             
             document.getElementById("mainName").value = "";
-            document.getElementById("phoneNumber").value = "";
+            document.getElementById("phoneNumber").value = defaultPhone || "";
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
             container.appendChild(createPrayerBlock({}, 1));
+            
+            // 隐藏选择器和提示信息
+            document.getElementById("resultSelector").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
         };
 
         // 3. 添加祈福者
@@ -298,8 +354,6 @@
             document.getElementById("mainName").value = selectedEntry.mainName || "";
             document.getElementById("phoneNumber").value = selectedEntry.phoneNumber || "";
             
-            // 注意：这里不再处理备注信息，因为用户版不需要
-
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
             const prayers = selectedEntry.data || [];
@@ -313,6 +367,10 @@
                     }
                 });
             }
+            
+            // 隐藏选择器和提示信息
+            document.getElementById("resultSelector").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
         }
 
         // 5. 保存资料（用户版 - 强制清空备注信息）
@@ -364,16 +422,35 @@
             .then(result => {
                 if (result.success) {
                     alert("✅ 保存成功！");
-                    startNewEntry();
+                    cancelEdit(); // 保存后返回首页
                 } else {
                     alert("❌ 保存失败：" + (result.message || "未知错误"));
                 }
             })
-            .catch(err => alert("网络错误：" + err.message))
+            .catch(err => {
+                console.error("保存出错:", err);
+                alert("网络错误：" + err.message);
+            })
             .finally(() => {
                 btn.innerHTML = "💾 保存资料";
                 btn.disabled = false;
             });
+        };
+
+        // 6. 取消编辑（返回首页）
+        window.cancelEdit = function() {
+            document.getElementById("adminForm").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
+            document.getElementById("resultSelector").classList.add("hidden");
+            
+            // 清空表单
+            document.getElementById("mainName").value = "";
+            document.getElementById("phoneNumber").value = "";
+            document.getElementById("searchInput").value = "";
+            
+            // 重置全局变量
+            selectedEntry = null;
+            fullData = [];
         };
 
         // === 补全的辅助函数 ===
