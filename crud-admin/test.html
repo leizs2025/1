@@ -130,35 +130,40 @@
             padding: 5px;
         }
         .prayer-card .radio-group .form-check {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    margin: 0 !important;
-    padding: 0 4px; /* 微调间距 */
-}
-  .prayer-card .form-check-input[type="radio"] {
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
-    border: 2px solid #333 !important;
-    background-color: #fff !important;
-    flex-shrink: 0; /* 防止被压缩 */
-    margin: 0 !important;
-    vertical-align: middle;
-}
-
-.prayer-card .form-check-input[type="radio"]:checked {
-    background-color: #333 !important;
-    border-color: #333 !important;
-}
-
-.prayer-card .form-check-label {
-    font-size: 12px;
-    margin: 0 0 0 4px; /* 左侧留空隙，避免文字贴太近 */
-    line-height: 1.4;
-}
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 !important;
+            padding: 2px;
+        }
+        .prayer-card .radio-group .form-check-label {
+            font-size: 11px;
+            margin: 0;
+            padding: 2px;
+        }
+        
+        /* === 修复“出轨”问题的关键CSS === */
+        .prayer-card .form-check-input[type="radio"] {
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px !important;
+            min-height: 18px !important;
+            border: 2px solid #333 !important;
+            background-color: #fff !important;
+            flex-shrink: 0; /* 防止被压缩 */
+            margin: 0 !important;
+            vertical-align: middle;
+        }
+        .prayer-card .form-check-input[type="radio"]:checked {
+            background-color: #333 !important;
+            border-color: #333 !important;
+        }
+        .prayer-card .form-check-label {
+            font-size: 12px;
+            margin: 0 0 0 4px; /* 左侧留空隙 */
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -202,31 +207,6 @@
             </div>
             <div id="prayersContainer">
                 <!-- JS 动态生成 -->
-            </div>
-        </div>
-
-        <!-- 备注与选项 -->
-        <div class="card">
-            <h6 class="border-bottom pb-2 mb-3">📋 备注信息</h6>
-            <div class="mb-3">
-                <label class="form-label">祈福纸内容</label>
-                <textarea id="wishPaper" class="form-control" rows="2" placeholder="选填"></textarea>
-            </div>
-            <div class="row">
-                <div class="col-6">
-                    <label class="form-label">还愿</label>
-                    <div class="radio-group">
-                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnYes" value="是"><label class="form-check-label" for="wishReturnYes">是</label></div>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnNo" value="" checked><label class="form-check-label" for="wishReturnNo">否</label></div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <label class="form-label">供奉</label>
-                    <div class="radio-group">
-                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringYes" value="是"><label class="form-check-label" for="offeringYes">是</label></div>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringNo" value="" checked><label class="form-check-label" for="offeringNo">否</label></div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -297,9 +277,6 @@
             
             document.getElementById("mainName").value = "";
             document.getElementById("phoneNumber").value = "";
-            document.getElementById("wishPaper").value = "";
-            document.getElementById("wishReturnNo").checked = true;
-            document.getElementById("offeringNo").checked = true;
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -320,12 +297,8 @@
 
             document.getElementById("mainName").value = selectedEntry.mainName || "";
             document.getElementById("phoneNumber").value = selectedEntry.phoneNumber || "";
-            document.getElementById("wishPaper").value = selectedEntry.wishPaper || "";
             
-            document.getElementById("wishReturnYes").checked = selectedEntry.wishReturn === "是";
-            document.getElementById("wishReturnNo").checked = selectedEntry.wishReturn !== "是";
-            document.getElementById("offeringYes").checked = selectedEntry.offering === "是";
-            document.getElementById("offeringNo").checked = selectedEntry.offering !== "是";
+            // 注意：这里不再处理备注信息，因为用户版不需要
 
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -342,7 +315,7 @@
             }
         }
 
-        // 5. 保存资料
+        // 5. 保存资料（用户版 - 强制清空备注信息）
         window.saveChanges = function () {
             const phone = document.getElementById("phoneNumber").value.trim();
             const name = document.getElementById("mainName").value.trim();
@@ -369,19 +342,23 @@
             btn.innerHTML = "保存中...";
             btn.disabled = true;
 
+            // 构建要提交的数据 - 用户版：强制清空备注信息
+            const submitData = {
+                phoneNumber: phone,
+                mainName: name,
+                data: updatedData,
+                receiptNumber: "", // 强制为空
+                receiptDate: "",   // 强制为空
+                // 用户版：强制清空备注信息，无论原数据是什么
+                wishReturn: "",    // 强制清空
+                offering: "",      // 强制清空
+                wishPaper: ""      // 强制清空
+            };
+
             fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    phoneNumber: phone,
-                    mainName: name,
-                    data: updatedData,
-                    receiptNumber: "", // 强制为空
-                    receiptDate: "",   // 强制为空
-                    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-                    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-                    wishPaper: document.getElementById("wishPaper").value.trim()
-                })
+                body: JSON.stringify(submitData)
             })
             .then(res => res.json())
             .then(result => {
@@ -426,7 +403,6 @@
         function createPrayerBlock(data = {}, index = 1) {
             const div = document.createElement("div");
             div.className = "prayer-card"; // 使用自定义样式类
-            // div.style.position = "relative"; // 已在 CSS 中定义
 
             div.innerHTML = `
                 <div class="remove-btn" onclick="this.parentElement.remove(); checkMin()">❌</div>
