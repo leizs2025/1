@@ -219,7 +219,7 @@
             }
 
             try {
-                const response = await fetch(`/api/entry?phone=${phone}`);
+                const response = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${phone}`);
                 const data = await response.json();
 
                 if (data.success) {
