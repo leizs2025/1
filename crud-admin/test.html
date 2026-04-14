@@ -183,6 +183,34 @@
             border-radius: 6px;
             border: 1px solid #ffeaa7;
         }
+        
+        /* 价格汇总卡片样式 */
+        .price-summary {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
     </style>
 </head>
 <body>
@@ -234,7 +262,7 @@
         <div class="card">
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                 <h6 class="m-0">🙏 祈福者名单</h6>
-                <button onclick="addPrayer()" class="btn btn-sm btn-outline-primary">+ 添加</button>
+                <button onclick="addPrayer()" class="btn btn-sm btn-outline-primary" onmousedown="setTimeout(calculateTotalPrice, 100)">+ 添加</button>
             </div>
             <div id="prayersContainer">
                 <!-- JS 动态生成 -->
@@ -248,10 +276,26 @@
         </div>
     </div>
 
+    <!-- 价格汇总卡片 -->
+    <div id="priceSummary" class="price-summary hidden">
+        <div class="price-item">
+            <span>纸金费用 (3元/份):</span>
+            <span id="paperGoldAmount">0元</span>
+        </div>
+        <div class="price-item">
+            <span>安奉功德金:</span>
+            <span id="donationAmount">0元</span>
+        </div>
+        <div class="total-price">
+            <span>总计:</span>
+            <span id="totalAmount">0元</span>
+        </div>
+    </div>
+
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+        const API_URL = "https://你的-worker-domain.workers.dev";
 
         let fullData = [];
         let selectedEntry = null;
@@ -290,7 +334,7 @@
         function extractRealPhone(phoneWithPrefix) {
             if (!phoneWithPrefix) return phoneWithPrefix;
             
-            // 如果长度大于11且第一位是数字，则认为是年份前缀
+            // 如果长度大于10且第一位是数字，则认为是年份前缀
             // 马来西亚手机号：0 + 9-10位数字 = 10-11位
             // 加上前缀后：1位年份 + 0 + 9-10位 = 11-12位
             if (phoneWithPrefix.length > 10 && /^[0-9]$/.test(phoneWithPrefix.charAt(0))) {
@@ -337,7 +381,7 @@
             const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
             const currentPhone = phoneInput.value;
             
-            // 如果当前手机号已经有前缀（长度大于11），替换第一位
+            // 如果当前手机号已经有前缀（长度大于10），替换第一位
             if (currentPhone.length > 10 && /^[0-9]$/.test(currentPhone.charAt(0))) {
                 // 替换第一位数字
                 const newPhone = yearLastDigit + currentPhone.substring(1);
@@ -346,6 +390,40 @@
                 // 如果没有前缀，直接添加前缀
                 phoneInput.value = yearLastDigit + currentPhone;
             }
+        }
+
+        // 计算总价格
+        function calculateTotalPrice() {
+            let totalPaperGold = 0;
+            let totalDonation = 0;
+            
+            const prayers = document.getElementById("prayersContainer").children;
+            Array.from(prayers).forEach(div => {
+                // 计算纸金总数（5种纸金相加）
+                const pg1 = parseInt(div.querySelector(".pg1").value) || 0;
+                const pg2 = parseInt(div.querySelector(".pg2").value) || 0;
+                const pg3 = parseInt(div.querySelector(".pg3").value) || 0;
+                const pg4 = parseInt(div.querySelector(".pg4").value) || 0;
+                const pg5 = parseInt(div.querySelector(".pg5").value) || 0;
+                
+                totalPaperGold += pg1 + pg2 + pg3 + pg4 + pg5;
+                
+                // 计算安奉功德金
+                const donation = parseInt(div.querySelector(".donate").value) || 0;
+                totalDonation += donation;
+            });
+            
+            // 计算纸金费用（3元/份）
+            const paperGoldCost = totalPaperGold * 3;
+            const total = paperGoldCost + totalDonation;
+            
+            // 更新显示
+            document.getElementById("paperGoldAmount").textContent = paperGoldCost + "元";
+            document.getElementById("donationAmount").textContent = totalDonation + "元";
+            document.getElementById("totalAmount").textContent = total + "元";
+            
+            // 显示价格汇总卡片
+            document.getElementById("priceSummary").classList.remove("hidden");
         }
 
         // 页面加载时初始化
@@ -465,6 +543,9 @@
             // 隐藏选择器和提示信息
             document.getElementById("resultSelector").classList.add("hidden");
             document.getElementById("searchResultInfo").classList.add("hidden");
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
         };
 
         // 3. 添加祈福者
@@ -472,6 +553,9 @@
             const container = document.getElementById("prayersContainer");
             if (container.children.length >= 15) return alert("最多添加 15 位！");
             container.appendChild(createPrayerBlock({}, container.children.length + 1));
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
         };
 
         // 4. 渲染表单数据
@@ -504,6 +588,9 @@
             // 隐藏选择器和提示信息
             document.getElementById("resultSelector").classList.add("hidden");
             document.getElementById("searchResultInfo").classList.add("hidden");
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
         }
 
         // 5. 保存资料（用户版 - 保留前缀用于年份判断）
@@ -531,7 +618,7 @@
             const prayers = document.getElementById("prayersContainer").children;
             const updatedData = Array.from(prayers).map(div => ({
                 name: div.querySelector(".pName").value,
-                zodiac: div.querySelector(".pZodiac").value,
+                zodiac: div.querySelector(".pZodiac").value, // 保存选择的生肖
                 taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
                 light: div.querySelector('input.pLight:checked')?.value || "",
                 longevity: div.querySelector('input.pLongevity:checked')?.value || "",
@@ -592,6 +679,9 @@
             document.getElementById("searchResultInfo").classList.add("hidden");
             document.getElementById("resultSelector").classList.add("hidden");
             
+            // 隐藏价格汇总
+            document.getElementById("priceSummary").classList.add("hidden");
+            
             // 清空表单
             document.getElementById("mainName").value = "";
             document.getElementById("phoneNumber").value = "";
@@ -626,50 +716,79 @@
              const container = document.getElementById("prayersContainer");
              if (container.children.length === 0) {
                  container.appendChild(createPrayerBlock({}, 1));
+                 setTimeout(calculateTotalPrice, 100);
              }
         };
 
-        // === 你提供的完整 createPrayerBlock 函数 ===
+        // 生成生肖下拉选择
+        function createZodiacSelect(selectedValue = "") {
+            const zodiacs = [
+                { value: "", label: "-- 请选择 --" },
+                { value: "鼠", label: "🐭 鼠" },
+                { value: "牛", label: "🐮 牛" },
+                { value: "虎", label: "🐯 虎" },
+                { value: "兔", label: "🐰 兔" },
+                { value: "龙", label: "🐉 龙" },
+                { value: "蛇", label: "🐍 蛇" },
+                { value: "马", label: "🐎 马" },
+                { value: "羊", label: "🐑 羊" },
+                { value: "猴", label: "🐵 猴" },
+                { value: "鸡", label: "🐔 鸡" },
+                { value: "狗", label: "🐶 狗" },
+                { value: "猪", label: "🐷 猪" }
+            ];
+            
+            let options = "";
+            zodiacs.forEach(z => {
+                options += `<option value="${z.value}" ${selectedValue === z.value ? "selected" : ""}>${z.label}</option>`;
+            });
+            
+            return `<select class="form-select pZodiac" style="height:35px" oninput="calculateTotalPrice()">
+                ${options}
+            </select>`;
+        }
+
+        // === 你提供的完整 createPrayerBlock 函数（已修改生肖为下拉选择）===
         function createPrayerBlock(data = {}, index = 1) {
             const div = document.createElement("div");
             div.className = "prayer-card"; // 使用自定义样式类
 
             div.innerHTML = `
-                <div class="remove-btn" onclick="this.parentElement.remove(); checkMin()">❌</div>
+                <div class="remove-btn" onclick="this.parentElement.remove(); checkMin(); setTimeout(calculateTotalPrice, 100)">❌</div>
                 <div class="mb-2"><strong>🧍‍♂️ 第 ${index} 位祈福者</strong></div>
 
                 <div class="row g-2">
-                    <div class="col-6">姓名 <input value="${data.name || ""}" class="form-control pName" style="height:35px" /></div>
-                    <div class="col-6">生肖 <input value="${data.zodiac || ""}" class="form-control pZodiac" style="height:35px" /></div>
+                    <div class="col-6">姓名 <input value="${data.name || ''}" class="form-control pName" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">生肖 ${createZodiacSelect(data.zodiac || '')}</div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-6">太岁 <div class="radio-group">${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui)}</div></div>
-                    <div class="col-6">纸金1 <input type="number" value="${data.paperGold1 || ""}" class="form-control pg1" style="height:35px" /></div>
+                    <div class="col-6">纸金1 <input type="number" value="${data.paperGold1 || ''}" class="form-control pg1" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-6">光明灯 <div class="radio-group">${createRadioGroup(`pLight${index}`, "pLight", data.light)}</div></div>
-                    <div class="col-6">纸金2 <input type="number" value="${data.paperGold2 || ""}" class="form-control pg2" style="height:35px" /></div>
+                    <div class="col-6">纸金2 <input type="number" value="${data.paperGold2 || ''}" class="form-control pg2" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-6">长生禄 <div class="radio-group">${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity)}</div></div>
-                    <div class="col-6">纸金3 <input type="number" value="${data.paperGold3 || ""}" class="form-control pg3" style="height:35px" /></div>
+                    <div class="col-6">纸金3 <input type="number" value="${data.paperGold3 || ''}" class="form-control pg3" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-6">文昌 <div class="radio-group">${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom)}</div></div>
-                    <div class="col-6">纸金4 <input type="number" value="${data.paperGold4 || ""}" class="form-control pg4" style="height:35px" /></div>
+                    <div class="col-6">纸金4 <input type="number" value="${data.paperGold4 || ''}" class="form-control pg4" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-6">十六罗汉 <div class="radio-group">${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat)}</div></div>
-                    <div class="col-6">纸金5 <input type="number" value="${data.paperGold5 || ""}" class="form-control pg5" style="height:35px" /></div>
+                    <div class="col-6">纸金5 <input type="number" value="${data.paperGold5 || ''}" class="form-control pg5" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-12">安奉功德金 <input type="number" value="${data.donation || ""}" class="form-control donate" style="height:35px" /></div>
+                    <div class="col-12">安奉功德金 <input type="number" value="${data.donation || ''}" class="form-control donate" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
             `;
 
