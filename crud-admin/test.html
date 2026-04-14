@@ -215,6 +215,7 @@
             <div class="year-selector mb-3">
                 <label class="form-label">📅 报名太岁年份</label>
                 <select id="registrationYear" class="form-select" onchange="updatePhoneWithYearPrefix()">
+                    <option value="">-- 请选择年份 --</option> <!-- 初始为空 -->
                     <!-- JS 动态生成年份选项 -->
                 </select>
             </div>
@@ -261,16 +262,14 @@
         // 初始化年份选择器
         function initYearSelector() {
             const yearSelect = document.getElementById("registrationYear");
-            yearSelect.innerHTML = ""; // 清空现有选项
+            // 保留默认的"请选择年份"选项
+            yearSelect.innerHTML = '<option value="">-- 请选择年份 --</option>';
             
             // 生成从今年开始往后10年的选项
             for (let year = currentYear; year <= currentYear + 10; year++) {
                 const option = document.createElement("option");
                 option.value = year;
                 option.textContent = year + "年";
-                if (year === currentYear) {
-                    option.selected = true; // 默认选中今年
-                }
                 yearSelect.appendChild(option);
             }
         }
@@ -294,7 +293,7 @@
             // 如果长度大于11且第一位是数字，则认为是年份前缀
             // 马来西亚手机号：0 + 9-10位数字 = 10-11位
             // 加上前缀后：1位年份 + 0 + 9-10位 = 11-12位
-            if (phoneWithPrefix.length > 11 && /^[0-9]$/.test(phoneWithPrefix.charAt(0))) {
+            if (phoneWithPrefix.length > 10 && /^[0-9]$/.test(phoneWithPrefix.charAt(0))) {
                 const withoutPrefix = phoneWithPrefix.substring(1); // 去掉第一位前缀
                 
                 // 验证剩余部分是否符合马来西亚手机号格式
@@ -313,7 +312,7 @@
 
         // 为手机号添加前缀（直接替换第一位数字）
         function addPhonePrefix(phone, year) {
-            if (!phone) return phone;
+            if (!phone || !year) return phone;
             
             const yearLastDigit = year % 10; // 获取年份最后一位数字
             const realPhone = extractRealPhone(phone); // 先清洗一次
@@ -332,15 +331,17 @@
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
             
+            // 只有当选择了具体年份时才执行替换逻辑
             if (!selectedYear || !phoneInput.value) return;
             
             const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
             const currentPhone = phoneInput.value;
             
             // 如果当前手机号已经有前缀（长度大于11），替换第一位
-            if (currentPhone.length > 11 && /^[0-9]$/.test(currentPhone.charAt(0))) {
+            if (currentPhone.length > 10 && /^[0-9]$/.test(currentPhone.charAt(0))) {
                 // 替换第一位数字
-                phoneInput.value = yearLastDigit + currentPhone.substring(1);
+                const newPhone = yearLastDigit + currentPhone.substring(1);
+                phoneInput.value = newPhone;
             } else if (currentPhone.length >= 10) {
                 // 如果没有前缀，直接添加前缀
                 phoneInput.value = yearLastDigit + currentPhone;
@@ -415,14 +416,15 @@
                         select.className = "form-select mb-2";
                         select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
                         select.onchange = () => {
-                            selectedEntry = fullData[select.selectedIndex - 1];
+                            selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
                             renderForm();
                             
                             // 隐藏选择器，显示表单
                             selector.classList.add("hidden");
                         };
-                        data.forEach(item => {
+                        data.forEach((item, index) => {
                             const opt = document.createElement("option");
+                            opt.value = index;
                             opt.textContent = `${item.mainName} (${item.phoneNumber})`;
                             select.appendChild(opt);
                         });
@@ -453,11 +455,8 @@
             
             document.getElementById("mainName").value = "";
             
-            // 为新记录添加当前年份的前缀
-            const yearSelect = document.getElementById("registrationYear");
-            const selectedYear = parseInt(yearSelect.value);
-            const phoneWithPrefix = addPhonePrefix(defaultPhone, selectedYear);
-            document.getElementById("phoneNumber").value = phoneWithPrefix;
+            // 新增时只显示原始手机号，不添加前缀
+            document.getElementById("phoneNumber").value = defaultPhone;
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -482,12 +481,11 @@
 
             document.getElementById("mainName").value = selectedEntry.mainName || "";
             
-            // 渲染时添加当前年份的前缀
-            const yearSelect = document.getElementById("registrationYear");
-            const selectedYear = parseInt(yearSelect.value);
+            // 查询回来时显示原始手机号，等待用户选择年份
+            document.getElementById("phoneNumber").value = selectedEntry.phoneNumber;
             
-            const phoneWithPrefix = addPhonePrefix(selectedEntry.phoneNumber, selectedYear);
-            document.getElementById("phoneNumber").value = phoneWithPrefix;
+            // 将年份选择器设为"请选择"
+            document.getElementById("registrationYear").value = "";
             
             const container = document.getElementById("prayersContainer");
             container.innerHTML = "";
@@ -510,6 +508,13 @@
 
         // 5. 保存资料（用户版 - 保留前缀用于年份判断）
         window.saveChanges = function () {
+            // 检查年份是否已选择
+            const yearSelect = document.getElementById("registrationYear");
+            if (!yearSelect.value) {
+                alert("⚠️ 请先选择报名太岁年份！");
+                return;
+            }
+            
             // 直接使用带前缀的手机号
             const phoneWithPrefix = document.getElementById("phoneNumber").value.trim();
             const name = document.getElementById("mainName").value.trim();
@@ -596,9 +601,9 @@
             selectedEntry = null;
             fullData = [];
             
-            // 重置年份选择器为今年
+            // 重置年份选择器为"请选择"
             const yearSelect = document.getElementById("registrationYear");
-            yearSelect.value = currentYear;
+            yearSelect.value = "";
         };
 
         // === 补全的辅助函数 ===
