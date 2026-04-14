@@ -255,6 +255,7 @@
         let fullData = [];
         let selectedEntry = null;
         let currentRegistrationYear = null; // 当前选择的年份
+        let originalPhoneNumber = null; // 存储原始手机号（不带前缀）
 
         // 获取当前年份
         const currentYear = new Date().getFullYear();
@@ -334,20 +335,20 @@
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
             
-            if (!selectedYear) return;
+            if (!selectedYear || !phoneInput.value) return;
             
             currentRegistrationYear = selectedYear;
             const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
             
-            // 获取当前手机号（去掉旧前缀）
-            let currentPhone = phoneInput.value;
-            if (currentPhone) {
-                currentPhone = extractRealPhone(currentPhone);
-                
-                // 添加新前缀并更新显示
-                const newPhone = addPhonePrefix(currentPhone, selectedYear);
-                phoneInput.value = newPhone;
-            }
+            // 获取原始手机号（不带前缀）
+            const realPhone = extractRealPhone(phoneInput.value);
+            
+            // 保存原始手机号以便后续使用
+            originalPhoneNumber = realPhone;
+            
+            // 添加新前缀并更新显示
+            const newPhone = addPhonePrefix(realPhone, selectedYear);
+            phoneInput.value = newPhone;
         }
 
         // 页面加载时初始化
@@ -456,6 +457,9 @@
             
             document.getElementById("mainName").value = "";
             
+            // 保存原始手机号
+            originalPhoneNumber = defaultPhone;
+            
             // 为新记录添加年份前缀
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
@@ -488,6 +492,10 @@
             // 渲染时添加当前年份的前缀
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
+            
+            // 保存原始手机号（来自数据库的不带前缀的手机号）
+            originalPhoneNumber = selectedEntry.phoneNumber;
+            
             const phoneWithPrefix = addPhonePrefix(selectedEntry.phoneNumber, selectedYear);
             document.getElementById("phoneNumber").value = phoneWithPrefix;
             
@@ -596,6 +604,7 @@
             // 重置全局变量
             selectedEntry = null;
             fullData = [];
+            originalPhoneNumber = null;
             
             // 重置年份选择器为今年
             const yearSelect = document.getElementById("registrationYear");
