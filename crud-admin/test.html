@@ -254,8 +254,6 @@
 
         let fullData = [];
         let selectedEntry = null;
-        let currentRegistrationYear = null; // 当前选择的年份
-        let originalPhoneNumber = null; // 存储原始手机号（不带前缀）
 
         // 获取当前年份
         const currentYear = new Date().getFullYear();
@@ -272,7 +270,6 @@
                 option.textContent = year + "年";
                 if (year === currentYear) {
                     option.selected = true; // 默认选中今年
-                    currentRegistrationYear = year;
                 }
                 yearSelect.appendChild(option);
             }
@@ -314,7 +311,7 @@
             return phoneWithPrefix;
         }
 
-        // 为手机号添加前缀（适用于马来西亚格式）
+        // 为手机号添加前缀（直接替换第一位数字）
         function addPhonePrefix(phone, year) {
             if (!phone) return phone;
             
@@ -329,7 +326,7 @@
             return phone; // 如果不是有效手机号，返回原值
         }
 
-        // 更新手机号显示（添加年份前缀）
+        // 更新手机号显示（直接替换第一位数字来响应年份变化）
         function updatePhoneWithYearPrefix() {
             const phoneInput = document.getElementById("phoneNumber");
             const yearSelect = document.getElementById("registrationYear");
@@ -337,14 +334,17 @@
             
             if (!selectedYear || !phoneInput.value) return;
             
-            currentRegistrationYear = selectedYear;
             const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
+            const currentPhone = phoneInput.value;
             
-            // 从当前显示的号码中提取真实号码
-            const realPhone = extractRealPhone(phoneInput.value);
-            originalPhoneNumber = realPhone; // 更新原始号码
-            const newPhone = addPhonePrefix(realPhone, selectedYear);
-            phoneInput.value = newPhone;
+            // 如果当前手机号已经有前缀（长度大于11），替换第一位
+            if (currentPhone.length > 11 && /^[0-9]$/.test(currentPhone.charAt(0))) {
+                // 替换第一位数字
+                phoneInput.value = yearLastDigit + currentPhone.substring(1);
+            } else if (currentPhone.length >= 10) {
+                // 如果没有前缀，直接添加前缀
+                phoneInput.value = yearLastDigit + currentPhone;
+            }
         }
 
         // 页面加载时初始化
@@ -453,10 +453,7 @@
             
             document.getElementById("mainName").value = "";
             
-            // 保存原始手机号
-            originalPhoneNumber = defaultPhone;
-            
-            // 为新记录添加年份前缀
+            // 为新记录添加当前年份的前缀
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
             const phoneWithPrefix = addPhonePrefix(defaultPhone, selectedYear);
@@ -488,9 +485,6 @@
             // 渲染时添加当前年份的前缀
             const yearSelect = document.getElementById("registrationYear");
             const selectedYear = parseInt(yearSelect.value);
-            
-            // 保存原始手机号（来自数据库的不带前缀的手机号）
-            originalPhoneNumber = selectedEntry.phoneNumber;
             
             const phoneWithPrefix = addPhonePrefix(selectedEntry.phoneNumber, selectedYear);
             document.getElementById("phoneNumber").value = phoneWithPrefix;
@@ -601,12 +595,10 @@
             // 重置全局变量
             selectedEntry = null;
             fullData = [];
-            originalPhoneNumber = null;
             
             // 重置年份选择器为今年
             const yearSelect = document.getElementById("registrationYear");
             yearSelect.value = currentYear;
-            currentRegistrationYear = currentYear;
         };
 
         // === 补全的辅助函数 ===
