@@ -83,17 +83,45 @@
 
         .hidden { display: none !important; }
         
+        /* 改进的radio-group样式 */
         .radio-group {
             display: flex;
-            gap: 5px;
+            gap: 10px;
+            align-items: center;
         }
         .radio-group .form-check {
             margin-bottom: 0;
             flex: 1;
+            display: flex;
+            align-items: center;
         }
         .radio-group .form-check label {
             font-size: 12px;
-            width: 100%;
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+        .radio-group .form-check-input {
+            margin-right: 4px;
+        }
+        
+        /* 特别为祈福者卡片中的单选按钮调整 */
+        .prayer-card .radio-group {
+            display: flex;
+            gap: 5px;
+            min-height: 35px;
+            align-items: center;
+        }
+        .prayer-card .radio-group .form-check {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .prayer-card .radio-group .form-check-label {
+            font-size: 11px;
+            margin: 0;
+            padding: 2px;
         }
     </style>
 </head>
@@ -152,15 +180,15 @@
                 <div class="col-6">
                     <label class="form-label">还愿</label>
                     <div class="radio-group">
-                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnYes" value="是"><label class="form-check-label">是</label></div>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnNo" value="" checked><label class="form-check-label">否</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnYes" value="是"><label class="form-check-label" for="wishReturnYes">是</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="wishReturn" id="wishReturnNo" value="" checked><label class="form-check-label" for="wishReturnNo">否</label></div>
                     </div>
                 </div>
                 <div class="col-6">
                     <label class="form-label">供奉</label>
                     <div class="radio-group">
-                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringYes" value="是"><label class="form-check-label">是</label></div>
-                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringNo" value="" checked><label class="form-check-label">否</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringYes" value="是"><label class="form-check-label" for="offeringYes">是</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="offering" id="offeringNo" value="" checked><label class="form-check-label" for="offeringNo">否</label></div>
                     </div>
                 </div>
             </div>
@@ -176,7 +204,7 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://你的-worker-domain.workers.dev";
+        const API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
 
         let fullData = [];
         let selectedEntry = null;
@@ -337,16 +365,16 @@
 
         // === 补全的辅助函数 ===
 
-        // 生成单选框组
+        // 生成单选框组 - 修改版本，确保水平排列
         function createRadioGroup(name, className, checkedVal) {
             return `
-              <div class="form-check">
+              <div class="form-check d-flex align-items-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""}>
-                <label class="form-check-label">是</label>
+                <label class="form-check-label" style="font-size: 11px; margin-left: 2px;">是</label>
               </div>
-              <div class="form-check">
+              <div class="form-check d-flex align-items-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""}>
-                <label class="form-check-label">否</label>
+                <label class="form-check-label" style="font-size: 11px; margin-left: 2px;">否</label>
               </div>`;
         }
 
@@ -374,27 +402,27 @@
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">太岁 ${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui)}</div>
+                    <div class="col-6">太岁 <div class="radio-group">${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui)}</div></div>
                     <div class="col-6">纸金1 <input type="number" value="${data.paperGold1 || ""}" class="form-control pg1" style="height:35px" /></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">光明灯 ${createRadioGroup(`pLight${index}`, "pLight", data.light)}</div>
+                    <div class="col-6">光明灯 <div class="radio-group">${createRadioGroup(`pLight${index}`, "pLight", data.light)}</div></div>
                     <div class="col-6">纸金2 <input type="number" value="${data.paperGold2 || ""}" class="form-control pg2" style="height:35px" /></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">长生禄 ${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity)}</div>
+                    <div class="col-6">长生禄 <div class="radio-group">${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity)}</div></div>
                     <div class="col-6">纸金3 <input type="number" value="${data.paperGold3 || ""}" class="form-control pg3" style="height:35px" /></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">文昌 ${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom)}</div>
+                    <div class="col-6">文昌 <div class="radio-group">${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom)}</div></div>
                     <div class="col-6">纸金4 <input type="number" value="${data.paperGold4 || ""}" class="form-control pg4" style="height:35px" /></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">十六罗汉 ${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat)}</div>
+                    <div class="col-6">十六罗汉 <div class="radio-group">${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat)}</div></div>
                     <div class="col-6">纸金5 <input type="number" value="${data.paperGold5 || ""}" class="form-control pg5" style="height:35px" /></div>
                 </div>
 
