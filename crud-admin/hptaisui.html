@@ -606,7 +606,7 @@
                         // 查无资料，显示提示信息并提供继续按钮
                         infoDiv.innerHTML = `
                             <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的登记表单</div>
-                            <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 确认继续新增报名记录</button>
+                            <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 立即填写报名表</button>
                         `;
                         infoDiv.classList.remove("hidden");
                         
@@ -635,7 +635,7 @@
                         // 添加"新增资料"按钮
                         const newRecordBtn = document.createElement("button");
                         newRecordBtn.className = "btn btn-success new-record-btn";
-                        newRecordBtn.textContent = "➕ 用相同手机号登记全新资料";
+                        newRecordBtn.textContent = "➕ 填写全新的报名表";
                         newRecordBtn.onclick = () => {
                             startNewEntry(realKeyword); // 使用清洗后的手机号
                         };
@@ -661,7 +661,7 @@
                             <h6>📋 资料说明</h6>
                             <ul>
                                 <li>系统找到多笔使用此手机号的登记资料</li>
-		<li>手机号5开头就是2025年的报名资料，6开通就是2026年的报名资料</li>
+		                        <li>手机号5开头就是2025年的报名资料，6开通就是2026年的报名资料</li>
                                 <li>请从下方下拉菜单中选择您要添加或修改的具体资料</li>
                                 <li>如需创建全新的登记资料，可点击下方用相同手机号登记全新资料按钮</li>
                             </ul>
@@ -702,7 +702,7 @@
                         // 添加"新增资料"按钮（放在选择器下方）
                         const newRecordBtn = document.createElement("button");
                         newRecordBtn.className = "btn btn-success new-record-btn";
-                        newRecordBtn.textContent = "➕ 用相同手机号登记全新资料";
+                        newRecordBtn.textContent = "➕ 填写全新的报名表";
                         newRecordBtn.onclick = () => {
                             startNewEntry(realKeyword); // 使用清洗后的手机号
                         };
