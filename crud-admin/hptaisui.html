@@ -336,7 +336,7 @@
 <body>
 
     <!-- 顶部标题 -->
-    <h3 class="page-header">🙏 太岁光明灯查询/修改/新增登记</h3>
+    <h3 class="page-header">🙏 太岁光明灯查询/修改/新增报名</h3>
 
     <!-- 搜索与操作区 - 移除"开始登记"按钮 -->
     <div class="card">
@@ -605,7 +605,7 @@
                     if (data.length === 0) {
                         // 查无资料，显示提示信息并提供继续按钮
                         infoDiv.innerHTML = `
-                            <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的登记表单</div>
+                            <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的报名表单</div>
                             <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 立即填写报名表</button>
                         `;
                         infoDiv.classList.remove("hidden");
@@ -625,7 +625,7 @@
                         infoCard.innerHTML = `
                             <h6>📋 资料说明</h6>
                             <ul>
-                                <li>下方显示的是您之前登记的太岁光明灯资料</li>
+                                <li>下方显示的是您之前报名的太岁光明灯资料</li>
                                 <li>您可以直接编辑现有信息或添加新的祈福者</li>
                                 <li>点击"保存资料"即可更新您的登记信息</li>
                             </ul>
@@ -661,9 +661,9 @@
                             <h6>📋 资料说明</h6>
                             <ul>
                                 <li>系统找到多笔使用此手机号的登记资料</li>
-		                        <li>手机号5开头就是2025年的报名资料，6开通就是2026年的报名资料</li>
+		                        <li>手机号5开头就是2025年的报名资料，<br>6开头就是2026年的报名资料</br></li>
                                 <li>请从下方下拉菜单中选择您要添加或修改的具体资料</li>
-                                <li>如需创建全新的登记资料，可点击下方用相同手机号登记全新资料按钮</li>
+                                <li>如需创建全新的报名资料，可点击下方填写全新的报名表按钮</li>
                             </ul>
                         `;
                         infoDiv.appendChild(infoCard);
