@@ -239,6 +239,13 @@
             background-color: #218838;
             border-color: #1e7e34;
         }
+        
+        /* 纸金框样式 - 当禁用时 */
+        .pg-disabled {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+        }
     </style>
 </head>
 <body>
@@ -849,17 +856,37 @@
         // === 补全的辅助函数 ===
 
         // 生成单选框组 - 修改版本，确保水平排列
-        function createRadioGroup(name, className, checkedVal) {
+        function createRadioGroup(name, className, checkedVal, pgClass) {
             return `
               <div class="form-check d-flex align-items-center justify-content-center">
-                <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""}>
+                <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
                 <label class="form-check-label ms-1" style="font-size: 11px;">是</label>
               </div>
               <div class="form-check d-flex align-items-center justify-content-center">
-                <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""}>
+                <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
                 <label class="form-check-label ms-1" style="font-size: 11px;">否</label>
               </div>`;
         }
+
+        // 控制纸金框的启用/禁用
+        window.togglePaperGold = function(radioElement, pgClass) {
+            const isYes = radioElement.value === "是";
+            const parentDiv = radioElement.closest('.prayer-card');
+            const pgInputs = parentDiv.querySelectorAll(`.${pgClass}`);
+            
+            pgInputs.forEach(input => {
+                input.disabled = !isYes;
+                if (isYes) {
+                    input.classList.remove('pg-disabled');
+                } else {
+                    input.classList.add('pg-disabled');
+                    input.value = ''; // 清空值
+                }
+            });
+            
+            // 重新计算价格
+            setTimeout(calculateTotalPrice, 100);
+        };
 
         // 检查最小数量（防止删光了）
         window.checkMin = function() {
@@ -903,6 +930,13 @@
             const div = document.createElement("div");
             div.className = "prayer-card"; // 使用自定义样式类
 
+            // 确定初始状态
+            const taiSuiChecked = data.taiSui === "是";
+            const lightChecked = data.light === "是";
+            const longevityChecked = data.longevity === "是";
+            const wisdomChecked = data.wisdom === "是";
+            const arhatChecked = data.arhat === "是";
+
             div.innerHTML = `
                 <div class="remove-btn" onclick="this.parentElement.remove(); checkMin(); setTimeout(calculateTotalPrice, 100)">❌</div>
                 <div class="mb-2"><strong>🧍‍♂️ 第 ${index} 位祈福者</strong></div>
@@ -913,34 +947,69 @@
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">太岁 <div class="radio-group">${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui)}</div></div>
-                    <div class="col-6">纸金1 <input type="number" value="${data.paperGold1 || ''}" class="form-control pg1" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">太岁 <div class="radio-group">${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui, "pg1")}</div></div>
+                    <div class="col-6">纸金1 <input type="number" value="${data.paperGold1 || ''}" class="form-control pg1" style="height:35px" oninput="calculateTotalPrice()" ${taiSuiChecked ? '' : 'disabled'} ${!taiSuiChecked ? 'class="form-control pg1 pg-disabled"' : ''}/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">光明灯 <div class="radio-group">${createRadioGroup(`pLight${index}`, "pLight", data.light)}</div></div>
-                    <div class="col-6">纸金2 <input type="number" value="${data.paperGold2 || ''}" class="form-control pg2" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">光明灯 <div class="radio-group">${createRadioGroup(`pLight${index}`, "pLight", data.light, "pg2")}</div></div>
+                    <div class="col-6">纸金2 <input type="number" value="${data.paperGold2 || ''}" class="form-control pg2" style="height:35px" oninput="calculateTotalPrice()" ${lightChecked ? '' : 'disabled'} ${!lightChecked ? 'class="form-control pg2 pg-disabled"' : ''}/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">长生禄 <div class="radio-group">${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity)}</div></div>
-                    <div class="col-6">纸金3 <input type="number" value="${data.paperGold3 || ''}" class="form-control pg3" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">长生禄 <div class="radio-group">${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity, "pg3")}</div></div>
+                    <div class="col-6">纸金3 <input type="number" value="${data.paperGold3 || ''}" class="form-control pg3" style="height:35px" oninput="calculateTotalPrice()" ${longevityChecked ? '' : 'disabled'} ${!longevityChecked ? 'class="form-control pg3 pg-disabled"' : ''}/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">文昌 <div class="radio-group">${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom)}</div></div>
-                    <div class="col-6">纸金4 <input type="number" value="${data.paperGold4 || ''}" class="form-control pg4" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">文昌 <div class="radio-group">${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom, "pg4")}</div></div>
+                    <div class="col-6">纸金4 <input type="number" value="${data.paperGold4 || ''}" class="form-control pg4" style="height:35px" oninput="calculateTotalPrice()" ${wisdomChecked ? '' : 'disabled'} ${!wisdomChecked ? 'class="form-control pg4 pg-disabled"' : ''}/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
-                    <div class="col-6">十六罗汉 <div class="radio-group">${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat)}</div></div>
-                    <div class="col-6">纸金5 <input type="number" value="${data.paperGold5 || ''}" class="form-control pg5" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">十六罗汉 <div class="radio-group">${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat, "pg5")}</div></div>
+                    <div class="col-6">纸金5 <input type="number" value="${data.paperGold5 || ''}" class="form-control pg5" style="height:35px" oninput="calculateTotalPrice()" ${arhatChecked ? '' : 'disabled'} ${!arhatChecked ? 'class="form-control pg5 pg-disabled"' : ''}/></div>
                 </div>
 
                 <div class="row g-2 mt-2">
                     <div class="col-12">安奉功德金 <input type="number" value="${data.donation || ''}" class="form-control donate" style="height:35px" oninput="calculateTotalPrice()"/></div>
                 </div>
             `;
+
+            // 为每个输入框添加初始状态
+            setTimeout(() => {
+                const card = div;
+                
+                // 初始化太岁纸金框
+                const taiSuiYes = card.querySelector(`input[name="pTaiSui${index}"][value="是"]`);
+                if (taiSuiYes && taiSuiYes.checked) {
+                    togglePaperGold(taiSuiYes, 'pg1');
+                }
+                
+                // 初始化光明灯纸金框
+                const lightYes = card.querySelector(`input[name="pLight${index}"][value="是"]`);
+                if (lightYes && lightYes.checked) {
+                    togglePaperGold(lightYes, 'pg2');
+                }
+                
+                // 初始化长生禄纸金框
+                const longevityYes = card.querySelector(`input[name="pLongevity${index}"][value="是"]`);
+                if (longevityYes && longevityYes.checked) {
+                    togglePaperGold(longevityYes, 'pg3');
+                }
+                
+                // 初始化文昌纸金框
+                const wisdomYes = card.querySelector(`input[name="pWisdom${index}"][value="是"]`);
+                if (wisdomYes && wisdomYes.checked) {
+                    togglePaperGold(wisdomYes, 'pg4');
+                }
+                
+                // 初始化十六罗汉纸金框
+                const arhatYes = card.querySelector(`input[name="pArhat${index}"][value="是"]`);
+                if (arhatYes && arhatYes.checked) {
+                    togglePaperGold(arhatYes, 'pg5');
+                }
+            }, 10);
 
             return div;
         }
