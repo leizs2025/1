@@ -9,7 +9,7 @@
     <style>
         /* --- 手机端基础设置 --- */
         body {
-            background-color: #f8f9fa;
+            background-color: #fdf5e6; /* 米黄色背景 */
             padding: 10px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             padding-bottom: 80px;
@@ -112,7 +112,8 @@
             border-color: #333 !important;
         }
         .radio-group .form-check-label {
-            font-size: 11px;
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
             margin: 0;
             flex: 1;
             text-align: center;
@@ -138,7 +139,8 @@
             padding: 2px;
         }
         .prayer-card .radio-group .form-check-label {
-            font-size: 11px;
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
             margin: 0;
             padding: 2px;
         }
@@ -160,7 +162,8 @@
             border-color: #333 !important;
         }
         .prayer-card .form-check-label {
-            font-size: 12px;
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
             margin: 0 0 0 4px; /* 左侧留空隙 */
             line-height: 1.4;
         }
@@ -294,6 +297,32 @@
         .continue-btn:hover {
             background-color: #0056b3;
             border-color: #004085;
+        }
+        
+        /* 说明卡片样式 */
+        .info-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 14px; /* 增大字体 */
+            color: #856404;
+        }
+        
+        .info-card h6 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 15px; /* 增大标题字体 */
+        }
+        
+        .info-card ul {
+            margin-bottom: 0;
+            padding-left: 15px;
+        }
+        
+        .info-card li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -568,6 +597,19 @@
                         infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
                         infoDiv.classList.remove("hidden");
                         
+                        // 添加说明卡片
+                        const infoCard = document.createElement("div");
+                        infoCard.className = "info-card";
+                        infoCard.innerHTML = `
+                            <h6>📋 资料说明</h6>
+                            <ul>
+                                <li>下方显示的是您之前登记的太岁光明灯资料</li>
+                                <li>您可以直接编辑现有信息或添加新的祈福者</li>
+                                <li>点击"保存资料"即可更新您的登记信息</li>
+                            </ul>
+                        `;
+                        infoDiv.appendChild(infoCard);
+                        
                         // 添加"新增资料"按钮
                         const newRecordBtn = document.createElement("button");
                         newRecordBtn.className = "btn btn-success new-record-btn";
@@ -587,16 +629,20 @@
                         infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
                         infoDiv.classList.remove("hidden");
                         
-                        // 添加"新增资料"按钮
-                        const newRecordBtn = document.createElement("button");
-                        newRecordBtn.className = "btn btn-success new-record-btn";
-                        newRecordBtn.textContent = "➕ 用相同手机号登记新资料";
-                        newRecordBtn.onclick = () => {
-                            startNewEntry(realKeyword); // 使用清洗后的手机号
-                        };
-                        infoDiv.appendChild(newRecordBtn);
+                        // 添加说明卡片
+                        const infoCard = document.createElement("div");
+                        infoCard.className = "info-card";
+                        infoCard.innerHTML = `
+                            <h6>📋 资料说明</h6>
+                            <ul>
+                                <li>系统找到多笔使用此手机号的登记资料</li>
+                                <li>请从下方下拉菜单中选择您要编辑的具体资料</li>
+                                <li>如需创建新的登记资料，可点击下方按钮</li>
+                            </ul>
+                        `;
+                        infoDiv.appendChild(infoCard);
                         
-                        // 创建选择器
+                        // 创建选择器（放在按钮上方）
                         const select = document.createElement("select");
                         select.className = "form-select mb-2";
                         select.id = "entrySelector"; // 添加ID以便调试
@@ -621,10 +667,17 @@
                             }
                         };
                         
-                        selector.appendChild(select);
+                        // 将选择器插入到按钮前面（对调顺序：选择器在上，按钮在下）
+                        infoDiv.appendChild(select);
                         
-                        // 确保选择器可见
-                        selector.classList.remove("hidden");
+                        // 添加"新增资料"按钮（放在选择器下方）
+                        const newRecordBtn = document.createElement("button");
+                        newRecordBtn.className = "btn btn-success new-record-btn";
+                        newRecordBtn.textContent = "➕ 用相同手机号登记新资料";
+                        newRecordBtn.onclick = () => {
+                            startNewEntry(realKeyword); // 使用清洗后的手机号
+                        };
+                        infoDiv.appendChild(newRecordBtn);
                     }
                 })
                 .catch(err => {
@@ -972,11 +1025,11 @@
             return `
               <div class="form-check d-flex align-items-center justify-content-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
-                <label class="form-check-label ms-1" style="font-size: 11px;">是</label>
+                <label class="form-check-label ms-1" style="font-size: 14px; font-weight: 500;">是</label>
               </div>
               <div class="form-check d-flex align-items-center justify-content-center">
                 <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
-                <label class="form-check-label ms-1" style="font-size: 11px;">否</label>
+                <label class="form-check-label ms-1" style="font-size: 14px; font-weight: 500;">否</label>
               </div>`;
         }
 
