@@ -246,6 +246,40 @@
             cursor: not-allowed !important;
             opacity: 0.6 !important;
         }
+        
+        /* 新增一位按钮样式 */
+        .add-another-btn {
+            display: inline-block;
+            width: auto;
+            min-width: 80px;
+            margin-top: 15px;
+            margin-left: auto;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+            text-align: center;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .add-another-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        
+        /* 容器样式，使按钮靠右 */
+        .add-button-container {
+            text-align: right;
+        }
+        
+        /* 祈福者名单标题字体加大 */
+        .prayers-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -296,8 +330,7 @@
         <!-- 祈福者列表 -->
         <div class="card">
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                <h6 class="m-0">🙏 祈福者名单</h6>
-                <button onclick="addPrayer()" class="btn btn-sm btn-outline-primary" onmousedown="setTimeout(calculateTotalPrice, 100)">+ 添加</button>
+                <h6 class="m-0 prayers-title">🙏 祈福者名单</h6>
             </div>
             <div id="prayersContainer">
                 <!-- JS 动态生成 -->
@@ -621,6 +654,22 @@
             container.innerHTML = "";
             container.appendChild(createPrayerBlock({}, 1));
             
+            // 为第一个卡片添加"新增一位"按钮
+            const firstCard = container.firstElementChild;
+            if (firstCard) {
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "add-button-container";
+                
+                const addButton = document.createElement("button");
+                addButton.className = "add-another-btn";
+                addButton.type = "button";
+                addButton.textContent = "➕ 新增一位";
+                addButton.onclick = () => addPrayer();
+                
+                buttonContainer.appendChild(addButton);
+                firstCard.appendChild(buttonContainer);
+            }
+            
             // 隐藏选择器和提示信息
             document.getElementById("resultSelector").classList.add("hidden");
             document.getElementById("searchResultInfo").classList.add("hidden");
@@ -630,14 +679,70 @@
         };
 
         // 3. 添加祈福者
-        window.addPrayer = function () {
+        window.addPrayer = function (targetIndex) {
             const container = document.getElementById("prayersContainer");
             if (container.children.length >= 15) return alert("最多添加 15 位！");
-            container.appendChild(createPrayerBlock({}, container.children.length + 1));
+            
+            // 创建新卡片并插入到指定位置
+            const newBlock = createPrayerBlock({}, container.children.length + 1);
+            if (targetIndex !== undefined && targetIndex < container.children.length) {
+                container.insertBefore(newBlock, container.children[targetIndex]);
+            } else {
+                container.appendChild(newBlock);
+            }
+            
+            // 重新更新所有卡片的序号
+            updateCardIndexes();
             
             // 计算并显示价格
             setTimeout(calculateTotalPrice, 100);
         };
+
+        // 更新卡片序号
+        function updateCardIndexes() {
+            const cards = document.querySelectorAll(".prayer-card");
+            cards.forEach((card, index) => {
+                const title = card.querySelector("strong");
+                if (title) {
+                    title.textContent = `🧍‍♂️ 第 ${index + 1} 位祈福者`;
+                }
+            });
+            
+            // 更新最后一个卡片的按钮
+            updateAddButtonVisibility();
+        }
+
+        // 更新添加按钮的可见性
+        function updateAddButtonVisibility() {
+            // 隐藏所有按钮
+            document.querySelectorAll(".add-another-btn").forEach(btn => {
+                btn.style.display = "none";
+            });
+            
+            // 在最后一个卡片显示按钮
+            const cards = document.querySelectorAll(".prayer-card");
+            if (cards.length > 0) {
+                const lastCard = cards[cards.length - 1];
+                const existingButton = lastCard.querySelector(".add-another-btn");
+                
+                if (existingButton) {
+                    existingButton.style.display = "inline-block";
+                } else {
+                    // 如果最后一个卡片没有按钮，则创建一个
+                    const buttonContainer = document.createElement("div");
+                    buttonContainer.className = "add-button-container";
+                    
+                    const addButton = document.createElement("button");
+                    addButton.className = "add-another-btn";
+                    addButton.type = "button";
+                    addButton.textContent = "➕ 新增一位";
+                    addButton.onclick = () => addPrayer();
+                    
+                    buttonContainer.appendChild(addButton);
+                    lastCard.appendChild(buttonContainer);
+                }
+            }
+        }
 
         // 4. 渲染表单数据
         function renderForm() {
@@ -672,6 +777,9 @@
             
             // 计算并显示价格
             setTimeout(calculateTotalPrice, 100);
+            
+            // 确保最后一个卡片有"新增一位"按钮
+            setTimeout(updateAddButtonVisibility, 100);
         }
 
         // 5. 检查手机号是否已存在（用于避免冲突）
@@ -895,6 +1003,9 @@
                  container.appendChild(createPrayerBlock({}, 1));
                  setTimeout(calculateTotalPrice, 100);
              }
+             
+             // 确保最后一个卡片有"新增一位"按钮
+             setTimeout(updateAddButtonVisibility, 100);
         };
 
         // 生成生肖下拉选择
