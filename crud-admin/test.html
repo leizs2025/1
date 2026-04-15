@@ -218,6 +218,27 @@
             padding: 10px;
             color: #666;
         }
+        
+        /* 必填字段标记 */
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        
+        /* 新增资料按钮样式 */
+        .new-record-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        
+        .new-record-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
     </style>
 </head>
 <body>
@@ -248,7 +269,7 @@
             
             <!-- 新增：年份选择器 -->
             <div class="year-selector mb-3">
-                <label class="form-label">📅 报名太岁年份</label>
+                <label class="form-label required-field">📅 报名太岁年份</label>
                 <select id="registrationYear" class="form-select" onchange="updatePhoneWithYearPrefix()">
                     <option value="">-- 请选择年份 --</option> <!-- 初始为空 -->
                     <!-- JS 动态生成年份选项 -->
@@ -256,11 +277,11 @@
             </div>
             
             <div class="mb-3">
-                <label class="form-label">主家姓名</label>
+                <label class="form-label required-field">主家姓名</label>
                 <input type="text" id="mainName" class="form-control" placeholder="姓名">
             </div>
             <div class="mb-3">
-                <label class="form-label">手机号码</label>
+                <label class="form-label required-field">手机号码</label>
                 <input type="tel" id="phoneNumber" class="form-control" placeholder="用于查询" inputmode="tel" readonly>
             </div>
         </div>
@@ -302,7 +323,7 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://你的-worker-domain.workers.dev";
+        const API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
 
         let fullData = [];
         let selectedEntry = null;
@@ -493,6 +514,15 @@
                         infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
                         infoDiv.classList.remove("hidden");
                         
+                        // 添加"新增资料"按钮
+                        const newRecordBtn = document.createElement("button");
+                        newRecordBtn.className = "btn btn-success new-record-btn";
+                        newRecordBtn.textContent = "➕ 用相同手机号登记新资料";
+                        newRecordBtn.onclick = () => {
+                            startNewEntry(realKeyword); // 使用清洗后的手机号
+                        };
+                        infoDiv.appendChild(newRecordBtn);
+                        
                         selectedEntry = data[0];
                         setTimeout(() => {
                             renderForm();
@@ -502,6 +532,15 @@
                         // 多条记录，让用户选择
                         infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
                         infoDiv.classList.remove("hidden");
+                        
+                        // 添加"新增资料"按钮
+                        const newRecordBtn = document.createElement("button");
+                        newRecordBtn.className = "btn btn-success new-record-btn";
+                        newRecordBtn.textContent = "➕ 用相同手机号登记新资料";
+                        newRecordBtn.onclick = () => {
+                            startNewEntry(realKeyword); // 使用清洗后的手机号
+                        };
+                        infoDiv.appendChild(newRecordBtn);
                         
                         // 创建选择器
                         const select = document.createElement("select");
@@ -531,14 +570,14 @@
                         selector.appendChild(select);
                         
                         // 添加"新建记录"选项
-                        const newRecordBtn = document.createElement("button");
-                        newRecordBtn.className = "btn btn-outline-secondary w-100 mt-2";
-                        newRecordBtn.textContent = "➕ 创建新记录";
-                        newRecordBtn.onclick = () => {
+                        const newRecordBtn2 = document.createElement("button");
+                        newRecordBtn2.className = "btn btn-outline-secondary w-100 mt-2";
+                        newRecordBtn2.textContent = "➕ 创建新记录";
+                        newRecordBtn2.onclick = () => {
                             selector.classList.add("hidden");
                             startNewEntry(realKeyword); // 使用清洗后的手机号
                         };
-                        selector.appendChild(newRecordBtn);
+                        selector.appendChild(newRecordBtn2);
                         
                         // 确保选择器可见
                         selector.classList.remove("hidden");
@@ -628,25 +667,98 @@
             setTimeout(calculateTotalPrice, 100);
         }
 
-        // 5. 保存资料（用户版 - 保留前缀用于年份判断）
-        window.saveChanges = function () {
+        // 5. 检查手机号是否已存在（用于避免冲突）
+        async function checkPhoneExists(phone, year) {
+            try {
+                // 查询是否有相同手机号的记录
+                const response = await fetch(`${API_URL}?search=${encodeURIComponent(phone)}`);
+                const data = await response.json();
+                
+                // 检查是否有一样的年份前缀
+                const yearDigit = String(year % 10);
+                
+                // 检查数据库中是否存在相同年份前缀的记录
+                return data.some(record => {
+                    // 检查记录的手机号是否以相同的年份数字开头
+                    return record.phoneNumber.startsWith(yearDigit);
+                });
+            } catch (error) {
+                console.error("检查手机号冲突时出错:", error);
+                // 发生错误时假设不存在冲突，避免阻塞正常流程
+                return false;
+            }
+        }
+
+        // 6. 获取下一个可用的手机号（带前缀和后缀）
+        async function getNextAvailablePhone(basePhone, year) {
+            // 首先添加年份前缀
+            const phoneWithPrefix = addPhonePrefix(basePhone, year);
+            
+            // 检查基本前缀号码是否存在冲突
+            if (!(await checkPhoneExists(basePhone, year))) {
+                // 如果基本号码没有冲突（去掉前缀的部分），直接返回带前缀的号码
+                return phoneWithPrefix;
+            }
+            
+            // 如果存在冲突，开始添加后缀
+            let suffix = 1;
+            while (true) {
+                const phoneWithSuffix = `${phoneWithPrefix}+${suffix}`;
+                
+                // 检查这个带后缀的号码是否在当前年份中存在冲突
+                const response = await fetch(`${API_URL}?search=${encodeURIComponent(extractRealPhone(phoneWithSuffix))}`);
+                const data = await response.json();
+                
+                // 检查是否有一样的年份前缀
+                const yearDigit = String(year % 10);
+                
+                // 检查数据库中是否存在相同的完整号码（包括后缀）
+                const exists = data.some(record => {
+                    return record.phoneNumber === phoneWithSuffix;
+                });
+                
+                if (!exists) {
+                    // 如果不存在冲突，返回这个带前缀和后缀的号码
+                    return phoneWithSuffix;
+                }
+                
+                suffix++;
+            }
+        }
+
+        // 7. 保存资料（用户版 - 保留前缀用于年份判断）
+        window.saveChanges = async function () {
             // 检查年份是否已选择
             const yearSelect = document.getElementById("registrationYear");
             if (!yearSelect.value) {
                 alert("⚠️ 请先选择报名太岁年份！");
+                yearSelect.focus();
                 return;
             }
             
-            // 直接使用带前缀的手机号
-            const phoneWithPrefix = document.getElementById("phoneNumber").value.trim();
+            const selectedYear = parseInt(yearSelect.value);
+            
+            // 检查主家姓名
             const name = document.getElementById("mainName").value.trim();
+            if (!name) {
+                alert("⚠️ 请填写主家姓名！");
+                document.getElementById("mainName").focus();
+                return;
+            }
             
-            if (!phoneWithPrefix || !name) return alert("⚠️ 电话和姓名是必填项！");
+            // 检查手机号码
+            const phoneWithoutPrefix = document.getElementById("phoneNumber").value.trim();
+            if (!phoneWithoutPrefix) {
+                alert("⚠️ 手机号码不能为空！");
+                document.getElementById("phoneNumber").focus();
+                return;
+            }
             
-            // 验证手机号格式（包括前缀）
-            const realPhone = extractRealPhone(phoneWithPrefix);
+            // 验证手机号格式（不带前缀）
+            const realPhone = extractRealPhone(phoneWithoutPrefix);
             if (!isValidMalaysianPhone(realPhone)) {
                 alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+                document.getElementById("phoneNumber").focus();
                 return;
             }
 
@@ -671,44 +783,47 @@
             btn.innerHTML = "保存中...";
             btn.disabled = true;
 
-            // 构建要提交的数据 - 使用带前缀的手机号（用于年份判断）
-            const submitData = {
-                phoneNumber: phoneWithPrefix, // 使用带前缀的手机号提交（用于年份判断）
-                mainName: name,
-                data: updatedData,
-                receiptNumber: "", // 强制为空
-                receiptDate: "",   // 强制为空
-                // 用户版：强制清空备注信息，无论原数据是什么
-                wishReturn: "",    // 强制清空
-                offering: "",      // 强制清空
-                wishPaper: ""      // 强制清空
-            };
+            try {
+                // 获取最终要使用的手机号（检查冲突并添加前缀和后缀）
+                const finalPhone = await getNextAvailablePhone(realPhone, selectedYear);
+                
+                // 构建要提交的数据 - 使用带前缀的手机号（用于年份判断）
+                const submitData = {
+                    phoneNumber: finalPhone, // 使用带前缀和可能带后缀的手机号
+                    mainName: name,
+                    data: updatedData,
+                    receiptNumber: "", // 强制为空
+                    receiptDate: "",   // 强制为空
+                    // 用户版：强制清空备注信息，无论原数据是什么
+                    wishReturn: "",    // 强制清空
+                    offering: "",      // 强制清空
+                    wishPaper: ""      // 强制清空
+                };
 
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(submitData)
-            })
-            .then(res => res.json())
-            .then(result => {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(submitData)
+                });
+                
+                const result = await response.json();
+                
                 if (result.success) {
-                    alert("✅ 保存成功！");
+                    alert(`✅ 保存成功！\n使用手机号: ${finalPhone}`);
                     cancelEdit(); // 保存后返回首页
                 } else {
                     alert("❌ 保存失败：" + (result.message || "未知错误"));
                 }
-            })
-            .catch(err => {
-                console.error("保存出错:", err);
-                alert("网络错误：" + err.message);
-            })
-            .finally(() => {
+            } catch (error) {
+                console.error("保存出错:", error);
+                alert("网络错误：" + error.message);
+            } finally {
                 btn.innerHTML = "💾 保存资料";
                 btn.disabled = false;
-            });
+            }
         };
 
-        // 6. 取消编辑（返回首页）
+        // 8. 取消编辑（返回首页）
         window.cancelEdit = function() {
             document.getElementById("adminForm").classList.add("hidden");
             document.getElementById("searchResultInfo").classList.add("hidden");
@@ -829,7 +944,6 @@
 
             return div;
         }
-//15/4/2026  7.21
     </script>
 </body>
 </html>
