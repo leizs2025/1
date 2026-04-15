@@ -280,6 +280,21 @@
             font-size: 1.2rem;
             font-weight: bold;
         }
+        
+        /* 继续按钮样式 */
+        .continue-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        
+        .continue-btn:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
     </style>
 </head>
 <body>
@@ -363,7 +378,7 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+        const API_URL = "https://你的-worker-domain.workers.dev";
 
         let fullData = [];
         let selectedEntry = null;
@@ -540,13 +555,12 @@
                     infoDiv.classList.add("hidden");
 
                     if (data.length === 0) {
-                        // 查无资料，直接开始新登记
-                        infoDiv.innerHTML = `<div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的登记表单</div>`;
+                        // 查无资料，显示提示信息并提供继续按钮
+                        infoDiv.innerHTML = `
+                            <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的登记表单</div>
+                            <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 确认继续新增</button>
+                        `;
                         infoDiv.classList.remove("hidden");
-                        
-                        setTimeout(() => {
-                            startNewEntry(realKeyword); // 传入清洗后的手机号
-                        }, 1000); // 延迟1秒再开始新登记，让用户看到提示
                     }
                     // 有资料的情况
                     else if (data.length === 1) {
@@ -608,16 +622,6 @@
                         };
                         
                         selector.appendChild(select);
-                        
-                        // 添加"新建记录"选项
-                        const newRecordBtn2 = document.createElement("button");
-                        newRecordBtn2.className = "btn btn-outline-secondary w-100 mt-2";
-                        newRecordBtn2.textContent = "➕ 创建新记录";
-                        newRecordBtn2.onclick = () => {
-                            selector.classList.add("hidden");
-                            startNewEntry(realKeyword); // 使用清洗后的手机号
-                        };
-                        selector.appendChild(newRecordBtn2);
                         
                         // 确保选择器可见
                         selector.classList.remove("hidden");
