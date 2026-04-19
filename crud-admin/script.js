@@ -474,51 +474,20 @@ window.printEntry = function () {
 };
 
 window.printTempReceipt = function () {
-  // --- 修改点 1：强制先生成/确保存在收据号 ---
-  const receiptInput = document.getElementById("receiptNumber");
-  let tempReceiptNumber = null;
+  // ... (前面生成单号的代码保持不变) ...
 
-  // 如果输入框为空，生成临时号
-  if (!receiptInput?.value.trim()) {
-    tempReceiptNumber = generateTempReceiptNumber();
-    receiptInput.value = tempReceiptNumber;
-    console.log("✅ 临时生成单号用于打印：" + tempReceiptNumber);
-  }
-
-  // --- 修改点 2：获取数据 ---
+  // 获取当前表单数据
   const currentData = getCurrentFormData();
 
-  // --- 修改点 3：放宽校验条件 ---
-  // 原来的逻辑是检查有没有祈福者列表 (items)。
-  // 现在改为：只要“主祈者姓名”填了，或者哪怕没填，只要是为了打印小票，就允许继续。
-  // 这里我们只检查最基础的信息，比如主祈者姓名。
-  
-  if (!currentData.mainName) {
-    alert("请先填写主祈者姓名，以便打印小票！");
-    // 如果是因为没填名字，记得把刚才生成的临时号清空，避免误导用户
-    if(tempReceiptNumber) {
-      receiptInput.value = ""; 
-    }
-    return;
-  }
+  // 🔴 加上这一行，看看抓取到的真实数据
+  console.log("🔍 抓取到的数据:", currentData); 
+  console.log("🔍 祈福者列表长度:", currentData.items ? currentData.items.length : "列表不存在");
 
-  // 如果通过了检查，说明可以打印
-  // 注意：这里不要把临时生成的号码存入数据库，只用于打印预览
-  // （假设你的 saveDraft 或打印逻辑在这里）
-  console.log("📄 正在打印小票...");
-  
-  // 这里放你的打印窗口打开逻辑...
-  // openPrintWindow(currentData); 
-
-  // --- 特别处理：如果这个号是临时生成的，打印完后把它清掉 ---
-  // 这样用户回到页面时，输入框还是空的，用户可以继续编辑或正式保存
-  if(tempReceiptNumber) {
-    // 延迟一点清空，确保打印任务已经读取了这个值
-    setTimeout(() => {
-      // 只有当用户没有在打印后手动修改输入框内容的情况下才清空
-      if(receiptInput.value === tempReceiptNumber) {
-        receiptInput.value = "";
-      }
-    }, 1000);
+  // 下面是原来的检查代码...
+  if (!currentData || !currentData.items || currentData.items.length === 0) {
+      alert("请先填写有效的单据内容！");
+      return;
   }
+  
+  // ...
 }
