@@ -7,20 +7,30 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f4; }
         .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
+        h1 { text-align: center; color: #333; margin-top: 0; }
+        
+        /* 统计卡片样式 */
         .summary-card { display: flex; justify-content: space-around; margin-bottom: 20px; background: #e9ecef; padding: 15px; border-radius: 5px; }
         .stat-item { text-align: center; }
         .stat-value { font-size: 24px; font-weight: bold; color: #007bff; }
         .stat-label { font-size: 14px; color: #666; }
         
+        /* 表格样式 */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f8f9fa; }
         .text-right { text-align: right; }
-        .cash { color: green; }
-        .transfer { color: blue; }
+        .cash { color: green; font-weight: bold; }
+        .transfer { color: blue; font-weight: bold; }
         
-        .btn-back { display: block; width: 100%; padding: 10px; margin-top: 20px; background: #333; color: #fff; text-align: center; text-decoration: none; border-radius: 5px; }
+        /* 按钮样式 */
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; text-align: center; text-decoration: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
+        .btn-back { background: #333; }
+        .btn-clear { background: #dc3545; } /* 红色清空按钮 */
+        .btn-clear:hover { background: #c82333; }
+
+        .empty-msg { text-align: center; color: #999; padding: 20px; }
     </style>
 </head>
 <body>
@@ -31,11 +41,11 @@
         <div class="summary-card">
             <div class="stat-item">
                 <div class="stat-value" id="totalCount">0</div>
-                <div class="stat-label">总单数</div>
+                <div class="stat-label">今日单数</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="totalAmount">RM 0.00</div>
-                <div class="stat-label">总营业额</div>
+                <div class="stat-label">今日总额</div>
             </div>
         </div>
 
@@ -53,34 +63,39 @@
             </tbody>
         </table>
 
-        <a href="receipt-print.html" class="btn-back">⬅ 返回打印页面</a>
+        <!-- 按钮组：返回 和 清空 -->
+        <div class="btn-group">
+            <a href="receipt-print.html" class="btn btn-back">⬅ 返回打印</a>
+            <button onclick="clearAllCache()" class="btn btn-clear">🗑️ 清空所有缓存</button>
+        </div>
     </div>
 
     <script>
         const STORAGE_KEY = 'daily_receipts_cache';
 
+        // 1. 加载并显示数据
         function loadSummary() {
             const receipts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-            const today = new Date().toDateString(); // 获取今天的日期字符串
+            const today = new Date().toDateString(); 
             
-            // 1. 筛选今天的数据
+            // 筛选今天的数据
             const todayReceipts = receipts.filter(r => new Date(r.date).toDateString() === today);
 
-            // 2. 计算总额
+            // 计算总额
             const totalAmount = todayReceipts.reduce((sum, r) => sum + r.amount, 0);
             const totalCount = todayReceipts.length;
 
-            // 3. 渲染统计卡片
+            // 更新界面
             document.getElementById("dateDisplay").innerText = new Date().toLocaleDateString("zh-CN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById("totalCount").innerText = totalCount;
             document.getElementById("totalAmount").innerText = "RM " + totalAmount.toFixed(2);
 
-            // 4. 渲染列表
+            // 渲染列表
             const tbody = document.getElementById("receiptList");
-            tbody.innerHTML = ""; // 清空
+            tbody.innerHTML = ""; 
 
             if (todayReceipts.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#999;'>今日暂无数据</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='4' class='empty-msg'>今日暂无数据</td></tr>";
                 return;
             }
 
@@ -98,6 +113,15 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // 2. 一键清空所有缓存（新增功能）
+        function clearAllCache() {
+            if(confirm("确定要清空所有缓存数据吗？\n\n这将删除所有历史打印记录，且无法恢复！")) {
+                localStorage.removeItem(STORAGE_KEY);
+                alert("✅ 缓存已清空！");
+                loadSummary(); // 刷新页面显示
+            }
         }
 
         // 页面加载时执行
