@@ -97,25 +97,44 @@ window.deleteEntry = function () {
 
 function generateTempReceiptNumber() {
   const now = new Date();
-  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); // 20250512
+  // 格式：YYYYMMDD
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); 
 
-  // 使用 Local Storage 记录流水号
   const key = "globalTempReceiptCounter";
-  let currentSerial = localStorage.getItem(key);
-  if (!currentSerial) {
-      currentSerial = 1;
-  } else {
-      currentSerial = parseInt(currentSerial) + 1;
+  
+  // --- 修复核心逻辑 ---
+  
+  // 1. 获取原始数据
+  let rawValue = localStorage.getItem(key);
+  let currentSerial = 0;
+
+  // 2. 安全地解析数字 (防止 NaN 错误)
+  if (rawValue) {
+      const parsed = parseInt(rawValue, 10);
+      // 只有当解析结果是有效数字时，才使用它，否则归零
+      if (!isNaN(parsed)) {
+          currentSerial = parsed;
+      }
   }
 
-  // 保存新的流水号
-  localStorage.setItem(key, currentSerial);
+  // 3. 自增 (先加后用)
+  currentSerial++;
 
-  // 返回完整的小票号
+  // 4. 同步写入 LocalStorage (确保下一次读取是最新的)
+  // 注意：这里只存纯数字，不要存带前缀的字符串，方便计算
+  try {
+      localStorage.setItem(key, currentSerial.toString());
+  } catch (e) {
+      console.error("存储失败，可能是浏览器隐私模式或空间已满", e);
+      // 降级策略：使用当前时间戳作为后备，防止报错
+      return `TSR${datePart}-${Date.now().toString().slice(-4)}`;
+  }
+
+  // 5. 格式化输出 (不足4位补0)
   const serialPart = currentSerial.toString().padStart(4, "0");
+  
   return `TSR${datePart}-${serialPart}`;
 }
-
 function resetTempReceiptCounter() {
   const confirmReset = confirm("⚠️ 确定要清除小票计数吗？这将重置所有临时收据号！");
   if (confirmReset) {
@@ -456,23 +475,39 @@ window.printEntry = function () {
 
 window.printTempReceipt = function () {
   const receiptInput = document.getElementById("receiptNumber");
+  
+  // 获取当前表单数据
+  const currentData = getCurrentFormData();
+
+  // 校验数据有效性（例如检查是否有商品，金额是否大于0）
+  // 如果数据本身不合法，直接return，不要生成单号
+  if (!currentData || !currentData.items || currentData.items.length === 0) {
+      alert("请先填写有效的单据内容！");
+      return;
+  }
 
   // 如果没有收据编号，先生成临时编号
+  // 注意：这里依然无法避免“点了打印但取消”导致的断号，这是前端打印的通病
   if (!receiptInput.value.trim()) {
       const tempReceiptNumber = generateTempReceiptNumber();
       receiptInput.value = tempReceiptNumber;
       console.log("✅ 临时收据号生成：" + tempReceiptNumber);
   }
 
-  // 获取当前表单数据
-  const currentData = getCurrentFormData();
-
   // 打开小票打印模板
   const win = window.open("receipt-print.html", "_blank");
+  
+  // 检查弹窗是否被拦截
+  if (!win) {
+      alert("打印窗口被浏览器拦截，请允许弹窗！");
+      // 可选：这里可以回滚单号，或者提示用户单号已生成但未打印
+      return;
+  }
 
   const interval = setInterval(() => {
       if (win && win.document.readyState === "complete") {
           clearInterval(interval);
+          // 发送数据
           win.postMessage(JSON.stringify(currentData), "*");
       }
   }, 100);
