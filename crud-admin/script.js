@@ -476,35 +476,30 @@ window.printEntry = function () {
 window.printTempReceipt = function () {
   const receiptInput = document.getElementById("receiptNumber");
   
-  // --- 1. 强制生成/获取单号 ---
-  // 只要输入框是空的，就生成一个，并且填进去
-  if (!receiptInput.value.trim()) {
+  // --- 第一步：处理 Receipt No ---
+  // 如果输入框是空的，就生成一个；如果有值，就直接使用。
+  if (!receiptInput || !receiptInput.value.trim()) {
       const tempReceiptNumber = generateTempReceiptNumber();
       receiptInput.value = tempReceiptNumber;
-      console.log("✅ 已生成临时单号：" + tempReceiptNumber);
+      console.log("✅ 自动生成单号：" + tempReceiptNumber);
+  } else {
+      console.log("✅ 使用已有单号：" + receiptInput.value);
   }
 
-  // --- 2. 获取数据 ---
+  // --- 第二步：获取所有数据 ---
   const currentData = getCurrentFormData();
 
-  // --- 3. 修改校验逻辑 (关键点) ---
-  // 不要检查 items (祈福者列表) 是否为空，因为打印小票可能只需要表头信息
+  // --- 第三步：智能检查（只检查核心数据） ---
+  // 我们不检查 items (祈福者列表)，因为用户可能只打印表头。
   // 我们只检查最核心的：主祈者姓名 (mainName)
-  
-  if (!currentData.mainName) {
-      alert("请至少填写【主祈者姓名】，否则无法打印小票！");
-      
-      // 可选：如果因为没填名字报错，是否要清空刚才生成的单号？
-      // 如果不清空，单号会被占用但没打印出来（断号）。
-      // 如果想避免断号，可以在这里把 receiptInput.value 清空。
-      // 但为了用户体验，建议保留单号，让用户填完名字直接再点打印。
-      
-      return; // 停止执行
+  if (!currentData || !currentData.mainName) {
+      alert("请先填写【主祈者姓名】，否则小票无法打印！");
+      return; // 只有没填名字时，才阻止打印
   }
 
-  // --- 4. 执行打印 ---
-  // 既然有了单号，也有了名字，就可以打印了
-  console.log("🖨️ 正在准备打印...");
+  // --- 第四步：执行打印 ---
+  // 既然有了单号（生成或已有），也有了名字，就可以打印了
+  console.log("🖨️ 正在打开打印窗口...");
   
   const win = window.open("receipt-print.html", "_blank");
   
@@ -513,6 +508,7 @@ window.printTempReceipt = function () {
       return;
   }
 
+  // 等待打印页面加载完成，然后发送数据
   const interval = setInterval(() => {
       if (win && win.document.readyState === "complete") {
           clearInterval(interval);
@@ -520,4 +516,3 @@ window.printTempReceipt = function () {
       }
   }, 100);
 };
-}
