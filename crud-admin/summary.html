@@ -6,7 +6,7 @@
     <title>每日销售汇总</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f4; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; margin-top: 0; }
         
         /* 统计卡片样式 */
@@ -15,19 +15,20 @@
         .stat-value { font-size: 24px; font-weight: bold; color: #007bff; }
         .stat-label { font-size: 14px; color: #666; }
         
-        /* 表格样式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; }
+        /* 表格样式 - 优化了紧凑度 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #333; }
         .text-right { text-align: right; }
-        .cash { color: green; font-weight: bold; }
-        .transfer { color: blue; font-weight: bold; }
+        .text-center { text-align: center; }
+        .cash { color: #28a745; font-weight: bold; }
+        .transfer { color: #007bff; font-weight: bold; }
         
         /* 按钮样式 */
         .btn-group { margin-top: 20px; display: flex; gap: 10px; }
         .btn { flex: 1; padding: 12px; text-align: center; text-decoration: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
         .btn-back { background: #333; }
-        .btn-clear { background: #dc3545; } /* 红色清空按钮 */
+        .btn-clear { background: #dc3545; } 
         .btn-clear:hover { background: #c82333; }
 
         .empty-msg { text-align: center; color: #999; padding: 20px; }
@@ -54,6 +55,7 @@
                 <tr>
                     <th>单号</th>
                     <th>主祈者</th>
+                    <th class="text-center">电话</th> <!-- 新增列 -->
                     <th>方式</th>
                     <th class="text-right">金额</th>
                 </tr>
@@ -95,7 +97,7 @@
             tbody.innerHTML = ""; 
 
             if (todayReceipts.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='4' class='empty-msg'>今日暂无数据</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='5' class='empty-msg'>今日暂无数据</td></tr>";
                 return;
             }
 
@@ -108,6 +110,7 @@
                 tr.innerHTML = `
                     <td>${r.receiptNumber}</td>
                     <td>${r.mainName}</td>
+                    <td class="text-center">${r.phoneNumber}</td> <!-- 显示电话 -->
                     <td class="${paymentClass}">${r.paymentType}</td>
                     <td class="text-right">RM ${r.amount.toFixed(2)}</td>
                 `;
@@ -115,7 +118,7 @@
             });
         }
 
-        // 2. 一键清空所有缓存（新增功能）
+        // 2. 一键清空所有缓存
         function clearAllCache() {
             if(confirm("确定要清空所有缓存数据吗？\n\n这将删除所有历史打印记录，且无法恢复！")) {
                 localStorage.removeItem(STORAGE_KEY);
