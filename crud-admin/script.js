@@ -474,20 +474,50 @@ window.printEntry = function () {
 };
 
 window.printTempReceipt = function () {
-  // ... (前面生成单号的代码保持不变) ...
+  const receiptInput = document.getElementById("receiptNumber");
+  
+  // --- 1. 强制生成/获取单号 ---
+  // 只要输入框是空的，就生成一个，并且填进去
+  if (!receiptInput.value.trim()) {
+      const tempReceiptNumber = generateTempReceiptNumber();
+      receiptInput.value = tempReceiptNumber;
+      console.log("✅ 已生成临时单号：" + tempReceiptNumber);
+  }
 
-  // 获取当前表单数据
+  // --- 2. 获取数据 ---
   const currentData = getCurrentFormData();
 
-  // 🔴 加上这一行，看看抓取到的真实数据
-  console.log("🔍 抓取到的数据:", currentData); 
-  console.log("🔍 祈福者列表长度:", currentData.items ? currentData.items.length : "列表不存在");
+  // --- 3. 修改校验逻辑 (关键点) ---
+  // 不要检查 items (祈福者列表) 是否为空，因为打印小票可能只需要表头信息
+  // 我们只检查最核心的：主祈者姓名 (mainName)
+  
+  if (!currentData.mainName) {
+      alert("请至少填写【主祈者姓名】，否则无法打印小票！");
+      
+      // 可选：如果因为没填名字报错，是否要清空刚才生成的单号？
+      // 如果不清空，单号会被占用但没打印出来（断号）。
+      // 如果想避免断号，可以在这里把 receiptInput.value 清空。
+      // 但为了用户体验，建议保留单号，让用户填完名字直接再点打印。
+      
+      return; // 停止执行
+  }
 
-  // 下面是原来的检查代码...
-  if (!currentData || !currentData.items || currentData.items.length === 0) {
-      alert("请先填写有效的单据内容！");
+  // --- 4. 执行打印 ---
+  // 既然有了单号，也有了名字，就可以打印了
+  console.log("🖨️ 正在准备打印...");
+  
+  const win = window.open("receipt-print.html", "_blank");
+  
+  if (!win) {
+      alert("打印窗口被浏览器拦截，请允许弹窗！");
       return;
   }
-  
-  // ...
+
+  const interval = setInterval(() => {
+      if (win && win.document.readyState === "complete") {
+          clearInterval(interval);
+          win.postMessage(JSON.stringify(currentData), "*");
+      }
+  }, 100);
+};
 }
