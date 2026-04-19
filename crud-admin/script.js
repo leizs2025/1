@@ -397,15 +397,45 @@ function updateTotalBox() {
   `;
 }
 
+window.printTempReceipt = function () {
+  const receiptInput = document.getElementById("receiptNumber");
+  
+  // 获取当前表单数据
+  const currentData = getCurrentFormData();
 
+  // 校验数据有效性（例如检查是否有商品，金额是否大于0）
+  // 如果数据本身不合法，直接return，不要生成单号
+  if (!currentData || !currentData.items || currentData.items.length === 0) {
+      alert("请先填写有效的单据内容！");
+      return;
+  }
 
+  // 如果没有收据编号，先生成临时编号
+  // 注意：这里依然无法避免“点了打印但取消”导致的断号，这是前端打印的通病
+  if (!receiptInput.value.trim()) {
+      const tempReceiptNumber = generateTempReceiptNumber();
+      receiptInput.value = tempReceiptNumber;
+      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
+  }
 
+  // 打开小票打印模板
+  const win = window.open("receipt-print.html", "_blank");
+  
+  // 检查弹窗是否被拦截
+  if (!win) {
+      alert("打印窗口被浏览器拦截，请允许弹窗！");
+      // 可选：这里可以回滚单号，或者提示用户单号已生成但未打印
+      return;
+  }
 
-
-
-
-
-
+  const interval = setInterval(() => {
+      if (win && win.document.readyState === "complete") {
+          clearInterval(interval);
+          // 发送数据
+          win.postMessage(JSON.stringify(currentData), "*");
+      }
+  }, 100);
+};
 
 
 function getCurrentFormData() {
