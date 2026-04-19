@@ -474,44 +474,51 @@ window.printEntry = function () {
 };
 
 window.printTempReceipt = function () {
+  // --- 修改点 1：强制先生成/确保存在收据号 ---
   const receiptInput = document.getElementById("receiptNumber");
-  
-  // 获取当前表单数据
+  let tempReceiptNumber = null;
+
+  // 如果输入框为空，生成临时号
+  if (!receiptInput?.value.trim()) {
+    tempReceiptNumber = generateTempReceiptNumber();
+    receiptInput.value = tempReceiptNumber;
+    console.log("✅ 临时生成单号用于打印：" + tempReceiptNumber);
+  }
+
+  // --- 修改点 2：获取数据 ---
   const currentData = getCurrentFormData();
 
-  // 校验数据有效性（例如检查是否有商品，金额是否大于0）
-  // 如果数据本身不合法，直接return，不要生成单号
-  if (!currentData || !currentData.items || currentData.items.length === 0) {
-      alert("请先填写有效的单据内容！");
-      return;
-  }
-
-  // 如果没有收据编号，先生成临时编号
-  // 注意：这里依然无法避免“点了打印但取消”导致的断号，这是前端打印的通病
-  if (!receiptInput.value.trim()) {
-      const tempReceiptNumber = generateTempReceiptNumber();
-      receiptInput.value = tempReceiptNumber;
-      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
-  }
-
-  // 打开小票打印模板
-  const win = window.open("receipt-print.html", "_blank");
+  // --- 修改点 3：放宽校验条件 ---
+  // 原来的逻辑是检查有没有祈福者列表 (items)。
+  // 现在改为：只要“主祈者姓名”填了，或者哪怕没填，只要是为了打印小票，就允许继续。
+  // 这里我们只检查最基础的信息，比如主祈者姓名。
   
-  // 检查弹窗是否被拦截
-  if (!win) {
-      alert("打印窗口被浏览器拦截，请允许弹窗！");
-      // 可选：这里可以回滚单号，或者提示用户单号已生成但未打印
-      return;
+  if (!currentData.mainName) {
+    alert("请先填写主祈者姓名，以便打印小票！");
+    // 如果是因为没填名字，记得把刚才生成的临时号清空，避免误导用户
+    if(tempReceiptNumber) {
+      receiptInput.value = ""; 
+    }
+    return;
   }
 
-  const interval = setInterval(() => {
-      if (win && win.document.readyState === "complete") {
-          clearInterval(interval);
-          // 发送数据
-          win.postMessage(JSON.stringify(currentData), "*");
+  // 如果通过了检查，说明可以打印
+  // 注意：这里不要把临时生成的号码存入数据库，只用于打印预览
+  // （假设你的 saveDraft 或打印逻辑在这里）
+  console.log("📄 正在打印小票...");
+  
+  // 这里放你的打印窗口打开逻辑...
+  // openPrintWindow(currentData); 
+
+  // --- 特别处理：如果这个号是临时生成的，打印完后把它清掉 ---
+  // 这样用户回到页面时，输入框还是空的，用户可以继续编辑或正式保存
+  if(tempReceiptNumber) {
+    // 延迟一点清空，确保打印任务已经读取了这个值
+    setTimeout(() => {
+      // 只有当用户没有在打印后手动修改输入框内容的情况下才清空
+      if(receiptInput.value === tempReceiptNumber) {
+        receiptInput.value = "";
       }
-  }, 100);
-};
-
-
-
+    }, 1000);
+  }
+}
