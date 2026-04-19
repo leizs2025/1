@@ -61,48 +61,6 @@ window.searchPhone = function () {
       alert("查询失败：" + err.message);
     });
 };
-
-function generateTempReceiptNumber() {
-  const now = new Date();
-  // 格式：YYYYMMDD
-  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); 
-
-  const key = "globalTempReceiptCounter";
-  
-  // --- 修复核心逻辑 ---
-  
-  // 1. 获取原始数据
-  let rawValue = localStorage.getItem(key);
-  let currentSerial = 0;
-
-  // 2. 安全地解析数字 (防止 NaN 错误)
-  if (rawValue) {
-      const parsed = parseInt(rawValue, 10);
-      // 只有当解析结果是有效数字时，才使用它，否则归零
-      if (!isNaN(parsed)) {
-          currentSerial = parsed;
-      }
-  }
-
-  // 3. 自增 (先加后用)
-  currentSerial++;
-
-  // 4. 同步写入 LocalStorage (确保下一次读取是最新的)
-  // 注意：这里只存纯数字，不要存带前缀的字符串，方便计算
-  try {
-      localStorage.setItem(key, currentSerial.toString());
-  } catch (e) {
-      console.error("存储失败，可能是浏览器隐私模式或空间已满", e);
-      // 降级策略：使用当前时间戳作为后备，防止报错
-      return `TSR${datePart}-${Date.now().toString().slice(-4)}`;
-  }
-
-  // 5. 格式化输出 (不足4位补0)
-  const serialPart = currentSerial.toString().padStart(4, "0");
-  
-  return `TSR${datePart}-${serialPart}`;
-}
-
 window.deleteEntry = function () {
   if (!selectedEntry) {
     alert("⚠️ 请先查询一笔资料再删除！");
@@ -136,6 +94,36 @@ window.deleteEntry = function () {
       alert("❌ 删除出错：" + err.message);
     });
 };
+
+function generateTempReceiptNumber() {
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); // 20250512
+
+  // 使用 Local Storage 记录流水号
+  const key = "globalTempReceiptCounter";
+  let currentSerial = localStorage.getItem(key);
+  if (!currentSerial) {
+      currentSerial = 1;
+  } else {
+      currentSerial = parseInt(currentSerial) + 1;
+  }
+
+  // 保存新的流水号
+  localStorage.setItem(key, currentSerial);
+
+  // 返回完整的小票号
+  const serialPart = currentSerial.toString().padStart(4, "0");
+  return `TSR${datePart}-${serialPart}`;
+}
+
+function resetTempReceiptCounter() {
+  const confirmReset = confirm("⚠️ 确定要清除小票计数吗？这将重置所有临时收据号！");
+  if (confirmReset) {
+      localStorage.removeItem("globalTempReceiptCounter");
+      alert("✅ 小票计数已清除！");
+  }
+}
+
 
 window.startNewEntry = function () {
   selectedEntry = null;
@@ -204,55 +192,74 @@ window.saveChanges = function () {
   const mainName = document.getElementById("mainName").value.trim();
 
   if (!mainName || !phoneInput) {
-    alert("主祈者姓名和电话都不能为空！");
-    return;
+      alert("主祈者姓名和电话都不能为空！");
+      return;
   }
 
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
+      name: div.querySelector(".pName").value,
+      zodiac: div.querySelector(".pZodiac").value,
+      taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+      light: div.querySelector('input.pLight:checked')?.value || "",
+      longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+      wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+      arhat: div.querySelector('input.pArhat:checked')?.value || "",
+      paperGold1: +div.querySelector(".pg1").value || 0,
+      paperGold2: +div.querySelector(".pg2").value || 0,
+      paperGold3: +div.querySelector(".pg3").value || 0,
+      paperGold4: +div.querySelector(".pg4").value || 0,
+      paperGold5: +div.querySelector(".pg5").value || 0,
+      donation: +div.querySelector(".donate").value || 0
   }));
 
+  // 确定是更新还是新增
+  const isPhoneUpdated = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
+  const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
+  
+    // 确保收据号不为空
+    const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
+    }
+
+
   const body = {
-    method: "PUT",
-    phoneNumber: selectedEntry?.phoneNumber || phoneInput, // 用查出来的作索引
-    mainName,
-    data: updatedData,
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录"
+      method: "PUT",
+      oldPhoneNumber: oldPhoneNumber, // 传递旧的电话号码以便后端识别
+      phoneNumber: phoneInput,        // 传递新的电话号码
+      mainName,
+      data: updatedData,
+      receiptNumber: document.getElementById("receiptNumber").value.trim(),
+      receiptDate: document.getElementById("receiptDate").value.trim(),
+      wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
+      offering: document.querySelector('input[name="offering"]:checked')?.value || "",
+      wishPaper: document.getElementById("wishPaper").value.trim(),
+      admin: localStorage.getItem("admin") || "未登录"
   };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
   })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 更新成功！");
-        startNewEntry();
-      } else {
-        alert("❌ 更新失败：" + result.message);
-      }
-    });
+      .then(res => res.json())
+      .then(result => {
+          if (result.success) {
+              alert("✅ 更新成功！");
+              selectedEntry = null; // 清空已选择的记录
+              startNewEntry();      // 重置表单
+          } else {
+              alert("❌ 更新失败：" + result.message);
+          }
+      })
+      .catch(err => {
+          alert("❌ 更新出错：" + err.message);
+      });
 };
+
 
 
 
@@ -340,6 +347,13 @@ window.forceInsertNewEntry = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
+  const receiptInput = document.getElementById("receiptNumber");
+    if (!receiptInput.value.trim()) {
+        const tempReceiptNumber = generateTempReceiptNumber();
+        receiptInput.value = tempReceiptNumber;
+        console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
+    }
+    
   const body = {
     phoneNumber: newPhone,
     mainName: document.getElementById("mainName").value.trim(),
@@ -370,113 +384,62 @@ window.forceInsertNewEntry = function () {
 };
 
 function updateTotalBox() {
-  const prayers = document.getElementById("prayersContainer").children;
+    const prayers = document.getElementById("prayersContainer").children;
+    const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
+    
+    Array.from(prayers).forEach(div => {
+        sum.pg1 += +div.querySelector(".pg1").value || 0;
+        sum.pg2 += +div.querySelector(".pg2").value || 0;
+        sum.pg3 += +div.querySelector(".pg3").value || 0;
+        sum.pg4 += +div.querySelector(".pg4").value || 0;
+        sum.pg5 += +div.querySelector(".pg5").value || 0;
+        sum.donation += +div.querySelector(".donate").value || 0;
+    });
 
-  const sum = {
-    pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0
-  };
-
-  Array.from(prayers).forEach(div => {
-    sum.pg1 += +div.querySelector(".pg1").value || 0;
-    sum.pg2 += +div.querySelector(".pg2").value || 0;
-    sum.pg3 += +div.querySelector(".pg3").value || 0;
-    sum.pg4 += +div.querySelector(".pg4").value || 0;
-    sum.pg5 += +div.querySelector(".pg5").value || 0;
-    sum.donation += +div.querySelector(".donate").value || 0;
-  });
-
-  const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
-  const paperMoney = paperTotal * 3;
-  const total = paperMoney + sum.donation;
-
-  const totalBox = document.getElementById("totalBox");
-  totalBox.innerHTML = `
-    安奉功德金：RM ${sum.donation.toFixed(2)}<br/>
-    真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
-    总计：RM ${total.toFixed(2)}
-  `;
+    const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
+    const paperMoney = paperTotal * 3;
+    const total = paperMoney + sum.donation;
+    
+    const totalBox = document.getElementById("totalBox");
+    if(totalBox) { // 加个保护，防止元素不存在报错
+        totalBox.innerHTML = `
+         安奉功德金：RM ${sum.donation.toFixed(2)}<br/>
+         真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
+         总计：RM ${total.toFixed(2)}
+        `;
+    }
 }
-
-window.printTempReceipt = function () {
-  const receiptInput = document.getElementById("receiptNumber");
-  
-  // 获取当前表单数据
-  const currentData = getCurrentFormData();
-
-  // 校验数据有效性（例如检查是否有商品，金额是否大于0）
-  // 如果数据本身不合法，直接return，不要生成单号
-  if (!currentData || !currentData.items || currentData.items.length === 0) {
-      alert("请先填写有效的单据内容！");
-      return;
-  }
-
-  // 如果没有收据编号，先生成临时编号
-  // 注意：这里依然无法避免“点了打印但取消”导致的断号，这是前端打印的通病
-  if (!receiptInput.value.trim()) {
-      const tempReceiptNumber = generateTempReceiptNumber();
-      receiptInput.value = tempReceiptNumber;
-      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
-  }
-
-  // 打开小票打印模板
-  const win = window.open("receipt-print.html", "_blank");
-  
-  // 检查弹窗是否被拦截
-  if (!win) {
-      alert("打印窗口被浏览器拦截，请允许弹窗！");
-      // 可选：这里可以回滚单号，或者提示用户单号已生成但未打印
-      return;
-  }
-
-  const interval = setInterval(() => {
-      if (win && win.document.readyState === "complete") {
-          clearInterval(interval);
-          // 发送数据
-          win.postMessage(JSON.stringify(currentData), "*");
-      }
-  }, 100);
-};
-
 
 function getCurrentFormData() {
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
+      name: div.querySelector(".pName").value,
+      zodiac: div.querySelector(".pZodiac").value,
+      taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+      light: div.querySelector('input.pLight:checked')?.value || "",
+      longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+      wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+      arhat: div.querySelector('input.pArhat:checked')?.value || "",
+      paperGold1: +div.querySelector(".pg1").value || 0,
+      paperGold2: +div.querySelector(".pg2").value || 0,
+      paperGold3: +div.querySelector(".pg3").value || 0,
+      paperGold4: +div.querySelector(".pg4").value || 0,
+      paperGold5: +div.querySelector(".pg5").value || 0,
+      donation: +div.querySelector(".donate").value || 0
   }));
 
+  // ✅ 直接返回数据，不要有多余代码
   return {
-    serial: document.getElementById("serialNumber").value.trim(),
-    phoneNumber: document.getElementById("phoneNumber").value.trim(),
-    mainName: document.getElementById("mainName").value.trim(),
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    data: updatedData
+      serial: document.getElementById("serialNumber").value.trim(),
+      phoneNumber: document.getElementById("phoneNumber").value.trim(),
+      mainName: document.getElementById("mainName").value.trim(),
+      receiptNumber: document.getElementById("receiptNumber").value.trim(),
+      receiptDate: document.getElementById("receiptDate").value.trim(),
+      wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
+      offering: document.querySelector('input[name="offering"]:checked')?.value || "",
+      wishPaper: document.getElementById("wishPaper").value.trim(),
+      data: updatedData
   };
-    const totalBox = document.getElementById("totalBox");
-    const paperTotal = sum.pg1 + sum.pg2 + sum.pg3 + sum.pg4 + sum.pg5;
-    const paperMoney = paperTotal * 3;
-    const total = paperMoney + sum.donation;
-
-    totalBox.innerHTML = `
-      安奉功德金：RM ${sum.donation.toFixed(2)}<br/>
-      真佛十四宝金：3.00 x ${paperTotal} 份 = RM ${paperMoney.toFixed(2)}<br/>
-      总计：RM ${total.toFixed(2)}
-    `;
 }
 window.printEntry = function () {
   const currentData = getCurrentFormData(); // 获取当前表单中填写的数据
@@ -490,4 +453,30 @@ window.printEntry = function () {
     }
   }, 100);
 };
+
+window.printTempReceipt = function () {
+  const receiptInput = document.getElementById("receiptNumber");
+
+  // 如果没有收据编号，先生成临时编号
+  if (!receiptInput.value.trim()) {
+      const tempReceiptNumber = generateTempReceiptNumber();
+      receiptInput.value = tempReceiptNumber;
+      console.log("✅ 临时收据号生成：" + tempReceiptNumber);
+  }
+
+  // 获取当前表单数据
+  const currentData = getCurrentFormData();
+
+  // 打开小票打印模板
+  const win = window.open("receipt-print.html", "_blank");
+
+  const interval = setInterval(() => {
+      if (win && win.document.readyState === "complete") {
+          clearInterval(interval);
+          win.postMessage(JSON.stringify(currentData), "*");
+      }
+  }, 100);
+};
+
+
 
