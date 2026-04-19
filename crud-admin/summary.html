@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日销售汇总</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f4; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .summary-card { display: flex; justify-content: space-around; margin-bottom: 20px; background: #e9ecef; padding: 15px; border-radius: 5px; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { font-size: 14px; color: #666; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .text-right { text-align: right; }
+        .cash { color: green; }
+        .transfer { color: blue; }
+        
+        .btn-back { display: block; width: 100%; padding: 10px; margin-top: 20px; background: #333; color: #fff; text-align: center; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 今日销售汇总</h1>
+        <div id="dateDisplay" style="text-align: center; margin-bottom: 20px; color: #666;"></div>
+        
+        <div class="summary-card">
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">总单数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalAmount">RM 0.00</div>
+                <div class="stat-label">总营业额</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>单号</th>
+                    <th>主祈者</th>
+                    <th>方式</th>
+                    <th class="text-right">金额</th>
+                </tr>
+            </thead>
+            <tbody id="receiptList">
+                <!-- 数据将在这里生成 -->
+            </tbody>
+        </table>
+
+        <a href="receipt-print.html" class="btn-back">⬅ 返回打印页面</a>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'daily_receipts_cache';
+
+        function loadSummary() {
+            const receipts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            const today = new Date().toDateString(); // 获取今天的日期字符串
+            
+            // 1. 筛选今天的数据
+            const todayReceipts = receipts.filter(r => new Date(r.date).toDateString() === today);
+
+            // 2. 计算总额
+            const totalAmount = todayReceipts.reduce((sum, r) => sum + r.amount, 0);
+            const totalCount = todayReceipts.length;
+
+            // 3. 渲染统计卡片
+            document.getElementById("dateDisplay").innerText = new Date().toLocaleDateString("zh-CN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById("totalCount").innerText = totalCount;
+            document.getElementById("totalAmount").innerText = "RM " + totalAmount.toFixed(2);
+
+            // 4. 渲染列表
+            const tbody = document.getElementById("receiptList");
+            tbody.innerHTML = ""; // 清空
+
+            if (todayReceipts.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#999;'>今日暂无数据</td></tr>";
+                return;
+            }
+
+            // 按时间倒序排列
+            todayReceipts.sort((a, b) => b.timestamp - a.timestamp);
+
+            todayReceipts.forEach(r => {
+                const tr = document.createElement("tr");
+                const paymentClass = r.paymentType === '现金' ? 'cash' : 'transfer';
+                tr.innerHTML = `
+                    <td>${r.receiptNumber}</td>
+                    <td>${r.mainName}</td>
+                    <td class="${paymentClass}">${r.paymentType}</td>
+                    <td class="text-right">RM ${r.amount.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 页面加载时执行
+        loadSummary();
+    </script>
+</body>
+</html>
