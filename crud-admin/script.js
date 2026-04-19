@@ -61,6 +61,48 @@ window.searchPhone = function () {
       alert("查询失败：" + err.message);
     });
 };
+
+function generateTempReceiptNumber() {
+  const now = new Date();
+  // 格式：YYYYMMDD
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); 
+
+  const key = "globalTempReceiptCounter";
+  
+  // --- 修复核心逻辑 ---
+  
+  // 1. 获取原始数据
+  let rawValue = localStorage.getItem(key);
+  let currentSerial = 0;
+
+  // 2. 安全地解析数字 (防止 NaN 错误)
+  if (rawValue) {
+      const parsed = parseInt(rawValue, 10);
+      // 只有当解析结果是有效数字时，才使用它，否则归零
+      if (!isNaN(parsed)) {
+          currentSerial = parsed;
+      }
+  }
+
+  // 3. 自增 (先加后用)
+  currentSerial++;
+
+  // 4. 同步写入 LocalStorage (确保下一次读取是最新的)
+  // 注意：这里只存纯数字，不要存带前缀的字符串，方便计算
+  try {
+      localStorage.setItem(key, currentSerial.toString());
+  } catch (e) {
+      console.error("存储失败，可能是浏览器隐私模式或空间已满", e);
+      // 降级策略：使用当前时间戳作为后备，防止报错
+      return `TSR${datePart}-${Date.now().toString().slice(-4)}`;
+  }
+
+  // 5. 格式化输出 (不足4位补0)
+  const serialPart = currentSerial.toString().padStart(4, "0");
+  
+  return `TSR${datePart}-${serialPart}`;
+}
+
 window.deleteEntry = function () {
   if (!selectedEntry) {
     alert("⚠️ 请先查询一笔资料再删除！");
