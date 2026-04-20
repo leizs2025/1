@@ -335,14 +335,62 @@ function checkMin() {
 }
 
 
-window.forceInsertNewEntry = function () {
-  const newPhone = document.getElementById("phoneNumber").value.trim();
-  if (!newPhone) return alert("请填写电话号码！");
+window.forceInsertNewEntry = async function () {
+  const inputPhone = document.getElementById("phoneNumber").value.trim();
+  if (!inputPhone) return alert("请填写电话号码！");
 
-  const exists = fullData.some(entry => entry.phoneNumber === newPhone);
-  if (exists) {
-    alert("❌ 该电话号码已存在，不能重复新增！");
+  // --- 第一步：查重与自动重命名逻辑 (异步) ---
+  let finalPhone = inputPhone;
+  let counter = 1;
+  let needsRename = false;
+
+  // 1. 先检查原始号码是否存在
+  try {
+    const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
+    const checkData = await checkRes.json();
+    
+    // 如果后端返回的是数组，且长度大于0，说明已存在
+    if (Array.isArray(checkData) && checkData.length > 0) {
+      needsRename = true;
+    }
+  } catch (e) {
+    console.error("查询出错", e);
+    alert("查询后端失败，请检查网络");
     return;
+  }
+
+  // 2. 如果存在，开始循环尝试 +1, +2...
+  if (needsRename) {
+    while (needsRename) {
+      const testPhone = `${inputPhone}+${counter}`;
+      try {
+        // 再次查询新号码
+        const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
+        const json = await res.json();
+        
+        // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
+        if (Array.isArray(json) && json.length > 0) {
+          counter++; // 继续加号
+        } else {
+          finalPhone = testPhone; // 找到了没被占用的号码
+          needsRename = false;    // 退出循环
+        }
+      } catch (e) {
+        alert("查重过程出错，请重试");
+        return;
+      }
+    }
+    
+    // 提示用户号码被修改了
+    alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
+  }
+  // --- 第一步结束 ---
+
+  // 本地数据查重（可选，防止本地重复）
+  const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
+  if (existsInLocal && finalPhone === inputPhone) {
+      alert("❌ 本地列表中该电话号码已存在！");
+      return;
   }
 
   const prayers = document.getElementById("prayersContainer").children;
@@ -362,17 +410,13 @@ window.forceInsertNewEntry = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
-  // --- 修改部分开始 ---
-  // 删除了强制生成单号的代码。
-  // 允许 receiptNumber 为空，直接读取当前输入框的值（空的就传空的）
   const currentReceiptNumber = document.getElementById("receiptNumber").value.trim();
-  // --- 修改部分结束 ---
     
   const body = {
-    phoneNumber: newPhone,
+    phoneNumber: finalPhone, // 使用最终确定的号码
     mainName: document.getElementById("mainName").value.trim(),
     data: updatedData,
-    receiptNumber: currentReceiptNumber, // 允许为空
+    receiptNumber: currentReceiptNumber,
     receiptDate: document.getElementById("receiptDate").value.trim(),
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
@@ -389,13 +433,17 @@ window.forceInsertNewEntry = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("✅ 报名成功！待付款。"); // 提示语微调
+        alert("✅ 报名成功！待付款。"); 
         startNewEntry();
       } else {
         alert("❌ 报名失败：" + result.message);
       }
+    })
+    .catch(err => {
+        alert("提交出错：" + err.message);
     });
 };
+
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
