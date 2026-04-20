@@ -470,30 +470,19 @@ window.printEntry = function () {
 window.printTempReceipt = function () {
   const receiptInput = document.getElementById("receiptNumber");
   
-  // --- 第一步：处理 Receipt No ---
-  // 如果输入框是空的，就生成一个；如果有值，就直接使用。
-  if (!receiptInput || !receiptInput.value.trim()) {
-      const tempReceiptNumber = generateTempReceiptNumber();
-      receiptInput.value = tempReceiptNumber;
-      console.log("✅ 自动生成单号：" + tempReceiptNumber);
-  } else {
-      console.log("✅ 使用已有单号：" + receiptInput.value);
-  }
-
-  // --- 第二步：获取所有数据 ---
+  // --- 第一步：检查核心数据 (只检查名字) ---
+  // 注意：这里我们不再检查 receiptInput.value，允许它是空的
   const currentData = getCurrentFormData();
 
-  // --- 第三步：智能检查（只检查核心数据） ---
-  // 我们不检查 items (祈福者列表)，因为用户可能只打印表头。
-  // 我们只检查最核心的：主祈者姓名 (mainName)
   if (!currentData || !currentData.mainName) {
       alert("请先填写【主祈者姓名】，否则小票无法打印！");
-      return; // 只有没填名字时，才阻止打印
+      return; 
   }
 
-  // --- 第四步：执行打印 ---
-  // 既然有了单号（生成或已有），也有了名字，就可以打印了
-  console.log("🖨️ 正在打开打印窗口...");
+  // --- 第二步：执行预览 ---
+  // 这里不再强制生成号码！
+  // 如果是空的，currentData.receiptNumber 就是 undefined，预览页会显示 "未生成"
+  console.log("👀 正在打开预览窗口... (尚未生成正式单号)");
   
   const win = window.open("receipt-print.html", "_blank");
   
@@ -506,7 +495,25 @@ window.printTempReceipt = function () {
   const interval = setInterval(() => {
       if (win && win.document.readyState === "complete") {
           clearInterval(interval);
+          // 发送数据给预览页
           win.postMessage(JSON.stringify(currentData), "*");
       }
   }, 100);
+};
+
+// 新增函数：供预览页调用，用于正式生成单号
+window.finalizeReceiptNumber = function() {
+    const receiptInput = document.getElementById("receiptNumber");
+    
+    // 如果输入框已经有值了（比如之前打印过），直接返回
+    if (receiptInput.value && receiptInput.value !== "未生成") {
+        return receiptInput.value;
+    }
+
+    // 否则，生成新号码
+    const newNo = generateTempReceiptNumber(); // 或者你用的 generateReceiptNumber
+    receiptInput.value = newNo;
+    
+    // 注意：这里不保存数据，只填号。保存动作留给预览页的 saveToCache 去做。
+    return newNo;
 };
