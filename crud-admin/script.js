@@ -100,7 +100,7 @@ function generateTempReceiptNumber() {
   // 格式：YYYYMMDD
   const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); 
 
-  const key = "globalTempReceiptCounter";
+  const key = "TS_globalTempReceiptCounter";
   
   // --- 修复核心逻辑 ---
   
