@@ -128,14 +128,16 @@
             const now = new Date();
             const receiptDate = now.toLocaleString("zh-CN");
 
-            document.getElementById("receiptInfo").innerHTML = `
-                <div>
-                    <p><strong>D/NO:</strong> ${receiptNumber}</p>
-                    <p><strong>时间:</strong> ${receiptDate}</p>
-                    <p><strong>主祈者:</strong> ${mainName}</p>
-                    <p><strong>电话:</strong> ${phoneNumber}</p>    
-                </div>
-            `;
+           document.getElementById("receiptInfo").innerHTML = `
+    <div>
+        <!-- 注意这里：给号码加了一个 span 标签，id="receiptNoDisplay" -->
+        <p><strong>D/NO:</strong> <span id="receiptNoDisplay">${receiptNumber}</span></p>
+        
+        <p><strong>时间:</strong> ${receiptDate}</p>
+        <p><strong>主祈者:</strong> ${mainName}</p>
+        <p><strong>电话:</strong> ${phoneNumber}</p>    
+    </div>
+`;
             document.getElementById("footerDate").innerText = `打印日期: ${now.toLocaleDateString()}`;
 
             // 2. 计算金额
@@ -162,30 +164,55 @@
                 </div>
             `;
 
-            // 4. 监听打印按钮（核心：保存缓存）
-            document.getElementById("printBtn").addEventListener("click", () => {
-                const paymentType = document.getElementById("paymentType").value;
-                
-                // 构建要保存的数据对象
-                const receiptRecord = {
-                    id: Date.now(), // 唯一ID
-                    receiptNumber: receiptNumber,
-                    mainName: mainName,
-                    phoneNumber: phoneNumber,
-                    amount: grandTotal,
-                    paymentType: paymentType, // 记录收款方式
-                    date: now.toISOString(), // 标准时间格式，方便筛选
-                    timestamp: now.getTime()
-                };
+            // 4. 监听打印按钮（核心：实现“点击确认才生成正式单号”）
+        document.getElementById("printBtn").addEventListener("click", () => {
+            const paymentType = document.getElementById("paymentType").value;
+            
+            // --- 核心修改逻辑开始 ---
+            
+            // 1. 获取当前显示的号码
+            const displaySpan = document.getElementById("receiptNoDisplay");
+            let currentNo = displaySpan.innerText;
 
-                saveToCache(receiptRecord);
-                
-                window.print();
-                // 打印后不关闭，方便查看汇总或重打，或者你可以保留 window.close()
-                // window.close(); 
-            });
+            // 2. 判断：如果是“未生成”或者空，向主窗口申请正式号码
+            if (currentNo === "未生成" || !currentNo) {
+                try {
+                    // 调用主页面的 finalizeReceiptNumber 函数
+                    const finalNo = window.opener.finalizeReceiptNumber();
+                    
+                    if (finalNo) {
+                        currentNo = finalNo; // 更新变量
+                        displaySpan.innerText = finalNo; // 更新页面上显示的号码
+                        console.log("✅ 已生成正式单号: " + finalNo);
+                    }
+                } catch (e) {
+                    console.error("❌ 获取单号失败:", e);
+                    alert("系统错误：无法生成单号！");
+                    return; // 停止执行
+                }
+            }
+
+            // --- 核心修改逻辑结束 ---
+
+            // 3. 构建要保存的数据对象 (使用最终确定的号码)
+            const receiptRecord = {
+                id: Date.now(), 
+                receiptNumber: currentNo, // 使用更新后的号码
+                mainName: mainName,
+                phoneNumber: phoneNumber,
+                amount: grandTotal,
+                paymentType: paymentType, 
+                date: now.toISOString(), 
+                timestamp: now.getTime()
+            };
+
+            // 4. 保存到缓存
+            saveToCache(receiptRecord);
+            
+            // 5. 执行打印
+            window.print();
         });
-
+    }); // 这个括号是结束 window.addEventListener("message"...
         // --- 缓存逻辑函数 ---
         function saveToCache(record) {
             // 1. 获取现有缓存
