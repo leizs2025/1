@@ -236,22 +236,19 @@ window.saveChanges = function () {
   const isPhoneUpdated = selectedEntry && selectedEntry.phoneNumber !== phoneInput;
   const oldPhoneNumber = selectedEntry ? selectedEntry.phoneNumber : phoneInput;
   
-    // 确保收据号不为空
-    const receiptInput = document.getElementById("receiptNumber");
-    if (!receiptInput.value.trim()) {
-        const tempReceiptNumber = generateTempReceiptNumber();
-        receiptInput.value = tempReceiptNumber;
-        console.log("✅ 自动补充临时收据号：" + tempReceiptNumber);
-    }
-
+  // --- 修改部分开始 ---
+  // 删除了强制生成单号的代码。
+  // 现在直接读取输入框的值，如果是空的，就传空字符串给后端。
+  const currentReceiptNumber = document.getElementById("receiptNumber").value.trim();
+  // --- 修改部分结束 ---
 
   const body = {
       method: "PUT",
-      oldPhoneNumber: oldPhoneNumber, // 传递旧的电话号码以便后端识别
-      phoneNumber: phoneInput,        // 传递新的电话号码
+      oldPhoneNumber: oldPhoneNumber, 
+      phoneNumber: phoneInput,        
       mainName,
       data: updatedData,
-      receiptNumber: document.getElementById("receiptNumber").value.trim(),
+      receiptNumber: currentReceiptNumber, // 这里可能是空的，允许提交
       receiptDate: document.getElementById("receiptDate").value.trim(),
       wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
       offering: document.querySelector('input[name="offering"]:checked')?.value || "",
@@ -268,8 +265,8 @@ window.saveChanges = function () {
       .then(result => {
           if (result.success) {
               alert("✅ 更新成功！");
-              selectedEntry = null; // 清空已选择的记录
-              startNewEntry();      // 重置表单
+              selectedEntry = null; 
+              startNewEntry();      
           } else {
               alert("❌ 更新失败：" + result.message);
           }
@@ -278,7 +275,6 @@ window.saveChanges = function () {
           alert("❌ 更新出错：" + err.message);
       });
 };
-
 
 
 
@@ -366,24 +362,23 @@ window.forceInsertNewEntry = function () {
     donation: +div.querySelector(".donate").value || 0
   }));
 
-  const receiptInput = document.getElementById("receiptNumber");
-    if (!receiptInput.value.trim()) {
-        const tempReceiptNumber = generateTempReceiptNumber();
-        receiptInput.value = tempReceiptNumber;
-        console.log("✅ 强制新增临时收据号：" + tempReceiptNumber);
-    }
+  // --- 修改部分开始 ---
+  // 删除了强制生成单号的代码。
+  // 允许 receiptNumber 为空，直接读取当前输入框的值（空的就传空的）
+  const currentReceiptNumber = document.getElementById("receiptNumber").value.trim();
+  // --- 修改部分结束 ---
     
   const body = {
     phoneNumber: newPhone,
     mainName: document.getElementById("mainName").value.trim(),
     data: updatedData,
-    receiptNumber: document.getElementById("receiptNumber").value.trim(),
+    receiptNumber: currentReceiptNumber, // 允许为空
     receiptDate: document.getElementById("receiptDate").value.trim(),
     wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
     offering: document.querySelector('input[name="offering"]:checked')?.value || "",
     wishPaper: document.getElementById("wishPaper").value.trim(),
     admin: localStorage.getItem("admin") || "未登录",
-    method: "POST"  // 明确告诉后端：新增操作
+    method: "POST"
   };
 
   fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
@@ -394,14 +389,13 @@ window.forceInsertNewEntry = function () {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        alert("✅ 新增成功！");
+        alert("✅ 报名成功！待付款。"); // 提示语微调
         startNewEntry();
       } else {
-        alert("❌ 新增失败：" + result.message);
+        alert("❌ 报名失败：" + result.message);
       }
     });
 };
-
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
