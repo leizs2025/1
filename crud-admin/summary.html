@@ -27,11 +27,20 @@
         /* 按钮样式 */
         .btn-group { margin-top: 20px; display: flex; gap: 10px; }
         .btn { flex: 1; padding: 12px; text-align: center; text-decoration: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
-        .btn-back { background: #333; }
+        .btn-print { background: #007bff; } /* 打印按钮改为蓝色 */
         .btn-clear { background: #dc3545; } 
         .btn-clear:hover { background: #c82333; }
 
         .empty-msg { text-align: center; color: #999; padding: 20px; }
+
+        /* --- 新增：打印专用样式 --- */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .btn-group { display: none !important; } /* 打印时隐藏按钮 */
+            h1 { font-size: 24px; margin-bottom: 10px; }
+            .summary-card { background: #f8f9fa; }
+        }
     </style>
 </head>
 <body>
@@ -55,7 +64,7 @@
                 <tr>
                     <th>单号</th>
                     <th>主祈者</th>
-                    <th class="text-center">电话</th> <!-- 新增列 -->
+                    <th class="text-center">电话</th>
                     <th>方式</th>
                     <th class="text-right">金额</th>
                 </tr>
@@ -65,9 +74,9 @@
             </tbody>
         </table>
 
-        <!-- 按钮组：返回 和 清空 -->
+        <!-- 按钮组：打印 和 清空 -->
         <div class="btn-group">
-            <a href="javascript:window.history.back()" class="btn btn-back">⬅ 返回打印</a>
+            <button onclick="window.print()" class="btn btn-print">🖨️ 打印当前页面</button>
             <button onclick="clearAllCache()" class="btn btn-clear">🗑️ 清空所有缓存</button>
         </div>
     </div>
@@ -110,7 +119,7 @@
                 tr.innerHTML = `
                     <td>${r.receiptNumber}</td>
                     <td>${r.mainName}</td>
-                    <td class="text-center">${r.phoneNumber}</td> <!-- 显示电话 -->
+                    <td class="text-center">${r.phoneNumber}</td>
                     <td class="${paymentClass}">${r.paymentType}</td>
                     <td class="text-right">RM ${r.amount.toFixed(2)}</td>
                 `;
