@@ -15,29 +15,32 @@
         .stat-value { font-size: 24px; font-weight: bold; color: #007bff; }
         .stat-label { font-size: 14px; color: #666; }
         
-        /* 表格样式 - 优化了紧凑度 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        /* 表格样式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f8f9fa; color: #333; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .cash { color: #28a745; font-weight: bold; }
         .transfer { color: #007bff; font-weight: bold; }
         
+        /* 明细小字样式 */
+        .detail-text { font-size: 11px; color: #666; display: block; margin-top: 2px; }
+        
         /* 按钮样式 */
         .btn-group { margin-top: 20px; display: flex; gap: 10px; }
         .btn { flex: 1; padding: 12px; text-align: center; text-decoration: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
-        .btn-print { background: #007bff; } /* 打印按钮改为蓝色 */
+        .btn-print { background: #007bff; }
         .btn-clear { background: #dc3545; } 
         .btn-clear:hover { background: #c82333; }
 
         .empty-msg { text-align: center; color: #999; padding: 20px; }
 
-        /* --- 新增：打印专用样式 --- */
+        /* 打印专用样式 */
         @media print {
             body { background: #fff; padding: 0; }
             .container { box-shadow: none; padding: 0; max-width: 100%; }
-            .btn-group { display: none !important; } /* 打印时隐藏按钮 */
+            .btn-group { display: none !important; }
             h1 { font-size: 24px; margin-bottom: 10px; }
             .summary-card { background: #f8f9fa; }
         }
@@ -62,11 +65,12 @@
         <table>
             <thead>
                 <tr>
+                    <th>时间</th>
                     <th>单号</th>
                     <th>主祈者</th>
-                    <th class="text-center">电话</th>
-                    <th>方式</th>
-                    <th class="text-right">金额</th>
+                    <th>明细详情</th>
+                    <th class="text-center">方式</th>
+                    <th class="text-right">总额</th>
                 </tr>
             </thead>
             <tbody id="receiptList">
@@ -106,7 +110,7 @@
             tbody.innerHTML = ""; 
 
             if (todayReceipts.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='5' class='empty-msg'>今日暂无数据</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='6' class='empty-msg'>今日暂无数据</td></tr>";
                 return;
             }
 
@@ -116,12 +120,47 @@
             todayReceipts.forEach(r => {
                 const tr = document.createElement("tr");
                 const paymentClass = r.paymentType === '现金' ? 'cash' : 'transfer';
+                
+                // 格式化时间 (HH:MM)
+                const timeStr = new Date(r.date).toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit' });
+                
+                // 构建明细字符串 (假设 data 数组里有 paperGold 总数和 donation)
+                // 注意：这里需要根据你实际保存的数据结构调整。
+                // 如果你保存的是完整的 data 数组，这里需要遍历计算。
+                // 假设 r 里面直接有 paperGoldCount 和 donationAmount (如果没有，需要像下面这样计算)
+                
+                let paperGoldTotal = 0;
+                let donationTotal = 0;
+                
+                // 兼容旧数据：如果 r.data 存在，则计算总和
+                if(r.data && Array.isArray(r.data)) {
+                    r.data.forEach(item => {
+                        // 假设每个 item 里有 5 个纸金字段
+                        paperGoldTotal += (item.paperGold1||0) + (item.paperGold2||0) + (item.paperGold3||0) + (item.paperGold4||0) + (item.paperGold5||0);
+                        donationTotal += (item.donation||0);
+                    });
+                } else {
+                    // 如果是旧版直接存的总额，这里做简单的减法估算（总额 - 纸金x3）
+                    // 这只是为了显示，如果不准，建议以后保存时把明细也存进去
+                    donationTotal = r.amount - (r.paperGoldCount * 3 || 0); 
+                    paperGoldTotal = r.paperGoldCount || 0;
+                }
+
+                const paperMoney = paperGoldTotal * 3;
+
                 tr.innerHTML = `
+                    <td>${timeStr}</td>
                     <td>${r.receiptNumber}</td>
-                    <td>${r.mainName}</td>
-                    <td class="text-center">${r.phoneNumber}</td>
-                    <td class="${paymentClass}">${r.paymentType}</td>
-                    <td class="text-right">RM ${r.amount.toFixed(2)}</td>
+                    <td>
+                        <div>${r.mainName}</div>
+                        <div class="detail-text">${r.phoneNumber || ''}</div>
+                    </td>
+                    <td>
+                        <div class="detail-text">纸金: ${paperGoldTotal}份 (RM${paperMoney.toFixed(2)})</div>
+                        <div class="detail-text">功德: RM${donationTotal.toFixed(2)}</div>
+                    </td>
+                    <td class="text-center ${paymentClass}">${r.paymentType}</td>
+                    <td class="text-right"><strong>RM ${r.amount.toFixed(2)}</strong></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -132,7 +171,7 @@
             if(confirm("确定要清空所有缓存数据吗？\n\n这将删除所有历史打印记录，且无法恢复！")) {
                 localStorage.removeItem(STORAGE_KEY);
                 alert("✅ 缓存已清空！");
-                loadSummary(); // 刷新页面显示
+                loadSummary();
             }
         }
 
