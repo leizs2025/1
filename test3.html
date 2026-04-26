@@ -932,6 +932,7 @@
         }
 
 // 7. 保存资料（用户版 - 保留前缀用于年份判断）
+// 7. 保存资料（用户版 - 保留前缀用于年份判断）
 window.saveChanges = async function () {
     // 检查年份是否已选择
     const yearSelect = document.getElementById("registrationYear");
@@ -1007,7 +1008,12 @@ window.saveChanges = async function () {
                 
                 return; // 返回，不执行保存
             } else {
-                return; // 用户选择取消，不执行保存
+                // 用户选择取消，检查年份选择器是否选择了比当前年份大的年份
+                if (selectedYear <= currentYear) {
+                    alert(`⚠️ 提示：您当前选择的年份是${selectedYear}年，不能修改${currentYear}年的记录。\n请选择比${currentYear}年更大的年份再进行保存。`);
+                    return; // 用户选择取消且年份不大于当前年份，不执行保存
+                }
+                // 如果用户选择取消但年份大于当前年份，则继续执行保存
             }
         }
     }
@@ -1055,7 +1061,8 @@ window.saveChanges = async function () {
         btn.disabled = false;
     }
 };
-        // 8. 取消编辑（返回首页）
+		
+		// 8. 取消编辑（返回首页）
         window.cancelEdit = function() {
             document.getElementById("adminForm").classList.add("hidden");
             document.getElementById("searchResultInfo").classList.add("hidden");
