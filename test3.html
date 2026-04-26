@@ -942,6 +942,7 @@ window.searchPhone = function () {
         }
 
 // 2. 修改保存功能，使用专门的保存 Worker
+// 7. 保存资料（用户版 - 保留前缀用于年份判断）- 仅在修改当前年份记录时提示
 window.saveChanges = async function () {
     // 检查年份是否已选择
     const yearSelect = document.getElementById("registrationYear");
@@ -994,20 +995,20 @@ window.saveChanges = async function () {
         donation: +div.querySelector(".donate").value || 0
     }));
 
-    // 关键逻辑：检查当前年份的记录是否被尝试修改
+    // 仅在以下条件满足时才显示提示：存在原始记录、是当前年份的记录、并且用户试图保存到当前年份
     if (selectedEntry && selectedEntry.phoneNumber) {
         // 获取当前年份的最后一位数字
         const currentYearLastDigit = currentYear % 10;
         // 获取原始记录的手机号第一位（年份前缀）
         const originalPhoneFirstDigit = selectedEntry.phoneNumber.charAt(0);
         
-        // 如果当前年份前缀与原始记录的前缀相同，说明这是当年的记录，不允许修改
-        if (String(currentYearLastDigit) === originalPhoneFirstDigit) {
-            // 使用confirm让用户选择是转到新增表单还是取消
+        // 检查是否是当前年份的记录（原始记录以当前年份的数字开头）AND 用户选择保存到当前年份
+        if (String(currentYearLastDigit) === originalPhoneFirstDigit && selectedYear === currentYear) {
+            // 显示提示，询问用户是否转到新增表单
             const shouldGoToNewForm = confirm(`⚠️  提示：您不能修改${currentYear}年的当前记录！\n\n需要添加新成员请填写新的报名表。是否要转到创建新增报名表单？\n点击"确定"将跳转到新增报名表单，点击"取消"返回`);
             
             if (shouldGoToNewForm) {
-                // 调用源代码中的 startNewEntry 函数来开始新的登记
+                // 用户点击确定，跳转到新增表单
                 setTimeout(() => {
                     // 使用清洗后的手机号调用 startNewEntry 函数
                     startNewEntry(realPhone);
@@ -1017,16 +1018,13 @@ window.saveChanges = async function () {
                 
                 return; // 返回，不执行保存
             } else {
-                // 用户选择取消，检查年份选择器是否选择了比当前年份大的年份
-                if (selectedYear <= currentYear) {
-                    alert(`⚠️ 提示：您当前选择的年份是${selectedYear}年，不能修改${currentYear}年的记录。\n请选择比${currentYear}年更大的年份再进行保存。`);
-                    return; // 用户选择取消且年份不大于当前年份，不执行保存
-                }
-                // 如果用户选择取消但年份大于当前年份，则继续执行保存
+                // 用户点击取消，直接返回，不执行任何操作
+                return;
             }
         }
     }
 
+    // 如果选择了比当前年份大的年份，或者不是当前年份的记录，则静默执行保存
     const btn = document.querySelector("button[onclick='saveChanges()']");
     btn.innerHTML = "保存中...";
     btn.disabled = true;
@@ -1089,8 +1087,7 @@ window.saveChanges = async function () {
     } catch (error) {
         console.error("保存出错:", error);
         
-        // 根据错误类型提供更详细的提示
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
             alert("网络错误：无法连接到保存服务，请检查网络连接或稍后再试。");
         } else if (error.message.includes('timeout')) {
             alert("保存超时：请求时间过长，请稍后再试。");
