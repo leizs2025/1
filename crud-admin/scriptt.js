@@ -404,7 +404,11 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
 
   // 只有在非移动操作时才检查本地列表重复
   if (!isMoveOperation) {
-    const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
+    // 在移动操作中，我们不应该检查当前编辑的记录，因为它本来就是要被移动的
+    const existsInLocal = fullData.some(entry => 
+      entry.phoneNumber === inputPhone && 
+      (!selectedEntry || entry.id !== selectedEntry.id) // 排除当前正在编辑的记录
+    );
     if (existsInLocal && finalPhone === inputPhone) {
         alert("❌ 本地列表中该电话号码已存在！");
         return;
@@ -517,19 +521,6 @@ window.moveEntry = async function () {
     forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
-// 添加移动按钮的处理函数
-window.moveEntry = async function () {
-  if (!selectedEntry) {
-    alert("请先查询并选择要移动的记录！");
-    return;
-  }
-  
-  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
-    // 设置当前表单数据，然后调用forceInsertNewEntry进行移动
-    forceInsertNewEntry(true); // 传递true表示这是移动操作
-  }
-};
-
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
