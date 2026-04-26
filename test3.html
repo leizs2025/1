@@ -414,8 +414,9 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const API_URL = "https://userts.gealarm2012.workers.dev/";
-
+        const SAVE_API_URL = "https://userts.gealarm2012.workers.dev/";
+		const SEARCH_API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+		
         let fullData = [];
         let selectedEntry = null;
 
@@ -562,170 +563,179 @@
             searchButton.classList.remove("locked-btn");
         }
 
-        // 1. 查询功能（核心逻辑：有记录则编辑，无记录则新建）
-        window.searchPhone = function () {
-            const keyword = document.getElementById("searchInput").value.trim();
-            if (!keyword) return alert("请输入手机号！");
+     // 1. 修改查询功能
+window.searchPhone = function () {
+    const keyword = document.getElementById("searchInput").value.trim();
+    if (!keyword) return alert("请输入手机号！");
 
-            // 验证手机号格式
-            if (!isValidMalaysianPhone(keyword)) {
-                alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
-                return;
+    // 验证手机号格式
+    if (!isValidMalaysianPhone(keyword)) {
+        alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+        return;
+    }
+
+    // 显示加载状态
+    const btn = document.getElementById("searchButton");
+    btn.innerHTML = "🔍 查询中...";
+    btn.disabled = true;
+
+    // 去掉查询关键词的前缀
+    const realKeyword = extractRealPhone(keyword);
+
+    // 使用专门的查询 Worker
+    fetch(`${SEARCH_API_URL}?search=${encodeURIComponent(realKeyword)}`)
+        .then(async response => {
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`查询请求失败: ${response.status} - ${errorText}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            if (!text || text.trim() === '') {
+                throw new Error("查询服务返回空响应");
+            }
+            
+            let data;
+            try { 
+                data = JSON.parse(text); 
+            } 
+            catch (e) { 
+                console.error("解析JSON错误:", e);
+                console.log("响应内容:", text);
+                throw new Error(`查询服务返回的数据格式错误: ${e.message}`);
             }
 
-            // 显示加载状态
-            const btn = document.getElementById("searchButton"); // 直接引用搜索按钮
-            btn.innerHTML = "🔍 查询中...";
-            btn.disabled = true;
+            fullData = data;
+            const selector = document.getElementById("resultSelector");
+            const infoDiv = document.getElementById("searchResultInfo");
+            
+            // 清空之前的选择器和提示信息
+            selector.innerHTML = "";
+            infoDiv.classList.add("hidden");
 
-            // 去掉查询关键词的前缀
-            const realKeyword = extractRealPhone(keyword);
-
-            fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(realKeyword)}`)
-                .then(res => res.text())
-                .then(text => {
-                    let data;
-                    try { 
-                        data = JSON.parse(text); 
-                    } 
-                    catch (e) { 
-                        console.error("解析JSON错误:", e);
-                        console.log("响应内容:", text);
-                        throw new Error("服务器返回的数据格式错误");
-                    }
-
-                    fullData = data;
-                    const selector = document.getElementById("resultSelector");
-                    const infoDiv = document.getElementById("searchResultInfo");
+            if (data.length === 0) {
+                // 查无资料，显示提示信息并提供继续按钮
+                infoDiv.innerHTML = `
+                    <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的报名表单</div>
+                    <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 立即填写报名表</button>
+                `;
+                infoDiv.classList.remove("hidden");
+                
+                // 锁定查询按钮
+                lockSearchButton();
+            }
+            // 有资料的情况
+            else if (data.length === 1) {
+                // 单条记录，直接编辑
+                infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
+                infoDiv.classList.remove("hidden");
+                
+                // 添加说明卡片
+                const infoCard = document.createElement("div");
+                infoCard.className = "info-card";
+                infoCard.innerHTML = `
+                    <h6>📋 资料说明</h6>
+                    <ul>
+                        <li>下方显示的是您之前报名的太岁光明灯资料</li>
+                        <li>您可以直接编辑现有信息或添加新的祈福者</li>
+                        <li>点击"保存资料"即可更新您的登记信息</li>
+                    </ul>
+                `;
+                infoDiv.appendChild(infoCard);
+                
+                const newRecordBtn = document.createElement("button");
+                newRecordBtn.className = "btn btn-success new-record-btn";
+                newRecordBtn.textContent = "➕ 填写全新的报名表";
+                newRecordBtn.onclick = () => {
+                    startNewEntry(realKeyword); // 使用清洗后的手机号
+                };
+                infoDiv.appendChild(newRecordBtn);
+                
+                selectedEntry = data[0];
+                setTimeout(() => {
+                    renderForm();
                     
-                    // 清空之前的选择器和提示信息
-                    selector.innerHTML = "";
-                    infoDiv.classList.add("hidden");
-
-                    if (data.length === 0) {
-                        // 查无资料，显示提示信息并提供继续按钮
-                        infoDiv.innerHTML = `
-                            <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的报名表单</div>
-                            <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 立即填写报名表</button>
-                        `;
-                        infoDiv.classList.remove("hidden");
+                    // 锁定查询按钮
+                    lockSearchButton();
+                }, 500); // 短暂延迟显示提示
+            } 
+            else {
+                // 多条记录，让用户选择
+                infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
+                infoDiv.classList.remove("hidden");
+                
+                // 添加说明卡片
+                const infoCard = document.createElement("div");
+                infoCard.className = "info-card";
+                infoCard.innerHTML = `
+                    <h6>📋 资料说明</h6>
+                    <ul>
+                        <li>系统找到多笔使用此手机号的登记资料</li>
+                        <li>手机号5开头就是2025年的报名资料，<br>6开头就是2026年的报名资料</li>
+                        <li>请从下方下拉菜单中选择您要添加或修改的具体资料</li>
+                        <li>如需创建全新的报名资料，可点击下方填写全新的报名表按钮</li>
+                    </ul>
+                `;
+                infoDiv.appendChild(infoCard);
+                
+                // 创建选择器（放在按钮上方）
+                const select = document.createElement("select");
+                select.className = "form-select mb-2";
+                select.id = "entrySelector"; // 添加ID以便调试
+                select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
+                
+                // 添加选项
+                data.forEach((item, index) => {
+                    const opt = document.createElement("option");
+                    opt.value = index;
+                    opt.textContent = `${item.mainName} (${item.phoneNumber})`;
+                    select.appendChild(opt);
+                });
+                
+                // 设置选择事件
+                select.onchange = () => {
+                    if (select.selectedIndex > 0) { // 确保选择了有效选项
+                        selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
+                        renderForm();
                         
                         // 锁定查询按钮
                         lockSearchButton();
+                        
+                        // 隐藏选择器，显示表单
+                        selector.classList.add("hidden");
                     }
-                    // 有资料的情况
-                    else if (data.length === 1) {
-                        // 单条记录，直接编辑
-                        infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
-                        infoDiv.classList.remove("hidden");
-                        
-                        // 添加说明卡片
-                        const infoCard = document.createElement("div");
-                        infoCard.className = "info-card";
-                        infoCard.innerHTML = `
-                            <h6>📋 资料说明</h6>
-                            <ul>
-                                <li>下方显示的是您之前报名的太岁光明灯资料</li>
-                                <li>您可以直接编辑现有信息或添加新的祈福者</li>
-                                <li>点击"保存资料"即可更新您的登记信息</li>
-                            </ul>
-                        `;
-                        infoDiv.appendChild(infoCard);
-                        
-                        // 添加"新增资料"按钮
-                        const newRecordBtn = document.createElement("button");
-                        newRecordBtn.className = "btn btn-success new-record-btn";
-                        newRecordBtn.textContent = "➕ 填写全新的报名表";
-                        newRecordBtn.onclick = () => {
-                            startNewEntry(realKeyword); // 使用清洗后的手机号
-                        };
-                        infoDiv.appendChild(newRecordBtn);
-                        
-                        selectedEntry = data[0];
-                        setTimeout(() => {
-                            renderForm();
-                            
-                            // 锁定查询按钮
-                            lockSearchButton();
-                        }, 500); // 短暂延迟显示提示
-                    } 
-                    else {
-                        // 多条记录，让用户选择
-                        infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
-                        infoDiv.classList.remove("hidden");
-                        
-                        // 添加说明卡片
-                        const infoCard = document.createElement("div");
-                        infoCard.className = "info-card";
-                        infoCard.innerHTML = `
-                            <h6>📋 资料说明</h6>
-                            <ul>
-                                <li>系统找到多笔使用此手机号的登记资料</li>
-		                        <li>手机号5开头就是2025年的报名资料，<br>6开头就是2026年的报名资料</br></li>
-                                <li>请从下方下拉菜单中选择您要添加或修改的具体资料</li>
-                                <li>如需创建全新的报名资料，可点击下方填写全新的报名表按钮</li>
-                            </ul>
-                        `;
-                        infoDiv.appendChild(infoCard);
-                        
-                        // 创建选择器（放在按钮上方）
-                        const select = document.createElement("select");
-                        select.className = "form-select mb-2";
-                        select.id = "entrySelector"; // 添加ID以便调试
-                        select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
-                        
-                        // 添加选项
-                        data.forEach((item, index) => {
-                            const opt = document.createElement("option");
-                            opt.value = index;
-                            opt.textContent = `${item.mainName} (${item.phoneNumber})`;
-                            select.appendChild(opt);
-                        });
-                        
-                        // 设置选择事件
-                        select.onchange = () => {
-                            if (select.selectedIndex > 0) { // 确保选择了有效选项
-                                selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
-                                renderForm();
-                                
-                                // 锁定查询按钮
-                                lockSearchButton();
-                                
-                                // 隐藏选择器，显示表单
-                                selector.classList.add("hidden");
-                            }
-                        };
-                        
-                        // 将选择器插入到按钮前面（对调顺序：选择器在上，按钮在下）
-                        infoDiv.appendChild(select);
-                        
-                        // 添加"新增资料"按钮（放在选择器下方）
-                        const newRecordBtn = document.createElement("button");
-                        newRecordBtn.className = "btn btn-success new-record-btn";
-                        newRecordBtn.textContent = "➕ 填写全新的报名表";
-                        newRecordBtn.onclick = () => {
-                            startNewEntry(realKeyword); // 使用清洗后的手机号
-                        };
-                        infoDiv.appendChild(newRecordBtn);
-                    }
-                })
-                .catch(err => {
-                    console.error("查询出错:", err);
-                    const infoDiv = document.getElementById("searchResultInfo");
-                    infoDiv.innerHTML = `<div class="search-result-info" style="background-color: #f8d7da; border-left-color: #dc3545; color: #721c24;">❌ 查询出错：${err.message}</div>`;
-                    infoDiv.classList.remove("hidden");
-                    
-                    // 清空选择器
-                    document.getElementById("resultSelector").innerHTML = "";
-                })
-                .finally(() => {
-                    // 恢复按钮状态
-                    const btn = document.getElementById("searchButton");
-                    btn.innerHTML = "🔍 查询资料";
-                    btn.disabled = false;
-                });
-        };
-
+                };
+                
+                // 将选择器插入到按钮前面（对调顺序：选择器在上，按钮在下）
+                infoDiv.appendChild(select);
+                
+                // 添加"新增资料"按钮（放在选择器下方）
+                const newRecordBtn = document.createElement("button");
+                newRecordBtn.className = "btn btn-success new-record-btn";
+                newRecordBtn.textContent = "➕ 填写全新的报名表";
+                newRecordBtn.onclick = () => {
+                    startNewEntry(realKeyword); // 使用清洗后的手机号
+                };
+                infoDiv.appendChild(newRecordBtn);
+            }
+        })
+        .catch(err => {
+            console.error("查询出错:", err);
+            const infoDiv = document.getElementById("searchResultInfo");
+            infoDiv.innerHTML = `<div class="search-result-info" style="background-color: #f8d7da; border-left-color: #dc3545; color: #721c24;">❌ 查询出错：${err.message}</div>`;
+            infoDiv.classList.remove("hidden");
+            
+            // 清空选择器
+            document.getElementById("resultSelector").innerHTML = "";
+        })
+        .finally(() => {
+            // 恢复按钮状态
+            const btn = document.getElementById("searchButton");
+            btn.innerHTML = "🔍 查询资料";
+            btn.disabled = false;
+        });
+};
         // 2. 开始新登记（带默认手机号）
         window.startNewEntry = function (defaultPhone = "") {
             selectedEntry = null;
@@ -931,8 +941,7 @@
             }
         }
 
-// 7. 保存资料（用户版 - 保留前缀用于年份判断）
-// 7. 保存资料（用户版 - 保留前缀用于年份判断）
+// 2. 修改保存功能，使用专门的保存 Worker
 window.saveChanges = async function () {
     // 检查年份是否已选择
     const yearSelect = document.getElementById("registrationYear");
@@ -1039,28 +1048,123 @@ window.saveChanges = async function () {
             wishPaper: ""      // 强制清空
         };
 
-        const response = await fetch(API_URL, {
+        // 使用专门的保存 Worker
+        const response = await fetch(SAVE_API_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json; charset=utf-8"
+            },
             body: JSON.stringify(submitData)
         });
         
-        const result = await response.json();
+        // 检查响应状态
+        if (!response.ok) {
+            // 如果响应不是 2xx，显示详细错误信息
+            const errorText = await response.text();
+            console.error(`HTTP Error: ${response.status} - ${response.statusText}`);
+            console.error(`Error details: ${errorText}`);
+            throw new Error(`保存服务错误: ${response.status} - ${response.statusText}. 详情: ${errorText}`);
+        }
+        
+        // 尝试解析 JSON 响应，但要处理可能的解析错误
+        let result;
+        try {
+            const responseText = await response.text();
+            if (!responseText.trim()) {
+                throw new Error("保存服务返回空响应");
+            }
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("JSON解析错误:", parseError);
+            console.error("响应内容:", responseText);
+            throw new Error(`保存服务响应格式错误: ${parseError.message}`);
+        }
         
         if (result.success) {
             alert(`✅ 保存成功！\n使用手机号: ${finalPhone}`);
             cancelEdit(); // 保存后返回首页
         } else {
-            alert("❌ 保存失败：" + (result.message || "未知错误"));
+            alert("❌ 保存失败：" + (result.message || "保存服务返回错误"));
         }
     } catch (error) {
         console.error("保存出错:", error);
-        alert("网络错误：" + error.message);
+        
+        // 根据错误类型提供更详细的提示
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            alert("网络错误：无法连接到保存服务，请检查网络连接或稍后再试。");
+        } else if (error.message.includes('timeout')) {
+            alert("保存超时：请求时间过长，请稍后再试。");
+        } else if (error.message.includes('404')) {
+            alert("保存服务错误：找不到请求的地址，请联系管理员。");
+        } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+            alert("保存服务内部错误：服务器暂时无法处理请求，请稍后再试。");
+        } else {
+            alert(`保存错误：${error.message}\n\n请检查网络连接或联系技术支持。`);
+        }
     } finally {
         btn.innerHTML = "💾 保存资料";
         btn.disabled = false;
     }
 };
+
+	// 3. 修改检查手机是否存在冲突的函数，也使用保存 Worker
+async function checkPhoneExists(phone, year) {
+    try {
+        // 查询是否有相同手机号的记录
+        const response = await fetch(`${SAVE_API_URL}?search=${encodeURIComponent(phone)}`);
+        const data = await response.json();
+        
+        // 检查是否有一样的年份前缀
+        const yearDigit = String(year % 10);
+        
+        // 检查数据库中是否存在相同年份前缀的记录
+        return data.some(record => {
+            // 检查记录的手机号是否以相同的年份数字开头
+            return record.phoneNumber.startsWith(yearDigit);
+        });
+    } catch (error) {
+        console.error("检查手机号冲突时出错:", error);
+        // 发生错误时假设不存在冲突，避免阻塞正常流程
+        return false;
+    }
+}
+
+// 4. 修改获取下一个可用手机号的函数
+async function getNextAvailablePhone(basePhone, year) {
+    // 首先添加年份前缀
+    const phoneWithPrefix = addPhonePrefix(basePhone, year);
+    
+    // 检查基本前缀号码是否存在冲突
+    if (!(await checkPhoneExists(basePhone, year))) {
+        // 如果基本号码没有冲突（去掉前缀的部分），直接返回带前缀的号码
+        return phoneWithPrefix;
+    }
+    
+    // 如果存在冲突，开始添加后缀
+    let suffix = 1;
+    while (true) {
+        const phoneWithSuffix = `${phoneWithPrefix}+${suffix}`;
+        
+        // 检查这个带后缀的号码是否在当前年份中存在冲突
+        const response = await fetch(`${SAVE_API_URL}?search=${encodeURIComponent(extractRealPhone(phoneWithSuffix))}`);
+        const data = await response.json();
+        
+        // 检查是否有一样的年份前缀
+        const yearDigit = String(year % 10);
+        
+        // 检查数据库中是否存在相同的完整号码（包括后缀）
+        const exists = data.some(record => {
+            return record.phoneNumber === phoneWithSuffix;
+        });
+        
+        if (!exists) {
+            // 如果不存在冲突，返回这个带前缀和后缀的号码
+            return phoneWithSuffix;
+        }
+        
+        suffix++;
+    }
+}	
 		
 		// 8. 取消编辑（返回首页）
         window.cancelEdit = function() {
