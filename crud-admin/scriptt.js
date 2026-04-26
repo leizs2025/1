@@ -360,7 +360,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   let counter = 1;
   let needsRename = false;
 
-  // 1. 先检查原始号码是否存在
+  // 1. 先检查管理Worker中原始号码是否存在
   try {
     const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
     const checkData = await checkRes.json();
@@ -402,11 +402,13 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   }
   // --- 第一步结束 ---
 
-  // 本地数据查重（可选，防止本地重复）
-  const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
-  if (existsInLocal && finalPhone === inputPhone) {
-      alert("❌ 本地列表中该电话号码已存在！");
-      return;
+  // 只有在非移动操作时才检查本地列表重复
+  if (!isMoveOperation) {
+    const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
+    if (existsInLocal && finalPhone === inputPhone) {
+        alert("❌ 本地列表中该电话号码已存在！");
+        return;
+    }
   }
 
   const prayers = document.getElementById("prayersContainer").children;
@@ -457,7 +459,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       }
 
       // 2. 成功保存后，从用户Worker删除原记录
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev/', {
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedEntry.id })
@@ -511,10 +513,23 @@ window.moveEntry = async function () {
   }
   
   if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
+    // 直接调用forceInsertNewEntry进行移动
+    forceInsertNewEntry(true); // 传递true表示这是移动操作
+  }
+};
+// 添加移动按钮的处理函数
+window.moveEntry = async function () {
+  if (!selectedEntry) {
+    alert("请先查询并选择要移动的记录！");
+    return;
+  }
+  
+  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
     // 设置当前表单数据，然后调用forceInsertNewEntry进行移动
     forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
+
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
