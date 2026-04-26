@@ -414,7 +414,7 @@
     <!-- === JS 逻辑 === -->
     <script>
         // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
-        const SAVE_API_URL = "https://userts.gealarm2012.workers.dev";
+        const SAVE_API_URL = "https://userts.gealarm2012.workers.dev/";
 		const SEARCH_API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
 		
         let fullData = [];
@@ -882,28 +882,76 @@ window.searchPhone = function () {
             setTimeout(updateAddButtonVisibility, 100);
         }
 
-        // 5. 检查手机号是否已存在（用于避免冲突）
-        async function checkPhoneExists(phone, year) {
-            try {
-                // 查询是否有相同手机号的记录
-                const response = await fetch(`${API_URL}?search=${encodeURIComponent(phone)}`);
-                const data = await response.json();
-                
-                // 检查是否有一样的年份前缀
-                const yearDigit = String(year % 10);
-                
-                // 检查数据库中是否存在相同年份前缀的记录
-                return data.some(record => {
-                    // 检查记录的手机号是否以相同的年份数字开头
-                    return record.phoneNumber.startsWith(yearDigit);
-                });
-            } catch (error) {
-                console.error("检查手机号冲突时出错:", error);
-                // 发生错误时假设不存在冲突，避免阻塞正常流程
+// 修改检查手机是否存在冲突的函数
+async function checkPhoneExists(phone, year) {
+    try {
+        console.log("检查手机号是否存在:", phone, "年份:", year);
+        
+        // 使用编码的参数构建URL
+        const encodedPhone = encodeURIComponent(phone);
+        const searchUrl = `${SAVE_API_URL}?search=${encodedPhone}`;
+        
+        console.log("查询URL:", searchUrl);
+        
+        // 发送GET请求
+        const response = await fetch(searchUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors' // 明确指定CORS模式
+        });
+        
+        console.log("查询响应状态:", response.status);
+        
+        if (!response.ok) {
+            console.error(`查询错误: ${response.status} - ${response.statusText}`);
+            const errorText = await response.text();
+            console.error("错误详情:", errorText);
+            throw new Error(`查询服务错误: ${response.status} - ${response.statusText}`);
+        }
+        
+        let data;
+        try {
+            const responseText = await response.text();
+            console.log("原始响应文本:", responseText);
+            
+            if (!responseText.trim()) {
+                console.warn("响应为空，返回空数组");
                 return false;
             }
+            
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("JSON解析错误:", parseError);
+            console.error("响应内容:", responseText);
+            throw new Error(`响应格式错误: ${parseError.message}`);
         }
-
+        
+        console.log("解析后的数据:", data);
+        
+        // 确保 data 是数组
+        if (!Array.isArray(data)) {
+            console.warn("返回的数据不是数组格式，返回false");
+            return false;
+        }
+        
+        // 检查数据库中是否存在相同年份前缀的记录
+        const yearDigit = String(year % 10);
+        const exists = data.some(record => {
+            // 检查记录的手机号是否以相同的年份数字开头
+            return record.phoneNumber && record.phoneNumber.startsWith(yearDigit);
+        });
+        
+        console.log("是否存在冲突:", exists);
+        return exists;
+    } catch (error) {
+        console.error("检查手机号冲突时出错:", error);
+        // 发生错误时返回 false，避免阻塞正常流程
+        return false;
+    }
+}
         // 6. 获取下一个可用的手机号（带前缀和后缀）
         async function getNextAvailablePhone(basePhone, year) {
             // 首先添加年份前缀
@@ -941,136 +989,66 @@ window.searchPhone = function () {
             }
         }
 
-// 2. 修改保存功能，使用专门的保存 Worker
+
 // 7. 保存资料（用户版 - 保留前缀用于年份判断）- 仅在修改当前年份记录时提示
+// 修改保存函数中的 fetch 请求部分
 window.saveChanges = async function () {
-    // 检查年份是否已选择
-    const yearSelect = document.getElementById("registrationYear");
-    if (!yearSelect.value) {
-        alert("⚠️ 请先选择报名太岁年份！");
-        yearSelect.focus();
-        return;
-    }
+    // ... 之前的验证代码保持不变 ...
     
-    const selectedYear = parseInt(yearSelect.value);
-    
-    // 检查主家姓名
-    const name = document.getElementById("mainName").value.trim();
-    if (!name) {
-        alert("⚠️ 请填写主祈者姓名！");
-        document.getElementById("mainName").focus();
-        return;
-    }
-    
-    // 检查手机号码
-    const phoneWithoutPrefix = document.getElementById("phoneNumber").value.trim();
-    if (!phoneWithoutPrefix) {
-        alert("⚠️ 手机号码不能为空！");
-        document.getElementById("phoneNumber").focus();
-        return;
-    }
-    
-    // 验证手机号格式（不带前缀）
-    const realPhone = extractRealPhone(phoneWithoutPrefix);
-    if (!isValidMalaysianPhone(realPhone)) {
-        alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
-        document.getElementById("phoneNumber").focus();
-        return;
-    }
-
-    const prayers = document.getElementById("prayersContainer").children;
-    const updatedData = Array.from(prayers).map(div => ({
-        name: div.querySelector(".pName").value,
-        zodiac: div.querySelector(".pZodiac").value, // 保存选择的生肖
-        taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-        light: div.querySelector('input.pLight:checked')?.value || "",
-        longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-        wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-        arhat: div.querySelector('input.pArhat:checked')?.value || "",
-        paperGold1: +div.querySelector(".pg1").value || 0,
-        paperGold2: +div.querySelector(".pg2").value || 0,
-        paperGold3: +div.querySelector(".pg3").value || 0,
-        paperGold4: +div.querySelector(".pg4").value || 0,
-        paperGold5: +div.querySelector(".pg5").value || 0,
-        donation: +div.querySelector(".donate").value || 0
-    }));
-
-    // 仅在以下条件满足时才显示提示：存在原始记录、是当前年份的记录、并且用户试图保存到当前年份
-    if (selectedEntry && selectedEntry.phoneNumber) {
-        // 获取当前年份的最后一位数字
-        const currentYearLastDigit = currentYear % 10;
-        // 获取原始记录的手机号第一位（年份前缀）
-        const originalPhoneFirstDigit = selectedEntry.phoneNumber.charAt(0);
-        
-        // 检查是否是当前年份的记录（原始记录以当前年份的数字开头）AND 用户选择保存到当前年份
-        if (String(currentYearLastDigit) === originalPhoneFirstDigit && selectedYear === currentYear) {
-            // 显示提示，询问用户是否转到新增表单
-            const shouldGoToNewForm = confirm(`⚠️  提示：您不能修改${currentYear}年的当前记录！\n\n需要添加新成员请填写新的报名表。是否要转到创建新增报名表单？\n点击"确定"将跳转到新增报名表单，点击"取消"返回`);
-            
-            if (shouldGoToNewForm) {
-                // 用户点击确定，跳转到新增表单
-                setTimeout(() => {
-                    // 使用清洗后的手机号调用 startNewEntry 函数
-                    startNewEntry(realPhone);
-                    
-                    alert(`✅ 已跳转到新增表单\n请选择年份并填写新的记录信息。`);
-                }, 50);
-                
-                return; // 返回，不执行保存
-            } else {
-                // 用户点击取消，直接返回，不执行任何操作
-                return;
-            }
-        }
-    }
-
-    // 如果选择了比当前年份大的年份，或者不是当前年份的记录，则静默执行保存
     const btn = document.querySelector("button[onclick='saveChanges()']");
     btn.innerHTML = "保存中...";
     btn.disabled = true;
 
     try {
+        console.log("开始获取可用手机号...");
         // 获取最终要使用的手机号（检查冲突并添加前缀和后缀）
         const finalPhone = await getNextAvailablePhone(realPhone, selectedYear);
+        console.log("获取到的最终手机号:", finalPhone);
         
-        // 构建要提交的数据 - 使用带前缀的手机号（用于年份判断）
+        // 构建要提交的数据
         const submitData = {
-            phoneNumber: finalPhone, // 使用带前缀和可能带后缀的手机号
+            phoneNumber: finalPhone,
             mainName: name,
             data: updatedData,
-            receiptNumber: "", // 强制为空
-            receiptDate: "",   // 强制为空
-            // 用户版：强制清空备注信息，无论原数据是什么
-            wishReturn: "",    // 强制清空
-            offering: "",      // 强制清空
-            wishPaper: ""      // 强制清空
+            receiptNumber: "",
+            receiptDate: "",
+            wishReturn: "",
+            offering: "",
+            wishPaper: ""
         };
+        
+        console.log("准备提交的数据:", JSON.stringify(submitData, null, 2));
 
-        // 使用专门的保存 Worker
+        // 发送保存请求
+        console.log("发送保存请求到:", SAVE_API_URL);
         const response = await fetch(SAVE_API_URL, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json; charset=utf-8"
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "Accept": "application/json"
             },
-            body: JSON.stringify(submitData)
+            body: JSON.stringify(submitData),
+            mode: 'cors' // 明确指定CORS模式
         });
         
-        // 检查响应状态
+        console.log("响应状态:", response.status);
+        
         if (!response.ok) {
-            // 如果响应不是 2xx，显示详细错误信息
             const errorText = await response.text();
             console.error(`HTTP Error: ${response.status} - ${response.statusText}`);
             console.error(`Error details: ${errorText}`);
             throw new Error(`保存服务错误: ${response.status} - ${response.statusText}. 详情: ${errorText}`);
         }
         
-        // 尝试解析 JSON 响应，但要处理可能的解析错误
         let result;
         try {
             const responseText = await response.text();
+            console.log("服务器响应内容:", responseText);
+            
             if (!responseText.trim()) {
                 throw new Error("保存服务返回空响应");
             }
+            
             result = JSON.parse(responseText);
         } catch (parseError) {
             console.error("JSON解析错误:", parseError);
@@ -1080,21 +1058,25 @@ window.saveChanges = async function () {
         
         if (result.success) {
             alert(`✅ 保存成功！\n使用手机号: ${finalPhone}`);
-            cancelEdit(); // 保存后返回首页
+            cancelEdit();
         } else {
             alert("❌ 保存失败：" + (result.message || "保存服务返回错误"));
         }
     } catch (error) {
         console.error("保存出错:", error);
+        console.error("错误类型:", error.constructor.name);
+        console.error("错误消息:", error.message);
         
         if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-            alert("网络错误：无法连接到保存服务，请检查网络连接或稍后再试。");
+            alert("网络错误：无法连接到保存服务，请检查网络连接或稍后再试。\n\n错误详情: " + error.message);
         } else if (error.message.includes('timeout')) {
-            alert("保存超时：请求时间过长，请稍后再试。");
+            alert("保存超时：请求时间过长，请稍后再试。\n\n错误详情: " + error.message);
         } else if (error.message.includes('404')) {
-            alert("保存服务错误：找不到请求的地址，请联系管理员。");
+            alert("保存服务错误：找不到请求的地址，请联系管理员。\n\n错误详情: " + error.message);
         } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
-            alert("保存服务内部错误：服务器暂时无法处理请求，请稍后再试。");
+            alert("保存服务内部错误：服务器暂时无法处理请求，请稍后再试。\n\n错误详情: " + error.message);
+        } else if (error.message.includes('CORS')) {
+            alert("跨域请求错误：浏览器阻止了跨域请求，请联系网站管理员。\n\n错误详情: " + error.message);
         } else {
             alert(`保存错误：${error.message}\n\n请检查网络连接或联系技术支持。`);
         }
@@ -1103,7 +1085,6 @@ window.saveChanges = async function () {
         btn.disabled = false;
     }
 };
-
 	// 3. 修改检查手机是否存在冲突的函数，也使用保存 Worker
 async function checkPhoneExists(phone, year) {
     try {
