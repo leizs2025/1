@@ -351,7 +351,7 @@ function checkMin() {
 }
 
 
-window.forceInsertNewEntry = async function () {
+window.forceInsertNewEntry = async function (isMoveOperation = false) {
   const inputPhone = document.getElementById("phoneNumber").value.trim();
   if (!inputPhone) return alert("请填写电话号码！");
 
@@ -441,25 +441,80 @@ window.forceInsertNewEntry = async function () {
     method: "POST"
   };
 
-  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        alert("✅ 报名成功！待付款。"); 
-        startNewEntry();
-      } else {
-        alert("❌ 报名失败：" + result.message);
+  // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
+  if (isMoveOperation && selectedEntry && selectedEntry.id) {
+    try {
+      // 1. 保存到管理Worker
+      const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const insertResult = await insertRes.json();
+      if (!insertResult.success) {
+        throw new Error(insertResult.message || "管理Worker保存失败");
       }
+
+      // 2. 成功保存后，从用户Worker删除原记录
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedEntry.id })
+      });
+
+      const deleteResult = await deleteRes.json();
+      if (!deleteResult.success) {
+        console.warn("用户Worker删除失败:", deleteResult.message);
+        // 不抛出错误，因为主要目的已达成
+      }
+
+      alert("✅ 资料已成功移动到管理Worker！");
+      
+      // 清空表单并重置状态
+      document.getElementById("entryForm").innerHTML = "";
+      document.getElementById("searchInput").value = "";
+      selectedEntry = null;
+      fullData = [];
+
+    } catch (error) {
+      alert("移动失败：" + error.message);
+      console.error("移动错误:", error);
+    }
+  } else {
+    // 原来的插入逻辑
+    fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
     })
-    .catch(err => {
-        alert("提交出错：" + err.message);
-    });
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          alert("✅ 报名成功！待付款。"); 
+          startNewEntry();
+        } else {
+          alert("❌ 报名失败：" + result.message);
+        }
+      })
+      .catch(err => {
+          alert("提交出错：" + err.message);
+      });
+  }
 };
 
+// 添加移动按钮的处理函数
+window.moveEntry = async function () {
+  if (!selectedEntry) {
+    alert("请先查询并选择要移动的记录！");
+    return;
+  }
+  
+  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
+    // 设置当前表单数据，然后调用forceInsertNewEntry进行移动
+    forceInsertNewEntry(true); // 传递true表示这是移动操作
+  }
+};
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
