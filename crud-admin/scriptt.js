@@ -436,10 +436,22 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
     method: "POST"
   };
 
+  // 显示保存进度提示
+  const originalButtonText = document.querySelector('#moveBtn')?.textContent || '移动';
+  if (document.querySelector('#moveBtn')) {
+    document.querySelector('#moveBtn').textContent = '正在保存...';
+    document.querySelector('#moveBtn').disabled = true;
+  }
+  
+  if (!isMoveOperation) {
+    alert("🔄 正在提交数据到服务器...");
+  }
+
   // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
-  if (isMoveOperation && selectedEntry && selectedEntry.phoneNumber) { // 注意这里使用phoneNumber而不是id
+  if (isMoveOperation && selectedEntry && selectedEntry.phoneNumber) {
     try {
       // 1. 保存到管理Worker
+      alert("🔄 正在将数据移动到管理端...");
       const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -454,8 +466,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       console.log("管理Worker保存成功，准备删除用户Worker记录");
       console.log("要删除的号码:", selectedEntry.phoneNumber);
 
-      // 2. 成功保存后，从用户Worker删除原记录
-      // 注意：GAS的DELETE是通过POST方法，使用method: "DELETE"
+      // 2. 静默删除用户Worker中的原记录
       const deleteBody = {
         phoneNumber: selectedEntry.phoneNumber, // GAS使用phoneNumber字段删除
         method: "DELETE"
@@ -469,64 +480,85 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
         body: JSON.stringify(deleteBody)
       });
 
-      console.log("删除响应状态:", deleteRes.status);
       const deleteResult = await deleteRes.json();
       console.log("删除响应内容:", deleteResult);
       
+      // 删除完成后返回搜索页面
       if (!deleteResult.success) {
         console.error("用户Worker删除失败:", deleteResult.message);
-        alert("⚠️ 记录已保存到管理Worker，但用户Worker删除失败：" + deleteResult.message);
+        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message + "\n\n请返回搜索页面重新检查数据。");
       } else {
-        alert("✅ 资料已成功移动到管理Worker！");
+        alert("✅ 数据已成功移动到管理端，并已从用户端删除！\n\n即将返回搜索页面...");
       }
       
-      // 清空表单并重置状态
+      // 清空表单并返回搜索页面
       document.getElementById("entryForm").innerHTML = "";
       document.getElementById("searchInput").value = "";
       selectedEntry = null;
       fullData = [];
       
-      // 强制刷新页面以同步最新数据
+      // 返回搜索页面
       setTimeout(() => {
+        window.location.hash = '#search';
         location.reload();
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error("移动过程中出错:", error);
-      alert("移动失败：" + error.message);
+      alert("❌ 移动失败：" + error.message);
+      
+      // 恢复按钮状态
+      if (document.querySelector('#moveBtn')) {
+        document.querySelector('#moveBtn').textContent = originalButtonText;
+        document.querySelector('#moveBtn').disabled = false;
+      }
     }
   } else {
     // 原来的插入逻辑
-    fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (result.success) {
-          alert("✅ 报名成功！待付款。"); 
-          startNewEntry();
-        } else {
-          alert("❌ 报名失败：" + result.message);
-        }
-      })
-      .catch(err => {
-          alert("提交出错：" + err.message);
+    try {
+      const res = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
+      
+      const result = await res.json();
+      
+      if (result.success) {
+        alert("✅ 提交成功！数据已保存。\n\n即将返回搜索页面...");
+        
+        // 清空表单并返回搜索页面
+        startNewEntry(); // 这会清空表单
+        
+        // 返回搜索页面
+        setTimeout(() => {
+          window.location.hash = '#search';
+          location.reload();
+        }, 1500);
+      } else {
+        alert("❌ 提交失败：" + result.message);
+      }
+    } catch (err) {
+      alert("❌ 提交出错：" + err.message);
+    }
+  }
+  
+  // 恢复按钮状态
+  if (document.querySelector('#moveBtn')) {
+    document.querySelector('#moveBtn').textContent = originalButtonText;
+    document.querySelector('#moveBtn').disabled = false;
   }
 };
 
-// 添加移动按钮的处理函数
+// 添加移动按钮的处理函数 - 现在是静默执行
 window.moveEntry = async function () {
   if (!selectedEntry) {
     alert("请先查询并选择要移动的记录！");
     return;
   }
   
-  if (confirm("确定要将此记录从用户数据新增到管理数据吗？\n原记录将从用户数据端删除。")) {
-    forceInsertNewEntry(true); // 传递true表示这是移动操作
-  }
+  // 静默执行，不询问确认
+  forceInsertNewEntry(true); // 传递true表示这是移动操作
 };
 
 // 添加移动按钮的处理函数
