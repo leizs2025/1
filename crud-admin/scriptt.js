@@ -468,8 +468,8 @@ window.forceInsertNewEntry = async function () {
     method: "POST"
   };
 
-  // 显示保存进度提示
-  alert("🔄 正在提交数据到管理端...");
+  // 开始处理前的提示
+  alert("🔄 正在保存中...");
 
   try {
     // 1. 保存到管理Worker (https://lucky-cloud-f9c3.gealarm2012.workers.dev)
@@ -486,7 +486,7 @@ window.forceInsertNewEntry = async function () {
 
     // 2. 检查是否有selectedEntry（即是否是从用户端移动过来的数据）
     if (selectedEntry && selectedEntry.phoneNumber) {
-      // 在后台执行删除操作，不显示提示
+      // 在后台执行删除操作，不显示额外提示
       try {
         const deleteBody = {
           phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
@@ -506,21 +506,16 @@ window.forceInsertNewEntry = async function () {
         
         if (!deleteResult.success) {
           console.error("用户端删除失败:", deleteResult.message);
-          // 不显示删除失败的提示，只是在控制台记录
         } else {
           console.log("原记录已从用户端成功删除！");
         }
       } catch (deleteError) {
         console.error("删除操作失败:", deleteError);
-        // 不显示删除失败的提示，只是在控制台记录
       }
-      
-      // 删除操作完成后，显示最终的成功提示
-      alert("✅ 数据已提交成功！原记录已从用户端移除。");
-    } else {
-      // 如果没有要删除的原始记录，直接显示成功
-      alert("✅ 数据已提交成功！");
     }
+    
+    // 所有操作完成后显示成功提示
+    alert("✅ 提交成功！点击确认关闭");
     
     // 清空表单并返回搜索页面
     if (typeof startNewEntry === 'function') {
