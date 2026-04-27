@@ -463,7 +463,7 @@ window.forceInsertNewEntry = async function () {
         method: "DELETE"
       };
       
-      const deleteRes = await fetch('YOUR_GAS_DEPLOYMENT_URL', { // 请替换为你的GAS部署URL
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 请替换为你的GAS部署URL
         method: 'POST', // GAS只接受POST请求
         headers: { 
           'Content-Type': 'application/json'
