@@ -439,7 +439,7 @@ window.forceInsertNewEntry = async function () {
   alert("🔄 正在提交数据到管理端...");
 
   try {
-    // 1. 保存到管理Worker
+    // 1. 保存到管理Worker (https://lucky-cloud-f9c3.gealarm2012.workers.dev)
     const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -455,15 +455,15 @@ window.forceInsertNewEntry = async function () {
 
     // 2. 检查是否有selectedEntry（即是否是从用户端移动过来的数据）
     if (selectedEntry && selectedEntry.phoneNumber) {
-      alert("🔄 检查用户端是否有原记录...");
+      alert("🔄 正在从用户端删除原记录...");
       
-      // 3. 静默删除用户Worker中的原记录
+      // 3. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
       const deleteBody = {
-        phoneNumber: selectedEntry.phoneNumber, // GAS使用phoneNumber字段删除
+        phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
         method: "DELETE"
       };
       
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 请替换为你的GAS部署URL
+      const deleteRes = await fetch('YOUR_GAS_DEPLOYMENT_URL', { // 这是用户端Worker
         method: 'POST', // GAS只接受POST请求
         headers: { 
           'Content-Type': 'application/json'
@@ -472,10 +472,10 @@ window.forceInsertNewEntry = async function () {
       });
 
       const deleteResult = await deleteRes.json();
-      console.log("删除响应内容:", deleteResult);
+      console.log("用户端删除响应内容:", deleteResult);
       
       if (!deleteResult.success) {
-        console.error("用户Worker删除失败:", deleteResult.message);
+        console.error("用户端删除失败:", deleteResult.message);
         alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
       } else {
         alert("✅ 原记录已从用户端成功删除！");
@@ -501,39 +501,6 @@ window.forceInsertNewEntry = async function () {
   } catch (error) {
     console.error("保存过程中出错:", error);
     alert("❌ 保存失败：" + error.message);
-  }
-};
-// 添加移动按钮的处理函数 - 现在是静默执行
-window.moveEntry = async function () {
-  if (!selectedEntry) {
-    alert("请先查询并选择要移动的记录！");
-    return;
-  }
-  
-  // 静默执行，不询问确认
-  forceInsertNewEntry(true); // 传递true表示这是移动操作
-};
-
-// 添加移动按钮的处理函数
-window.moveEntry = async function () {
-  if (!selectedEntry) {
-    alert("请先查询并选择要移动的记录！");
-    return;
-  }
-  
-  if (confirm("确定要将此记录从用户数据新增到管理数据吗？")) {
-    forceInsertNewEntry(true); // 传递true表示这是移动操作
-  }
-};
-// 添加移动按钮的处理函数
-window.moveEntry = async function () {
-  if (!selectedEntry) {
-    alert("请先查询并选择要移动的记录！");
-    return;
-  }
-  
-  if (confirm("确定要将此记录从用户数据新增到管理数据吗？")) {
-    forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
 
