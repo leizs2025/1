@@ -386,9 +386,7 @@ function checkMin() {
 
 
 window.forceInsertNewEntry = async function () {
-  // 修改这一行：使用正确的ID "phone" 而不是 "phoneNumber"
-  const inputPhone = document.getElementById("phone").value.trim();
-  
+  const inputPhone = document.getElementById("phoneNumber").value.trim();
   if (!inputPhone) return alert("请填写电话号码！");
 
   // --- 查重与自动重命名逻辑 ---
@@ -492,28 +490,52 @@ window.forceInsertNewEntry = async function () {
     if (selectedEntry && selectedEntry.phoneNumber) {
       alert("🔄 正在从用户端删除原记录...");
       
-      // 3. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
-      const deleteBody = {
-        phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
-        method: "DELETE"
+      // 3. 先查询用户端是否存在该记录
+      const queryBody = {
+        method: "GET",
+        phoneNumber: selectedEntry.phoneNumber
       };
       
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 这是用户端Worker
-        method: 'POST', // GAS只接受POST请求
+      const queryRes = await fetch('https://userts.gealarm2012.workers.dev', {
+        method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(deleteBody)
+        body: JSON.stringify(queryBody)
       });
-
-      const deleteResult = await deleteRes.json();
-      console.log("用户端删除响应内容:", deleteResult);
       
-      if (!deleteResult.success) {
-        console.error("用户端删除失败:", deleteResult.message);
-        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
+      const queryResult = await queryRes.json();
+      console.log("用户端查询响应内容:", queryResult);
+      
+      if (queryResult.success && queryResult.data) {
+        alert(`🔍 查询到用户端存在原始记录，准备删除...\n原始号码: ${selectedEntry.phoneNumber}`);
+        
+        // 4. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
+        const deleteBody = {
+          phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
+          method: "DELETE"
+        };
+        
+        const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 这是用户端Worker
+          method: 'POST', // GAS只接受POST请求
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(deleteBody)
+        });
+
+        const deleteResult = await deleteRes.json();
+        console.log("用户端删除响应内容:", deleteResult);
+        
+        if (!deleteResult.success) {
+          console.error("用户端删除失败:", deleteResult.message);
+          alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
+        } else {
+          alert("✅ 原记录已从用户端成功删除！");
+        }
       } else {
-        alert("✅ 原记录已从用户端成功删除！");
+        console.warn("用户端未找到原始记录:", selectedEntry.phoneNumber);
+        alert(`⚠️ 用户端未找到原始记录 ${selectedEntry.phoneNumber}，跳过删除步骤`);
       }
     } else {
       alert("✅ 数据已提交成功！");
