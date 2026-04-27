@@ -404,13 +404,6 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   }
   // --- 第一步结束 ---
 
-  // 移除本地数据查重，因为这不是权威的重复检查
-  // const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
-  // if (existsInLocal && finalPhone === inputPhone) {
-  //     alert("❌ 本地列表中该电话号码已存在！");
-  //     return;
-  // }
-
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
     name: div.querySelector(".pName").value,
@@ -443,10 +436,10 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
     method: "POST"
   };
 
-  // 如果是移动操作，直接保存到管理Worker，无需查重
+  // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
   if (isMoveOperation && selectedEntry && selectedEntry.id) {
     try {
-      // 直接保存到管理Worker，不做任何重复检查
+      // 1. 保存到管理Worker
       const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -458,26 +451,40 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
         throw new Error(insertResult.message || "管理Worker保存失败");
       }
 
-      // 成功保存后，从用户Worker删除原记录
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', {
+      // 2. 成功保存后，从用户Worker删除原记录
+      // 注意：这里需要替换为你实际的用户Worker URL
+      const userWorkerUrl = 'https://userts.gealarm2012.workers.dev'; // 请替换为你的用户Worker URL
+      
+      const deleteRes = await fetch(userWorkerUrl, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: selectedEntry.id })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + (localStorage.getItem("admin") || "") // 如果需要认证
+        },
+        body: JSON.stringify({ 
+          id: selectedEntry.id,
+          phoneNumber: selectedEntry.phoneNumber // 可以额外提供电话号码作为双重保险
+        })
       });
 
       const deleteResult = await deleteRes.json();
+      
       if (!deleteResult.success) {
-        console.warn("用户Worker删除失败:", deleteResult.message);
-        // 不抛出错误，因为主要目的已达成
+        console.error("用户Worker删除失败:", deleteResult.message);
+        alert("⚠️ 记录已保存到管理Worker，但用户Worker删除失败：" + deleteResult.message);
+        // 即使删除失败，也提示用户主要任务已完成
+      } else {
+        alert("✅ 资料已成功移动到管理Worker，并已从用户Worker删除！");
       }
-
-      alert("✅ 资料已成功移动到管理Worker！");
       
       // 清空表单并重置状态
       document.getElementById("entryForm").innerHTML = "";
       document.getElementById("searchInput").value = "";
       selectedEntry = null;
       fullData = [];
+      
+      // 刷新页面或重新加载数据
+      location.reload(); // 或者调用刷新数据的函数
 
     } catch (error) {
       alert("移动失败：" + error.message);
@@ -493,7 +500,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          alert("✅ 报名成功！待付款。"); 
+          alert("✅ 新增成功。"); 
           startNewEntry();
         } else {
           alert("❌ 报名失败：" + result.message);
@@ -505,6 +512,17 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   }
 };
 
+// 添加移动按钮的处理函数
+window.moveEntry = async function () {
+  if (!selectedEntry) {
+    alert("请先查询并选择要移动的记录！");
+    return;
+  }
+  
+  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
+    forceInsertNewEntry(true); // 传递true表示这是移动操作
+  }
+};
 // 添加移动按钮的处理函数
 window.moveEntry = async function () {
   if (!selectedEntry) {
