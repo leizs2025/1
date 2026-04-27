@@ -437,7 +437,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   };
 
   // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
-  if (isMoveOperation && selectedEntry && selectedEntry.id) {
+  if (isMoveOperation && selectedEntry && selectedEntry.phoneNumber) { // 注意这里使用phoneNumber而不是id
     try {
       // 1. 保存到管理Worker
       const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
@@ -451,30 +451,33 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
         throw new Error(insertResult.message || "管理Worker保存失败");
       }
 
+      console.log("管理Worker保存成功，准备删除用户Worker记录");
+      console.log("要删除的号码:", selectedEntry.phoneNumber);
+
       // 2. 成功保存后，从用户Worker删除原记录
-      // 注意：这里需要替换为你实际的用户Worker URL
-      const userWorkerUrl = 'https://userts.gealarm2012.workers.dev'; // 请替换为你的用户Worker URL
+      // 注意：GAS的DELETE是通过POST方法，使用method: "DELETE"
+      const deleteBody = {
+        phoneNumber: selectedEntry.phoneNumber, // GAS使用phoneNumber字段删除
+        method: "DELETE"
+      };
       
-      const deleteRes = await fetch(userWorkerUrl, {
-        method: 'DELETE',
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 请替换为你的GAS部署URL
+        method: 'POST', // GAS只接受POST请求
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + (localStorage.getItem("admin") || "") // 如果需要认证
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          id: selectedEntry.id,
-          phoneNumber: selectedEntry.phoneNumber // 可以额外提供电话号码作为双重保险
-        })
+        body: JSON.stringify(deleteBody)
       });
 
+      console.log("删除响应状态:", deleteRes.status);
       const deleteResult = await deleteRes.json();
+      console.log("删除响应内容:", deleteResult);
       
       if (!deleteResult.success) {
         console.error("用户Worker删除失败:", deleteResult.message);
         alert("⚠️ 记录已保存到管理Worker，但用户Worker删除失败：" + deleteResult.message);
-        // 即使删除失败，也提示用户主要任务已完成
       } else {
-        alert("✅ 资料已成功移动到管理Worker，并已从用户Worker删除！");
+        alert("✅ 资料已成功移动到管理Worker！");
       }
       
       // 清空表单并重置状态
@@ -483,12 +486,14 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       selectedEntry = null;
       fullData = [];
       
-      // 刷新页面或重新加载数据
-      location.reload(); // 或者调用刷新数据的函数
+      // 强制刷新页面以同步最新数据
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
 
     } catch (error) {
+      console.error("移动过程中出错:", error);
       alert("移动失败：" + error.message);
-      console.error("移动错误:", error);
     }
   } else {
     // 原来的插入逻辑
@@ -500,7 +505,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          alert("✅ 新增成功。"); 
+          alert("✅ 报名成功！待付款。"); 
           startNewEntry();
         } else {
           alert("❌ 报名失败：" + result.message);
@@ -519,7 +524,19 @@ window.moveEntry = async function () {
     return;
   }
   
-  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
+  if (confirm("确定要将此记录从用户数据新增到管理数据吗？\n原记录将从用户数据端删除。")) {
+    forceInsertNewEntry(true); // 传递true表示这是移动操作
+  }
+};
+
+// 添加移动按钮的处理函数
+window.moveEntry = async function () {
+  if (!selectedEntry) {
+    alert("请先查询并选择要移动的记录！");
+    return;
+  }
+  
+  if (confirm("确定要将此记录从用户数据新增到管理数据吗？")) {
     forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
@@ -530,7 +547,7 @@ window.moveEntry = async function () {
     return;
   }
   
-  if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
+  if (confirm("确定要将此记录从用户数据新增到管理数据吗？")) {
     forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
