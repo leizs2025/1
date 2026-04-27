@@ -352,157 +352,177 @@ function checkMin() {
 }
 
 
-window.forceInsertNewEntry = async function () {
-  const inputPhone = document.getElementById("phoneNumber").value.trim();
-  if (!inputPhone) return alert("请填写电话号码！");
-
-  // --- 查重与自动重命名逻辑 ---
-  let finalPhone = inputPhone;
-  let counter = 1;
-  let needsRename = false;
-
-  // 检查管理Worker中原始号码是否存在（不管是否是移动操作都需要查重）
+async function forceInsertNewEntry() {
   try {
-    const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
-    const checkData = await checkRes.json();
-    
-    // 如果后端返回的是数组，且长度大于0，说明已存在
-    if (Array.isArray(checkData) && checkData.length > 0) {
-      needsRename = true;
-    }
-  } catch (e) {
-    console.error("查询出错", e);
-    alert("查询后端失败，请检查网络");
-    return;
-  }
+    const receiptNumber = document.getElementById("receiptNumber").value.trim();
+    const receiptDate = document.getElementById("receiptDate").value.trim();
+    const mainName = document.getElementById("mainName").value.trim();
+    const phoneInput = document.getElementById("phone").value.trim();
 
-  // 如果存在，开始循环尝试 +1, +2...
-  if (needsRename) {
-    while (needsRename) {
-      const testPhone = `${inputPhone}+${counter}`;
-      try {
-        // 再次查询新号码
-        const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
-        const json = await res.json();
-        
-        // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
-        if (Array.isArray(json) && json.length > 0) {
-          counter++; // 继续加号
-        } else {
-          finalPhone = testPhone; // 找到了没被占用的号码
-          needsRename = false;    // 退出循环
-        }
-      } catch (e) {
-        alert("查重过程出错，请重试");
-        return;
+    // 获取所有复选框的状态
+    const checkboxes = {};
+    const checkboxElements = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+    checkboxElements.forEach(checkbox => {
+      const name = checkbox.name;
+      if (name && name !== "selectAll") {
+        checkboxes[name] = checkbox.checked;
       }
+    });
+
+    // 检查收据号是否已存在
+    const existingRes = await fetch('https://lucky-cloud-f9c3.gealarm2012.workers.dev', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        method: "GET",
+        receiptNumber: receiptNumber
+      })
+    });
+    
+    const existingResult = await existingRes.json();
+    
+    if (existingResult.success && existingResult.data) {
+      alert(`收据号 ${receiptNumber} 已存在于管理数据库中，正在替换...`);
+      console.log("找到现有记录:", existingResult.data);
     }
-    
-    // 提示用户号码被修改了
-    alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
-  }
-  // --- 查重逻辑结束 ---
 
-  const prayers = document.getElementById("prayersContainer").children;
-  const updatedData = Array.from(prayers).map(div => ({
-    name: div.querySelector(".pName").value,
-    zodiac: div.querySelector(".pZodiac").value,
-    taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
-    light: div.querySelector('input.pLight:checked')?.value || "",
-    longevity: div.querySelector('input.pLongevity:checked')?.value || "",
-    wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
-    arhat: div.querySelector('input.pArhat:checked')?.value || "",
-    paperGold1: +div.querySelector(".pg1").value || 0,
-    paperGold2: +div.querySelector(".pg2").value || 0,
-    paperGold3: +div.querySelector(".pg3").value || 0,
-    paperGold4: +div.querySelector(".pg4").value || 0,
-    paperGold5: +div.querySelector(".pg5").value || 0,
-    donation: +div.querySelector(".donate").value || 0
-  }));
+    // 构建更新后的数据
+    const updatedData = {
+      receiptNumber: receiptNumber,
+      receiptDate: receiptDate,
+      mainName: mainName,
+      phone: phoneInput,
+      ...checkboxes
+    };
 
-  const currentReceiptNumber = document.getElementById("receiptNumber").value.trim();
-    
-  const body = {
-    phoneNumber: finalPhone, // 使用最终确定的号码
-    mainName: document.getElementById("mainName").value.trim(),
-    data: updatedData,
-    receiptNumber: currentReceiptNumber,
-    receiptDate: document.getElementById("receiptDate").value.trim(),
-    wishReturn: document.querySelector('input[name="wishReturn"]:checked')?.value || "",
-    offering: document.querySelector('input[name="offering"]:checked')?.value || "",
-    wishPaper: document.getElementById("wishPaper").value.trim(),
-    admin: localStorage.getItem("admin") || "未登录",
-    method: "POST"
-  };
+    // 1. 保存到管理端Worker
+    const body = {
+      phoneNumber: phoneInput, // 使用输入的电话号码作为主键
+      mainName: mainName,
+      data: updatedData,
+      receiptNumber: receiptNumber,
+      receiptDate: receiptDate,
+      mainName: mainName,
+      ...checkboxes
+    };
 
-  // 显示保存进度提示
-  alert("🔄 正在提交数据到管理端...");
+    console.log("发送到管理端的数据:", body);
 
-  try {
-    // 1. 保存到管理Worker (https://lucky-cloud-f9c3.gealarm2012.workers.dev)
-    const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('https://lucky-cloud-f9c3.gealarm2012.workers.dev', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
 
-    const insertResult = await insertRes.json();
-    if (!insertResult.success) {
-      throw new Error(insertResult.message || "管理Worker保存失败");
+    const result = await res.json();
+    console.log("管理端保存结果:", result);
+
+    if (!result.success) {
+      throw new Error(result.error || "保存到管理端失败");
     }
 
-    alert("✅ 数据已成功保存到管理端！");
+    // 2. 确定要从用户端删除的原始电话号码
+    let originalPhoneNumber = null;
+    
+    // 查找与当前收据号对应的原始记录
+    if (existingResult.success && existingResult.data) {
+      // 如果收据号已存在，找到其原始电话号码
+      originalPhoneNumber = findOriginalPhoneNumberByReceiptNumber(existingResult.data.receiptNumber);
+    } else {
+      // 如果是新记录，尝试从当前表格中找到最匹配的原始记录
+      const tableRows = document.querySelectorAll("#entryTable tbody tr");
+      for (let row of tableRows) {
+        const cells = row.cells;
+        const cellReceiptNumber = cells[2].textContent.trim(); // 假设收据号在第3列
+        if (cellReceiptNumber === receiptNumber) {
+          originalPhoneNumber = cells[0].textContent.trim(); // 假设电话号码在第1列
+          break;
+        }
+      }
+    }
 
-    // 2. 检查是否有selectedEntry（即是否是从用户端移动过来的数据）
-    if (selectedEntry && selectedEntry.phoneNumber) {
-      alert("🔄 正在从用户端删除原记录...");
+    // 3. 如果找到了原始电话号码，则先查询用户端是否存在该记录
+    if (originalPhoneNumber) {
+      console.log("准备删除原始记录，电话号码:", originalPhoneNumber);
       
-      // 3. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
-      const deleteBody = {
-        phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
-        method: "DELETE"
+      // 先查询用户端是否存在该记录
+      const queryBody = {
+        method: "GET",
+        phoneNumber: originalPhoneNumber
       };
       
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 这是用户端Worker
-        method: 'POST', // GAS只接受POST请求
+      const queryRes = await fetch('https://userts.gealarm2012.workers.dev', {
+        method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(deleteBody)
+        body: JSON.stringify(queryBody)
       });
-
-      const deleteResult = await deleteRes.json();
-      console.log("用户端删除响应内容:", deleteResult);
       
-      if (!deleteResult.success) {
-        console.error("用户端删除失败:", deleteResult.message);
-        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
+      const queryResult = await queryRes.json();
+      console.log("查询用户端原始记录结果:", queryResult);
+      
+      if (queryResult.success && queryResult.data) {
+        // 记录存在，执行删除
+        const deleteBody = {
+          phoneNumber: originalPhoneNumber,
+          method: "DELETE"
+        };
+
+        const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(deleteBody)
+        });
+
+        const deleteResult = await deleteRes.json();
+        console.log("用户端删除结果:", deleteResult);
+        
+        if (deleteResult.success) {
+          console.log(`成功从用户端删除原始记录: ${originalPhoneNumber}`);
+        } else {
+          console.warn(`删除用户端记录失败:`, deleteResult.error);
+        }
       } else {
-        alert("✅ 原记录已从用户端成功删除！");
+        console.warn(`用户端未找到原始记录: ${originalPhoneNumber}`, queryResult);
       }
     } else {
-      alert("✅ 数据已提交成功！");
+      console.warn("未能确定要删除的原始电话号码");
     }
-    
-    // 清空表单并返回搜索页面
-    if (typeof startNewEntry === 'function') {
-      startNewEntry(); // 清空表单
-    } else {
-      // 如果没有startNewEntry函数，手动清空
-      document.getElementById("entryForm").innerHTML = "";
-    }
-    
-    // 返回搜索页面
-    setTimeout(() => {
-      window.location.hash = '#search';
-      location.reload();
-    }, 2000);
 
+    // 4. 更新本地UI显示
+    refreshTable();
+    
+    // 清空表单
+    document.getElementById("entryForm").reset();
+    
+    alert("条目已强制插入管理数据库！");
+    
   } catch (error) {
-    console.error("保存过程中出错:", error);
-    alert("❌ 保存失败：" + error.message);
+    console.error("强制插入新条目时出错:", error);
+    alert(`操作失败: ${error.message}`);
   }
-};
+}
+
+// 辅助函数：根据收据号查找原始电话号码
+function findOriginalPhoneNumberByReceiptNumber(receiptNumber) {
+  // 遍历当前表格数据，查找具有相同收据号的记录
+  const tableRows = document.querySelectorAll("#entryTable tbody tr");
+  for (let row of tableRows) {
+    const cells = row.cells;
+    const cellReceiptNumber = cells[2].textContent.trim(); // 假设收据号在第3列
+    if (cellReceiptNumber === receiptNumber) {
+      return cells[0].textContent.trim(); // 返回电话号码（假设在第1列）
+    }
+  }
+  return null;
+}
 
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
