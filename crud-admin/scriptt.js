@@ -536,7 +536,7 @@ window.forceInsertNewEntry = async function () {
     alert("❌ 保存失败：" + error.message);
   }
 };
-检查这段代码有问题吗？
+ 
 // 辅助函数：根据收据号查找原始电话号码
 function findOriginalPhoneNumberByReceiptNumber(receiptNumber) {
   // 遍历当前表格数据，查找具有相同收据号的记录
