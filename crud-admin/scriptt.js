@@ -459,7 +459,7 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       }
 
       // 成功保存后，从用户Worker删除原记录
-      const deleteRes = await fetch('https://your-user-worker.domain.workers.dev', {
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedEntry.id })
