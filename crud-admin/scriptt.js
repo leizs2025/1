@@ -355,65 +355,61 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   const inputPhone = document.getElementById("phoneNumber").value.trim();
   if (!inputPhone) return alert("请填写电话号码！");
 
-  // --- 第一步：查重与自动重命名逻辑 (异步) ---
+  // --- 第一步：查重与自动重命名逻辑 (仅用于非移动操作) ---
   let finalPhone = inputPhone;
   let counter = 1;
   let needsRename = false;
 
-  // 1. 先检查管理Worker中原始号码是否存在
-  try {
-    const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
-    const checkData = await checkRes.json();
-    
-    // 如果后端返回的是数组，且长度大于0，说明已存在
-    if (Array.isArray(checkData) && checkData.length > 0) {
-      needsRename = true;
-    }
-  } catch (e) {
-    console.error("查询出错", e);
-    alert("查询后端失败，请检查网络");
-    return;
-  }
-
-  // 2. 如果存在，开始循环尝试 +1, +2...
-  if (needsRename) {
-    while (needsRename) {
-      const testPhone = `${inputPhone}+${counter}`;
-      try {
-        // 再次查询新号码
-        const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
-        const json = await res.json();
-        
-        // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
-        if (Array.isArray(json) && json.length > 0) {
-          counter++; // 继续加号
-        } else {
-          finalPhone = testPhone; // 找到了没被占用的号码
-          needsRename = false;    // 退出循环
-        }
-      } catch (e) {
-        alert("查重过程出错，请重试");
-        return;
+  // 只有在非移动操作时才检查管理Worker中原始号码是否存在
+  if (!isMoveOperation) {
+    try {
+      const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
+      const checkData = await checkRes.json();
+      
+      // 如果后端返回的是数组，且长度大于0，说明已存在
+      if (Array.isArray(checkData) && checkData.length > 0) {
+        needsRename = true;
       }
+    } catch (e) {
+      console.error("查询出错", e);
+      alert("查询后端失败，请检查网络");
+      return;
     }
-    
-    // 提示用户号码被修改了
-    alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
+
+    // 2. 如果存在，开始循环尝试 +1, +2...
+    if (needsRename) {
+      while (needsRename) {
+        const testPhone = `${inputPhone}+${counter}`;
+        try {
+          // 再次查询新号码
+          const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
+          const json = await res.json();
+          
+          // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
+          if (Array.isArray(json) && json.length > 0) {
+            counter++; // 继续加号
+          } else {
+            finalPhone = testPhone; // 找到了没被占用的号码
+            needsRename = false;    // 退出循环
+          }
+        } catch (e) {
+          alert("查重过程出错，请重试");
+          return;
+        }
+      }
+      
+      // 提示用户号码被修改了
+      alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
+    }
   }
   // --- 第一步结束 ---
 
-  // 只有在非移动操作时才检查本地列表重复
-  if (!isMoveOperation) {
-    // 在移动操作中，我们不应该检查当前编辑的记录，因为它本来就是要被移动的
-    const existsInLocal = fullData.some(entry => 
-      entry.phoneNumber === inputPhone && 
-      (!selectedEntry || entry.id !== selectedEntry.id) // 排除当前正在编辑的记录
-    );
-    if (existsInLocal && finalPhone === inputPhone) {
-        alert("❌ 本地列表中该电话号码已存在！");
-        return;
-    }
-  }
+  // 移除本地数据查重，因为这不是权威的重复检查
+  // const existsInLocal = fullData.some(entry => entry.phoneNumber === inputPhone);
+  // if (existsInLocal && finalPhone === inputPhone) {
+  //     alert("❌ 本地列表中该电话号码已存在！");
+  //     return;
+  // }
 
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
@@ -447,10 +443,10 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
     method: "POST"
   };
 
-  // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
+  // 如果是移动操作，直接保存到管理Worker，无需查重
   if (isMoveOperation && selectedEntry && selectedEntry.id) {
     try {
-      // 1. 保存到管理Worker
+      // 直接保存到管理Worker，不做任何重复检查
       const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -462,8 +458,8 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
         throw new Error(insertResult.message || "管理Worker保存失败");
       }
 
-      // 2. 成功保存后，从用户Worker删除原记录
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', {
+      // 成功保存后，从用户Worker删除原记录
+      const deleteRes = await fetch('https://your-user-worker.domain.workers.dev', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedEntry.id })
@@ -517,10 +513,10 @@ window.moveEntry = async function () {
   }
   
   if (confirm("确定要将此记录从用户Worker移动到管理Worker吗？")) {
-    // 直接调用forceInsertNewEntry进行移动
     forceInsertNewEntry(true); // 传递true表示这是移动操作
   }
 };
+
 function updateTotalBox() {
     const prayers = document.getElementById("prayersContainer").children;
     const sum = { pg1: 0, pg2: 0, pg3: 0, pg4: 0, pg5: 0, donation: 0 };
