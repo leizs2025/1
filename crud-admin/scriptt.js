@@ -490,52 +490,28 @@ window.forceInsertNewEntry = async function () {
     if (selectedEntry && selectedEntry.phoneNumber) {
       alert("🔄 正在从用户端删除原记录...");
       
-      // 3. 先查询用户端是否存在该记录
-      const queryBody = {
-        method: "GET",
-        phoneNumber: selectedEntry.phoneNumber
+      // 3. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
+      const deleteBody = {
+        phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
+        method: "DELETE"
       };
       
-      const queryRes = await fetch('https://userts.gealarm2012.workers.dev', {
-        method: 'POST',
+      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 这是用户端Worker
+        method: 'POST', // GAS只接受POST请求
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(queryBody)
+        body: JSON.stringify(deleteBody)
       });
-      
-      const queryResult = await queryRes.json();
-      console.log("用户端查询响应内容:", queryResult);
-      
-      if (queryResult.success && queryResult.data) {
-        alert(`🔍 查询到用户端存在原始记录，准备删除...\n原始号码: ${selectedEntry.phoneNumber}`);
-        
-        // 4. 删除用户Worker中的原记录 (YOUR_GAS_DEPLOYMENT_URL)
-        const deleteBody = {
-          phoneNumber: selectedEntry.phoneNumber, // 用户端使用phoneNumber字段删除
-          method: "DELETE"
-        };
-        
-        const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 这是用户端Worker
-          method: 'POST', // GAS只接受POST请求
-          headers: { 
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(deleteBody)
-        });
 
-        const deleteResult = await deleteRes.json();
-        console.log("用户端删除响应内容:", deleteResult);
-        
-        if (!deleteResult.success) {
-          console.error("用户端删除失败:", deleteResult.message);
-          alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
-        } else {
-          alert("✅ 原记录已从用户端成功删除！");
-        }
+      const deleteResult = await deleteRes.json();
+      console.log("用户端删除响应内容:", deleteResult);
+      
+      if (!deleteResult.success) {
+        console.error("用户端删除失败:", deleteResult.message);
+        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
       } else {
-        console.warn("用户端未找到原始记录:", selectedEntry.phoneNumber);
-        alert(`⚠️ 用户端未找到原始记录 ${selectedEntry.phoneNumber}，跳过删除步骤`);
+        alert("✅ 原记录已从用户端成功删除！");
       }
     } else {
       alert("✅ 数据已提交成功！");
@@ -560,7 +536,7 @@ window.forceInsertNewEntry = async function () {
     alert("❌ 保存失败：" + error.message);
   }
 };
-
+检查这段代码有问题吗？
 // 辅助函数：根据收据号查找原始电话号码
 function findOriginalPhoneNumberByReceiptNumber(receiptNumber) {
   // 遍历当前表格数据，查找具有相同收据号的记录
