@@ -189,6 +189,7 @@ window.addPrayer = function () {
   }
   container.appendChild(createPrayerBlock({}, currentCount + 1));
 };
+
 function renderForm() {
   document.getElementById("adminForm").classList.remove("hidden");
 
@@ -351,58 +352,56 @@ function checkMin() {
 }
 
 
-window.forceInsertNewEntry = async function (isMoveOperation = false) {
+window.forceInsertNewEntry = async function () {
   const inputPhone = document.getElementById("phoneNumber").value.trim();
   if (!inputPhone) return alert("请填写电话号码！");
 
-  // --- 第一步：查重与自动重命名逻辑 (仅用于非移动操作) ---
+  // --- 查重与自动重命名逻辑 ---
   let finalPhone = inputPhone;
   let counter = 1;
   let needsRename = false;
 
-  // 只有在非移动操作时才检查管理Worker中原始号码是否存在
-  if (!isMoveOperation) {
-    try {
-      const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
-      const checkData = await checkRes.json();
-      
-      // 如果后端返回的是数组，且长度大于0，说明已存在
-      if (Array.isArray(checkData) && checkData.length > 0) {
-        needsRename = true;
-      }
-    } catch (e) {
-      console.error("查询出错", e);
-      alert("查询后端失败，请检查网络");
-      return;
+  // 检查管理Worker中原始号码是否存在（不管是否是移动操作都需要查重）
+  try {
+    const checkRes = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(inputPhone)}`);
+    const checkData = await checkRes.json();
+    
+    // 如果后端返回的是数组，且长度大于0，说明已存在
+    if (Array.isArray(checkData) && checkData.length > 0) {
+      needsRename = true;
     }
-
-    // 2. 如果存在，开始循环尝试 +1, +2...
-    if (needsRename) {
-      while (needsRename) {
-        const testPhone = `${inputPhone}+${counter}`;
-        try {
-          // 再次查询新号码
-          const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
-          const json = await res.json();
-          
-          // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
-          if (Array.isArray(json) && json.length > 0) {
-            counter++; // 继续加号
-          } else {
-            finalPhone = testPhone; // 找到了没被占用的号码
-            needsRename = false;    // 退出循环
-          }
-        } catch (e) {
-          alert("查重过程出错，请重试");
-          return;
-        }
-      }
-      
-      // 提示用户号码被修改了
-      alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
-    }
+  } catch (e) {
+    console.error("查询出错", e);
+    alert("查询后端失败，请检查网络");
+    return;
   }
-  // --- 第一步结束 ---
+
+  // 如果存在，开始循环尝试 +1, +2...
+  if (needsRename) {
+    while (needsRename) {
+      const testPhone = `${inputPhone}+${counter}`;
+      try {
+        // 再次查询新号码
+        const res = await fetch(`https://lucky-cloud-f9c3.gealarm2012.workers.dev?search=${encodeURIComponent(testPhone)}`);
+        const json = await res.json();
+        
+        // 如果查到了数据（数组长度>0），说明这个新号码也被占用了
+        if (Array.isArray(json) && json.length > 0) {
+          counter++; // 继续加号
+        } else {
+          finalPhone = testPhone; // 找到了没被占用的号码
+          needsRename = false;    // 退出循环
+        }
+      } catch (e) {
+        alert("查重过程出错，请重试");
+        return;
+      }
+    }
+    
+    // 提示用户号码被修改了
+    alert(`⚠️ 检测到手机号 "${inputPhone}" 已存在！\n系统已自动为您修改为：\n\n【 ${finalPhone} 】\n\n请留意后续数据。`);
+  }
+  // --- 查重逻辑结束 ---
 
   const prayers = document.getElementById("prayersContainer").children;
   const updatedData = Array.from(prayers).map(div => ({
@@ -437,42 +436,34 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
   };
 
   // 显示保存进度提示
-  const originalButtonText = document.querySelector('#moveBtn')?.textContent || '移动';
-  if (document.querySelector('#moveBtn')) {
-    document.querySelector('#moveBtn').textContent = '正在保存...';
-    document.querySelector('#moveBtn').disabled = true;
-  }
-  
-  if (!isMoveOperation) {
-    alert("🔄 正在提交数据到服务器...");
-  }
+  alert("🔄 正在提交数据到管理端...");
 
-  // 如果是移动操作，先保存到管理Worker，再从用户Worker删除
-  if (isMoveOperation && selectedEntry && selectedEntry.phoneNumber) {
-    try {
-      // 1. 保存到管理Worker
-      alert("🔄 正在将数据移动到管理端...");
-      const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+  try {
+    // 1. 保存到管理Worker
+    const insertRes = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
 
-      const insertResult = await insertRes.json();
-      if (!insertResult.success) {
-        throw new Error(insertResult.message || "管理Worker保存失败");
-      }
+    const insertResult = await insertRes.json();
+    if (!insertResult.success) {
+      throw new Error(insertResult.message || "管理Worker保存失败");
+    }
 
-      console.log("管理Worker保存成功，准备删除用户Worker记录");
-      console.log("要删除的号码:", selectedEntry.phoneNumber);
+    alert("✅ 数据已成功保存到管理端！");
 
-      // 2. 静默删除用户Worker中的原记录
+    // 2. 检查是否有selectedEntry（即是否是从用户端移动过来的数据）
+    if (selectedEntry && selectedEntry.phoneNumber) {
+      alert("🔄 检查用户端是否有原记录...");
+      
+      // 3. 静默删除用户Worker中的原记录
       const deleteBody = {
         phoneNumber: selectedEntry.phoneNumber, // GAS使用phoneNumber字段删除
         method: "DELETE"
       };
       
-      const deleteRes = await fetch('https://userts.gealarm2012.workers.dev', { // 请替换为你的GAS部署URL
+      const deleteRes = await fetch('YOUR_GAS_DEPLOYMENT_URL', { // 请替换为你的GAS部署URL
         method: 'POST', // GAS只接受POST请求
         headers: { 
           'Content-Type': 'application/json'
@@ -483,73 +474,35 @@ window.forceInsertNewEntry = async function (isMoveOperation = false) {
       const deleteResult = await deleteRes.json();
       console.log("删除响应内容:", deleteResult);
       
-      // 删除完成后返回搜索页面
       if (!deleteResult.success) {
         console.error("用户Worker删除失败:", deleteResult.message);
-        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message + "\n\n请返回搜索页面重新检查数据。");
+        alert("⚠️ 数据已保存到管理端，但用户端删除失败：" + deleteResult.message);
       } else {
-        alert("✅ 数据已成功移动到管理端，并已从用户端删除！\n\n即将返回搜索页面...");
+        alert("✅ 原记录已从用户端成功删除！");
       }
-      
-      // 清空表单并返回搜索页面
+    } else {
+      alert("✅ 数据已提交成功！");
+    }
+    
+    // 清空表单并返回搜索页面
+    if (typeof startNewEntry === 'function') {
+      startNewEntry(); // 清空表单
+    } else {
+      // 如果没有startNewEntry函数，手动清空
       document.getElementById("entryForm").innerHTML = "";
-      document.getElementById("searchInput").value = "";
-      selectedEntry = null;
-      fullData = [];
-      
-      // 返回搜索页面
-      setTimeout(() => {
-        window.location.hash = '#search';
-        location.reload();
-      }, 1500);
+    }
+    
+    // 返回搜索页面
+    setTimeout(() => {
+      window.location.hash = '#search';
+      location.reload();
+    }, 2000);
 
-    } catch (error) {
-      console.error("移动过程中出错:", error);
-      alert("❌ 移动失败：" + error.message);
-      
-      // 恢复按钮状态
-      if (document.querySelector('#moveBtn')) {
-        document.querySelector('#moveBtn').textContent = originalButtonText;
-        document.querySelector('#moveBtn').disabled = false;
-      }
-    }
-  } else {
-    // 原来的插入逻辑
-    try {
-      const res = await fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      
-      const result = await res.json();
-      
-      if (result.success) {
-        alert("✅ 提交成功！数据已保存。\n\n即将返回搜索页面...");
-        
-        // 清空表单并返回搜索页面
-        startNewEntry(); // 这会清空表单
-        
-        // 返回搜索页面
-        setTimeout(() => {
-          window.location.hash = '#search';
-          location.reload();
-        }, 1500);
-      } else {
-        alert("❌ 提交失败：" + result.message);
-      }
-    } catch (err) {
-      alert("❌ 提交出错：" + err.message);
-    }
-  }
-  
-  // 恢复按钮状态
-  if (document.querySelector('#moveBtn')) {
-    document.querySelector('#moveBtn').textContent = originalButtonText;
-    document.querySelector('#moveBtn').disabled = false;
+  } catch (error) {
+    console.error("保存过程中出错:", error);
+    alert("❌ 保存失败：" + error.message);
   }
 };
-
 // 添加移动按钮的处理函数 - 现在是静默执行
 window.moveEntry = async function () {
   if (!selectedEntry) {
