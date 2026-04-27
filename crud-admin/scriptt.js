@@ -159,6 +159,39 @@ function resetTempReceiptCounter() {
   }
 }
 
+window.deleteEntry = function () {
+  if (!selectedEntry) {
+    alert("⚠️ 请先查询一笔资料再删除！");
+    return;
+  }
+
+  const confirmDelete = confirm(`确定要删除手机号「${selectedEntry.phoneNumber}」的资料吗？⚠️ 此操作无法恢复！`);
+  if (!confirmDelete) return;
+
+  fetch("https://lucky-cloud-f9c3.gealarm2012.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      method: "DELETE",
+      phoneNumber: selectedEntry.phoneNumber
+    })
+  })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        alert("✅ 删除成功！");
+        document.getElementById("adminForm").classList.add("hidden");
+        document.getElementById("searchInput").value = "";
+        document.getElementById("resultSelector").innerHTML = "";
+        selectedEntry = null;
+      } else {
+        alert("❌ 删除失败：" + result.message);
+      }
+    })
+    .catch(err => {
+      alert("❌ 删除出错：" + err.message);
+    });
+};
 
 window.startNewEntry = function () {
   selectedEntry = null;
@@ -354,10 +387,26 @@ function checkMin() {
 
 async function forceInsertNewEntry() {
   try {
-    const receiptNumber = document.getElementById("receiptNumber").value.trim();
-    const receiptDate = document.getElementById("receiptDate").value.trim();
-    const mainName = document.getElementById("mainName").value.trim();
-    const phoneInput = document.getElementById("phone").value.trim();
+    // 确保所有输入元素都存在
+    const receiptNumberElement = document.getElementById("receiptNumber");
+    const receiptDateElement = document.getElementById("receiptDate");
+    const mainNameElement = document.getElementById("mainName");
+    const phoneInputElement = document.getElementById("phone");
+
+    // 检查元素是否存在
+    if (!receiptNumberElement || !receiptDateElement || !mainNameElement || !phoneInputElement) {
+      throw new Error("找不到必要的表单元素，请确保页面结构正确");
+    }
+
+    const receiptNumber = receiptNumberElement.value.trim();
+    const receiptDate = receiptDateElement.value.trim();
+    const mainName = mainNameElement.value.trim();
+    const phoneInput = phoneInputElement.value.trim();
+
+    // 检查必填字段
+    if (!receiptNumber || !receiptDate || !mainName || !phoneInput) {
+      throw new Error("请填写所有必填字段");
+    }
 
     // 获取所有复选框的状态
     const checkboxes = {};
@@ -431,16 +480,21 @@ async function forceInsertNewEntry() {
     // 查找与当前收据号对应的原始记录
     if (existingResult.success && existingResult.data) {
       // 如果收据号已存在，找到其原始电话号码
-      originalPhoneNumber = findOriginalPhoneNumberByReceiptNumber(existingResult.data.receiptNumber);
+      // 尝试从现有数据中获取原始电话号码
+      originalPhoneNumber = existingResult.data.phone || existingResult.data.phoneNumber;
     } else {
       // 如果是新记录，尝试从当前表格中找到最匹配的原始记录
       const tableRows = document.querySelectorAll("#entryTable tbody tr");
       for (let row of tableRows) {
         const cells = row.cells;
-        const cellReceiptNumber = cells[2].textContent.trim(); // 假设收据号在第3列
-        if (cellReceiptNumber === receiptNumber) {
-          originalPhoneNumber = cells[0].textContent.trim(); // 假设电话号码在第1列
-          break;
+        if (cells.length > 2) { // 确保有足够的单元格
+          const cellReceiptNumber = cells[2].textContent.trim(); // 假设收据号在第3列
+          if (cellReceiptNumber === receiptNumber) {
+            if (cells.length > 0) { // 确保电话号码单元格存在
+              originalPhoneNumber = cells[0].textContent.trim(); // 假设电话号码在第1列
+              break;
+            }
+          }
         }
       }
     }
@@ -493,14 +547,23 @@ async function forceInsertNewEntry() {
         console.warn(`用户端未找到原始记录: ${originalPhoneNumber}`, queryResult);
       }
     } else {
-      console.warn("未能确定要删除的原始电话号码");
+      console.log("没有找到需要删除的原始记录");
     }
 
     // 4. 更新本地UI显示
     refreshTable();
     
-    // 清空表单
-    document.getElementById("entryForm").reset();
+    // 清空表单 - 仅清空存在的元素
+    const formElement = document.getElementById("entryForm");
+    if (formElement) {
+      formElement.reset();
+    } else {
+      // 如果没有整个表单，单独清空各个输入字段
+      receiptNumberElement.value = '';
+      receiptDateElement.value = '';
+      mainNameElement.value = '';
+      phoneInputElement.value = '';
+    }
     
     alert("条目已强制插入管理数据库！");
     
