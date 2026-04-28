@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据管理界面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input[type="text"], select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.delete-btn {
+            background-color: #dc3545;
+        }
+        button.delete-btn:hover {
+            background-color: #c82333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .checkbox-cell {
+            text-align: center;
+            width: 50px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            padding: 10px;
+        }
+        .success {
+            color: green;
+            text-align: center;
+            padding: 10px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        .pagination button {
+            min-width: 30px;
+            padding: 5px 10px;
+        }
+        .pagination button.active {
+            background-color: #28a745;
+        }
+        .search-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数据管理界面</h1>
+        
+        <div class="search-section">
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="输入手机号搜索...">
+                <button onclick="searchData()">搜索</button>
+                <button onclick="loadAllData()">显示全部</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="toggleSelectAll()" id="selectAllBtn">全选</button>
+            <button onclick="deleteSelected()" class="delete-btn">删除选中项</button>
+            <span id="selectedCount">已选择 0 条</span>
+        </div>
+
+        <div id="messageArea"></div>
+        <div id="dataTableContainer">
+            <div class="loading">正在加载数据...</div>
+        </div>
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        // 配置你的后端API地址
+        const API_BASE_URL = 'https://userts.gealarm2012.workers.dev'; // 替换为你的Cloudflare Worker URL
+        
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let allData = [];
+        let filteredData = [];
+        let selectedItems = new Set();
+
+        // 页面加载时获取所有数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+        });
+
+        // 加载所有数据
+        async function loadAllData() {
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}?list=1`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allData = data;
+                filteredData = [...allData];
+                renderTable();
+            } catch (error) {
+                showError(`加载数据失败: ${error.message}`);
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // 搜索数据
+        async function searchData() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                loadAllData();
+                return;
+            }
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}?search=${encodeURIComponent(keyword)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                filteredData = data;
+                renderTable();
+            } catch (error) {
+                showError(`搜索失败: ${error.message}`);
+                console.error('Error searching data:', error);
+            }
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('dataTableContainer').innerHTML = '<div class="loading">正在加载...</div>';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('messageArea').innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => {
+                document.getElementById('messageArea').innerHTML = '';
+            }, 3000);
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            document.getElementById('messageArea').innerHTML = `<div class="success">${message}</div>`;
+            setTimeout(() => {
+                document.getElementById('messageArea').innerHTML = '';
+            }, 3000);
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell"><input type="checkbox" id="headerCheckbox" onchange="togglePageSelectAll(this)"></th>
+                            <th>主联系人</th>
+                            <th>手机号</th>
+                            <th>收据号码</th>
+                            <th>回向</th>
+                            <th>供品</th>
+                            <th>管理员</th>
+                            <th>往生纸钱</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            pageData.forEach((item, index) => {
+                const globalIndex = startIndex + index;
+                const isChecked = selectedItems.has(globalIndex) ? 'checked' : '';
+                html += `
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" 
+                                   data-index="${globalIndex}" 
+                                   ${isChecked} 
+                                   onchange="toggleItemSelection(this, ${globalIndex})">
+                        </td>
+                        <td>${item.mainName || ''}</td>
+                        <td>${item.phoneNumber || ''}</td>
+                        <td>${item.receiptNumber || ''}</td>
+                        <td>${item.wishReturn || ''}</td>
+                        <td>${item.offering || ''}</td>
+                        <td>${item.admin || ''}</td>
+                        <td>${item.wishPaper || 0}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('dataTableContainer').innerHTML = html;
+            
+            // 更新页码
+            renderPagination();
+            updateSelectedCount();
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const paginationElement = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                paginationElement.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button onclick="changePage(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            paginationElement.innerHTML = html;
+        }
+
+        // 切换页面
+        function changePage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const isSelectingAll = selectAllBtn.textContent === '全选';
+            
+            if (isSelectingAll) {
+                // 选择所有可见项目
+                for (let i = 0; i < filteredData.length; i++) {
+                    selectedItems.add(i);
+                }
+                selectAllBtn.textContent = '取消全选';
+            } else {
+                // 清空选择
+                selectedItems.clear();
+                selectAllBtn.textContent = '全选';
+            }
+            
+            renderTable(); // 重新渲染以更新复选框状态
+            updateSelectedCount();
+        }
+
+        // 切换单页全选
+        function togglePageSelectAll(headerCheckbox) {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            
+            if (headerCheckbox.checked) {
+                // 选择当前页面的所有项目
+                for (let i = startIndex; i < endIndex; i++) {
+                    selectedItems.add(i);
+                }
+            } else {
+                // 取消选择当前页面的所有项目
+                for (let i = startIndex; i < endIndex; i++) {
+                    selectedItems.delete(i);
+                }
+            }
+            
+            renderTable(); // 重新渲染以更新复选框状态
+            updateSelectedCount();
+        }
+
+        // 切换单个项目选择
+        function toggleItemSelection(checkbox, index) {
+            if (checkbox.checked) {
+                selectedItems.add(index);
+            } else {
+                selectedItems.delete(index);
+            }
+            updateSelectedCount();
+        }
+
+        // 更新已选择计数
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = `已选择 ${selectedItems.size} 条`;
+        }
+
+        // 删除选中的项目
+        async function deleteSelected() {
+            if (selectedItems.size === 0) {
+                alert('请先选择要删除的项目');
+                return;
+            }
+
+            if (!confirm(`确定要删除选中的 ${selectedItems.size} 条数据吗？此操作不可撤销！`)) {
+                return;
+            }
+
+            const deletingItems = Array.from(selectedItems).map(index => filteredData[index]);
+            let successCount = 0;
+            let failCount = 0;
+
+            // 逐个删除选中的项目
+            for (const item of deletingItems) {
+                try {
+                    const response = await fetch(API_BASE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            method: 'DELETE',
+                            phoneNumber: item.phoneNumber
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        console.error('删除失败:', result.message);
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error('删除请求失败:', error);
+                }
+            }
+
+            if (failCount > 0) {
+                showError(`部分删除失败：成功 ${successCount} 条，失败 ${failCount} 条`);
+            } else {
+                showSuccess(`成功删除 ${successCount} 条数据`);
+            }
+
+            // 重新加载数据
+            await loadAllData();
+            selectedItems.clear();
+            updateSelectedCount();
+        }
+    </script>
+</body>
+</html>
