@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>太岁光明灯登记</title>
+    <!-- 引入 Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* --- 手机端基础设置 --- */
+        body {
+            background-color: #fdf5e6; /* 米黄色背景 */
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            padding-bottom: 80px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* --- 输入框和按钮优化 --- */
+        .form-control, .form-select {
+            height: 40px; /* 稍微调小一点以适应更多字段 */
+            font-size: 14px;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+
+        .btn {
+            height: 45px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+
+        /* 只读输入框样式 */
+        .form-control[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #fff;
+        }
+
+        /* --- 祈福者卡片样式 --- */
+        .prayer-card {
+            position: relative;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            color: #dc3545;
+            font-size: 20px;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* 改进的radio-group样式 - 确保水平排列 */
+        .radio-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            background-color: #f8f9fa; /* 添加浅色背景 */
+            border: 1px solid #ccc; /* 轻微边框 */
+            border-radius: 6px;
+            padding: 5px;
+            min-height: 35px;
+        }
+        .radio-group .form-check {
+            margin: 0 !important;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+        }
+        .radio-group .form-check-input {
+            margin-right: 4px;
+            border: 2px solid #333 !important; /* 黑色边框 */
+            background-color: #fff !important;
+        }
+        .radio-group .form-check-input:checked {
+            background-color: #333 !important;
+            border-color: #333 !important;
+        }
+        .radio-group .form-check-label {
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+        
+        /* 特别为祈福者卡片中的单选按钮调整 */
+        .prayer-card .radio-group {
+            display: flex;
+            gap: 5px;
+            min-height: 35px;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 5px;
+        }
+        .prayer-card .radio-group .form-check {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 !important;
+            padding: 2px;
+        }
+        .prayer-card .radio-group .form-check-label {
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
+            margin: 0;
+            padding: 2px;
+        }
+        
+        /* === 修复"出轨"问题的关键CSS === */
+        .prayer-card .form-check-input[type="radio"] {
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px !important;
+            min-height: 18px !important;
+            border: 2px solid #333 !important;
+            background-color: #fff !important;
+            flex-shrink: 0; /* 防止被压缩 */
+            margin: 0 !important;
+            vertical-align: middle;
+        }
+        .prayer-card .form-check-input[type="radio"]:checked {
+            background-color: #333 !important;
+            border-color: #333 !important;
+        }
+        .prayer-card .form-check-label {
+            font-size: 14px; /* 再增大字体 */
+            font-weight: 500; /* 加粗 */
+            margin: 0 0 0 4px; /* 左侧留空隙 */
+            line-height: 1.4;
+        }
+        
+        /* 查询结果提示样式 */
+        .search-result-info {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e7f3ff;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        
+        /* 年份选择器样式 */
+        .year-selector {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff9db;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* 价格汇总卡片样式 */
+        .price-summary {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        /* 加载状态样式 */
+        .loading-state {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+        }
+        
+        /* 必填字段标记 */
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        
+        /* 新增资料按钮样式 */
+        .new-record-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        
+        .new-record-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        
+        /* 纸金框样式 - 当禁用时 */
+        .pg-disabled {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+        }
+        
+        /* 新增一位按钮样式 */
+        .add-another-btn {
+            display: inline-block;
+            width: auto;
+            min-width: 80px;
+            margin-top: 15px;
+            margin-left: auto;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+            text-align: center;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .add-another-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        
+        /* 容器样式，使按钮靠右 */
+        .add-button-container {
+            text-align: right;
+        }
+        
+        /* 祈福者名单标题字体加大 */
+        .prayers-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        /* 继续按钮样式 */
+        .continue-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        
+        .continue-btn:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        
+        /* 说明卡片样式 */
+        .info-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 14px; /* 增大字体 */
+            color: #856404;
+        }
+        
+        .info-card h6 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 15px; /* 增大标题字体 */
+        }
+        
+        .info-card ul {
+            margin-bottom: 0;
+            padding-left: 15px;
+        }
+        
+        .info-card li {
+            margin-bottom: 5px;
+        }
+        
+        /* 锁定状态样式 */
+        .locked-btn {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部标题 -->
+    <h3 class="page-header">🙏 太岁光明灯查询/修改/新增报名</h3>
+
+    <!-- 搜索与操作区 - 移除"开始登记"按钮 -->
+    <div class="card">
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control mb-2" placeholder="输入手机号查询资料" inputmode="tel">
+            <button onclick="searchPhone()" class="btn btn-primary w-100" id="searchButton">🔍 查询资料</button>
+        </div>
+    </div>
+
+    <!-- 查询结果提示信息 -->
+    <div id="searchResultInfo" class="hidden"></div>
+
+    <!-- 结果选择器 -->
+    <div id="resultSelector" class="mb-3"></div>
+
+    <!-- 登记表单区域 -->
+    <div id="adminForm" class="hidden">
+        
+        <!-- 基本信息 -->
+        <div class="card">
+            <h6 class="border-bottom pb-2 mb-3">📝 基本信息</h6>
+            
+            <!-- 新增：年份选择器 -->
+            <div class="year-selector mb-3">
+                <label class="form-label required-field">📅 报名太岁年份</label>
+                <select id="registrationYear" class="form-select" onchange="updatePhoneWithYearPrefix()">
+                    <option value="">-- 请选择年份 --</option> <!-- 初始为空 -->
+                    <!-- JS 动态生成年份选项 -->
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label required-field">主祈者姓名</label>
+                <input type="text" id="mainName" class="form-control" placeholder="姓名">
+            </div>
+            <div class="mb-3">
+                <label class="form-label required-field">手机号码</label>
+                <input type="tel" id="phoneNumber" class="form-control" placeholder="用于查询" inputmode="tel" readonly>
+            </div>
+        </div>
+
+        <!-- 祈福者列表 -->
+        <div class="card">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h6 class="m-0 prayers-title">🙏 祈福者名单</h6>
+            </div>
+            <div id="prayersContainer">
+                <!-- JS 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 底部保存按钮 -->
+        <div class="d-grid gap-2 mb-5">
+            <button onclick="saveChanges()" class="btn btn-danger btn-lg">💾 保存资料</button>
+            <button onclick="cancelEdit()" class="btn btn-secondary">取消</button>
+        </div>
+    </div>
+
+    <!-- 价格汇总卡片 -->
+    <div id="priceSummary" class="price-summary hidden">
+        <div class="price-item">
+            <span>纸金费用:</span>
+            <span id="paperGoldAmount">0份 (0元)</span>
+        </div>
+        <div class="price-item">
+            <span>安奉功德金:</span>
+            <span id="donationAmount">0元</span>
+        </div>
+        <div class="total-price">
+            <span>总计:</span>
+            <span id="totalAmount">0元</span>
+        </div>
+    </div>
+
+    <!-- === JS 逻辑 === -->
+    <script>
+        // ⚠️ 请在这里替换你的 Cloudflare Worker 地址
+        const SAVE_API_URL = "https://userts.gealarm2012.workers.dev/";
+		const SEARCH_API_URL = "https://lucky-cloud-f9c3.gealarm2012.workers.dev";
+		
+        let fullData = [];
+        let selectedEntry = null;
+
+        // 获取当前年份
+        const currentYear = new Date().getFullYear();
+
+        // 初始化年份选择器
+        function initYearSelector() {
+            const yearSelect = document.getElementById("registrationYear");
+            // 保留默认的"请选择年份"选项
+            yearSelect.innerHTML = '<option value="">-- 请选择年份 --</option>';
+            
+            // 生成从今年开始往后10年的选项
+            for (let year = currentYear; year <= currentYear + 10; year++) {
+                const option = document.createElement("option");
+                option.value = year;
+                option.textContent = year + "年";
+                yearSelect.appendChild(option);
+            }
+        }
+
+        // 验证马来西亚手机号格式
+        function isValidMalaysianPhone(phone) {
+            if (!phone) return false;
+            
+            // 移除所有非数字字符
+            const cleanPhone = phone.replace(/\D/g, '');
+            
+            // 马来西亚手机号格式：以0开头，总长度10-11位
+            // 例如：0123456789 (10位) 或 01234567890 (11位)
+            return /^0\d{9,10}$/.test(cleanPhone);
+        }
+
+        // 从带前缀的手机号中提取真实手机号（适用于马来西亚格式）
+        function extractRealPhone(phoneWithPrefix) {
+            if (!phoneWithPrefix) return phoneWithPrefix;
+            
+            // 如果长度大于10且第一位是数字，则认为是年份前缀
+            // 马来西亚手机号：0 + 9-10位数字 = 10-11位
+            // 加上前缀后：1位年份 + 0 + 9-10位 = 11-12位
+            if (phoneWithPrefix.length > 10 && /^[0-9]$/.test(phoneWithPrefix.charAt(0))) {
+                const withoutPrefix = phoneWithPrefix.substring(1); // 去掉第一位前缀
+                
+                // 验证剩余部分是否符合马来西亚手机号格式
+                if (isValidMalaysianPhone(withoutPrefix)) {
+                    return withoutPrefix;
+                }
+            }
+            
+            // 如果不符合前缀规则，但本身是有效手机号，直接返回
+            if (isValidMalaysianPhone(phoneWithPrefix)) {
+                return phoneWithPrefix;
+            }
+            
+            return phoneWithPrefix;
+        }
+
+        // 为手机号添加前缀（直接替换第一位数字）
+        function addPhonePrefix(phone, year) {
+            if (!phone || !year) return phone;
+            
+            const yearLastDigit = year % 10; // 获取年份最后一位数字
+            const realPhone = extractRealPhone(phone); // 先清洗一次
+            
+            // 验证是否是有效的马来西亚手机号
+            if (isValidMalaysianPhone(realPhone)) {
+                return yearLastDigit + realPhone; // 添加前缀
+            }
+            
+            return phone; // 如果不是有效手机号，返回原值
+        }
+
+        // 更新手机号显示（直接替换第一位数字来响应年份变化）
+        function updatePhoneWithYearPrefix() {
+            const phoneInput = document.getElementById("phoneNumber");
+            const yearSelect = document.getElementById("registrationYear");
+            const selectedYear = parseInt(yearSelect.value);
+            
+            // 只有当选择了具体年份时才执行替换逻辑
+            if (!selectedYear || !phoneInput.value) return;
+            
+            const yearLastDigit = selectedYear % 10; // 获取年份最后一位数字
+            const currentPhone = phoneInput.value;
+            
+            // 如果当前手机号已经有前缀（长度大于10），替换第一位
+            if (currentPhone.length > 10 && /^[0-9]$/.test(currentPhone.charAt(0))) {
+                // 替换第一位数字
+                const newPhone = yearLastDigit + currentPhone.substring(1);
+                phoneInput.value = newPhone;
+            } else if (currentPhone.length >= 10) {
+                // 如果没有前缀，直接添加前缀
+                phoneInput.value = yearLastDigit + currentPhone;
+            }
+        }
+
+        // 计算总价格
+        function calculateTotalPrice() {
+            let totalPaperGold = 0;
+            let totalDonation = 0;
+            
+            const prayers = document.getElementById("prayersContainer").children;
+            Array.from(prayers).forEach(div => {
+                // 计算纸金总数（5种纸金相加）
+                const pg1 = parseInt(div.querySelector(".pg1").value) || 0;
+                const pg2 = parseInt(div.querySelector(".pg2").value) || 0;
+                const pg3 = parseInt(div.querySelector(".pg3").value) || 0;
+                const pg4 = parseInt(div.querySelector(".pg4").value) || 0;
+                const pg5 = parseInt(div.querySelector(".pg5").value) || 0;
+                
+                totalPaperGold += pg1 + pg2 + pg3 + pg4 + pg5;
+                
+                // 计算安奉功德金
+                const donation = parseInt(div.querySelector(".donate").value) || 0;
+                totalDonation += donation;
+            });
+            
+            // 计算纸金费用（3元/份）
+            const paperGoldCost = totalPaperGold * 3;
+            const total = paperGoldCost + totalDonation;
+            
+            // 更新显示 - 纸金费用现在显示份数和金额
+            document.getElementById("paperGoldAmount").textContent = `${totalPaperGold}份 (${paperGoldCost}元)`;
+            document.getElementById("donationAmount").textContent = totalDonation + "元";
+            document.getElementById("totalAmount").textContent = total + "元";
+            
+            // 显示价格汇总卡片
+            document.getElementById("priceSummary").classList.remove("hidden");
+        }
+
+        // 页面加载时初始化
+        document.addEventListener("DOMContentLoaded", function() {
+            initYearSelector();
+        });
+
+        // 锁定查询按钮
+        function lockSearchButton() {
+            const searchButton = document.getElementById("searchButton");
+            searchButton.classList.add("locked-btn");
+        }
+
+        // 解锁查询按钮
+        function unlockSearchButton() {
+            const searchButton = document.getElementById("searchButton");
+            searchButton.classList.remove("locked-btn");
+        }
+
+     // 1. 修改查询功能
+window.searchPhone = function () {
+    const keyword = document.getElementById("searchInput").value.trim();
+    if (!keyword) return alert("请输入手机号！");
+
+    // 验证手机号格式
+    if (!isValidMalaysianPhone(keyword)) {
+        alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+        return;
+    }
+
+    // 显示加载状态
+    const btn = document.getElementById("searchButton");
+    btn.innerHTML = "🔍 查询中...";
+    btn.disabled = true;
+
+    // 去掉查询关键词的前缀
+    const realKeyword = extractRealPhone(keyword);
+
+    // 使用专门的查询 Worker
+    fetch(`${SEARCH_API_URL}?search=${encodeURIComponent(realKeyword)}`)
+        .then(async response => {
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`查询请求失败: ${response.status} - ${errorText}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            if (!text || text.trim() === '') {
+                throw new Error("查询服务返回空响应");
+            }
+            
+            let data;
+            try { 
+                data = JSON.parse(text); 
+            } 
+            catch (e) { 
+                console.error("解析JSON错误:", e);
+                console.log("响应内容:", text);
+                throw new Error(`查询服务返回的数据格式错误: ${e.message}`);
+            }
+
+            fullData = data;
+            const selector = document.getElementById("resultSelector");
+            const infoDiv = document.getElementById("searchResultInfo");
+            
+            // 清空之前的选择器和提示信息
+            selector.innerHTML = "";
+            infoDiv.classList.add("hidden");
+
+            if (data.length === 0) {
+                // 查无资料，显示提示信息并提供继续按钮
+                infoDiv.innerHTML = `
+                    <div class="search-result-info">📱 未找到该手机号的资料，将为您创建新的报名表单</div>
+                    <button class="btn continue-btn" onclick="startNewEntry('${realKeyword}')">✅ 立即填写报名表</button>
+                `;
+                infoDiv.classList.remove("hidden");
+                
+                // 锁定查询按钮
+                lockSearchButton();
+            }
+            // 有资料的情况
+            else if (data.length === 1) {
+                // 单条记录，直接编辑
+                infoDiv.innerHTML = `<div class="search-result-info">✅ 找到1笔资料，正在加载...</div>`;
+                infoDiv.classList.remove("hidden");
+                
+                // 添加说明卡片
+                const infoCard = document.createElement("div");
+                infoCard.className = "info-card";
+                infoCard.innerHTML = `
+                    <h6>📋 资料说明</h6>
+                    <ul>
+                        <li>下方显示的是您之前报名的太岁光明灯资料</li>
+                        <li>您可以直接编辑现有信息或添加新的祈福者</li>
+                        <li>点击"保存资料"即可更新您的登记信息</li>
+                    </ul>
+                `;
+                infoDiv.appendChild(infoCard);
+                
+                const newRecordBtn = document.createElement("button");
+                newRecordBtn.className = "btn btn-success new-record-btn";
+                newRecordBtn.textContent = "➕ 填写全新的报名表";
+                newRecordBtn.onclick = () => {
+                    startNewEntry(realKeyword); // 使用清洗后的手机号
+                };
+                infoDiv.appendChild(newRecordBtn);
+                
+                selectedEntry = data[0];
+                setTimeout(() => {
+                    renderForm();
+                    
+                    // 锁定查询按钮
+                    lockSearchButton();
+                }, 500); // 短暂延迟显示提示
+            } 
+            else {
+                // 多条记录，让用户选择
+                infoDiv.innerHTML = `<div class="search-result-info">📋 找到${data.length}笔资料，请选择要编辑的记录</div>`;
+                infoDiv.classList.remove("hidden");
+                
+                // 添加说明卡片
+                const infoCard = document.createElement("div");
+                infoCard.className = "info-card";
+                infoCard.innerHTML = `
+                    <h6>📋 资料说明</h6>
+                    <ul>
+                        <li>系统找到多笔使用此手机号的登记资料</li>
+                        <li>手机号5开头就是2025年的报名资料，<br>6开头就是2026年的报名资料</li>
+                        <li>请从下方下拉菜单中选择您要添加或修改的具体资料</li>
+                        <li>如需创建全新的报名资料，可点击下方填写全新的报名表按钮</li>
+                    </ul>
+                `;
+                infoDiv.appendChild(infoCard);
+                
+                // 创建选择器（放在按钮上方）
+                const select = document.createElement("select");
+                select.className = "form-select mb-2";
+                select.id = "entrySelector"; // 添加ID以便调试
+                select.innerHTML = `<option selected disabled>--- 选择一笔资料 ---</option>`;
+                
+                // 添加选项
+                data.forEach((item, index) => {
+                    const opt = document.createElement("option");
+                    opt.value = index;
+                    opt.textContent = `${item.mainName} (${item.phoneNumber})`;
+                    select.appendChild(opt);
+                });
+                
+                // 设置选择事件
+                select.onchange = () => {
+                    if (select.selectedIndex > 0) { // 确保选择了有效选项
+                        selectedEntry = fullData[select.selectedIndex - 1]; // 修正索引
+                        renderForm();
+                        
+                        // 锁定查询按钮
+                        lockSearchButton();
+                        
+                        // 隐藏选择器，显示表单
+                        selector.classList.add("hidden");
+                    }
+                };
+                
+                // 将选择器插入到按钮前面（对调顺序：选择器在上，按钮在下）
+                infoDiv.appendChild(select);
+                
+                // 添加"新增资料"按钮（放在选择器下方）
+                const newRecordBtn = document.createElement("button");
+                newRecordBtn.className = "btn btn-success new-record-btn";
+                newRecordBtn.textContent = "➕ 填写全新的报名表";
+                newRecordBtn.onclick = () => {
+                    startNewEntry(realKeyword); // 使用清洗后的手机号
+                };
+                infoDiv.appendChild(newRecordBtn);
+            }
+        })
+        .catch(err => {
+            console.error("查询出错:", err);
+            const infoDiv = document.getElementById("searchResultInfo");
+            infoDiv.innerHTML = `<div class="search-result-info" style="background-color: #f8d7da; border-left-color: #dc3545; color: #721c24;">❌ 查询出错：${err.message}</div>`;
+            infoDiv.classList.remove("hidden");
+            
+            // 清空选择器
+            document.getElementById("resultSelector").innerHTML = "";
+        })
+        .finally(() => {
+            // 恢复按钮状态
+            const btn = document.getElementById("searchButton");
+            btn.innerHTML = "🔍 查询资料";
+            btn.disabled = false;
+        });
+};
+        // 2. 开始新登记（带默认手机号）
+        window.startNewEntry = function (defaultPhone = "") {
+            selectedEntry = null;
+            document.getElementById("adminForm").classList.remove("hidden");
+            document.getElementById("adminForm").scrollIntoView({ behavior: 'smooth' });
+            
+            document.getElementById("mainName").value = "";
+            
+            // 新增时只显示原始手机号，不添加前缀
+            document.getElementById("phoneNumber").value = defaultPhone;
+            
+            const container = document.getElementById("prayersContainer");
+            container.innerHTML = "";
+            container.appendChild(createPrayerBlock({}, 1));
+            
+            // 为第一个卡片添加"新增一位"按钮
+            const firstCard = container.firstElementChild;
+            if (firstCard) {
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "add-button-container";
+                
+                const addButton = document.createElement("button");
+                addButton.className = "add-another-btn";
+                addButton.type = "button";
+                addButton.textContent = "➕ 新增一位";
+                addButton.onclick = () => addPrayer();
+                
+                buttonContainer.appendChild(addButton);
+                firstCard.appendChild(buttonContainer);
+            }
+            
+            // 隐藏选择器和提示信息
+            document.getElementById("resultSelector").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
+            
+            // 锁定查询按钮（如果还没有锁定的话）
+            lockSearchButton();
+        };
+
+        // 3. 添加祈福者
+        window.addPrayer = function (targetIndex) {
+            const container = document.getElementById("prayersContainer");
+            if (container.children.length >= 15) return alert("最多添加 15 位！");
+            
+            // 创建新卡片并插入到指定位置
+            const newBlock = createPrayerBlock({}, container.children.length + 1);
+            if (targetIndex !== undefined && targetIndex < container.children.length) {
+                container.insertBefore(newBlock, container.children[targetIndex]);
+            } else {
+                container.appendChild(newBlock);
+            }
+            
+            // 重新更新所有卡片的序号
+            updateCardIndexes();
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
+        };
+
+        // 更新卡片序号
+        function updateCardIndexes() {
+            const cards = document.querySelectorAll(".prayer-card");
+            cards.forEach((card, index) => {
+                const title = card.querySelector("strong");
+                if (title) {
+                    title.textContent = `🧍‍♂️ 第 ${index + 1} 位祈福者`;
+                }
+            });
+            
+            // 更新最后一个卡片的按钮
+            updateAddButtonVisibility();
+        }
+
+        // 更新添加按钮的可见性
+        function updateAddButtonVisibility() {
+            // 隐藏所有按钮
+            document.querySelectorAll(".add-another-btn").forEach(btn => {
+                btn.style.display = "none";
+            });
+            
+            // 在最后一个卡片显示按钮
+            const cards = document.querySelectorAll(".prayer-card");
+            if (cards.length > 0) {
+                const lastCard = cards[cards.length - 1];
+                const existingButton = lastCard.querySelector(".add-another-btn");
+                
+                if (existingButton) {
+                    existingButton.style.display = "inline-block";
+                } else {
+                    // 如果最后一个卡片没有按钮，则创建一个
+                    const buttonContainer = document.createElement("div");
+                    buttonContainer.className = "add-button-container";
+                    
+                    const addButton = document.createElement("button");
+                    addButton.className = "add-another-btn";
+                    addButton.type = "button";
+                    addButton.textContent = "➕ 新增一位";
+                    addButton.onclick = () => addPrayer();
+                    
+                    buttonContainer.appendChild(addButton);
+                    lastCard.appendChild(buttonContainer);
+                }
+            }
+        }
+
+        // 4. 渲染表单数据
+        function renderForm() {
+            document.getElementById("adminForm").classList.remove("hidden");
+            document.getElementById("adminForm").scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById("mainName").value = selectedEntry.mainName || "";
+            
+            // 查询回来时显示原始手机号，等待用户选择年份
+            document.getElementById("phoneNumber").value = selectedEntry.phoneNumber;
+            
+            // 将年份选择器设为"请选择"
+            document.getElementById("registrationYear").value = "";
+            
+            const container = document.getElementById("prayersContainer");
+            container.innerHTML = "";
+            const prayers = selectedEntry.data || [];
+            
+            if (prayers.length === 0) {
+                container.appendChild(createPrayerBlock({}, 1));
+            } else {
+                prayers.forEach((item, idx) => {
+                    if (item.name && item.name.trim()) {
+                        container.appendChild(createPrayerBlock(item, idx + 1));
+                    }
+                });
+            }
+            
+            // 隐藏选择器和提示信息
+            document.getElementById("resultSelector").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
+            
+            // 计算并显示价格
+            setTimeout(calculateTotalPrice, 100);
+            
+            // 确保最后一个卡片有"新增一位"按钮
+            setTimeout(updateAddButtonVisibility, 100);
+        }
+
+// 修改检查手机是否存在冲突的函数
+async function checkPhoneExists(phone, year) {
+    try {
+        console.log("检查手机号是否存在:", phone, "年份:", year);
+        
+        // 使用编码的参数构建URL
+        const encodedPhone = encodeURIComponent(phone);
+        const searchUrl = `${SAVE_API_URL}?search=${encodedPhone}`;
+        
+        console.log("查询URL:", searchUrl);
+        
+        // 发送GET请求
+        const response = await fetch(searchUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors' // 明确指定CORS模式
+        });
+        
+        console.log("查询响应状态:", response.status);
+        
+        if (!response.ok) {
+            console.error(`查询错误: ${response.status} - ${response.statusText}`);
+            const errorText = await response.text();
+            console.error("错误详情:", errorText);
+            throw new Error(`查询服务错误: ${response.status} - ${response.statusText}`);
+        }
+        
+        let data;
+        try {
+            const responseText = await response.text();
+            console.log("原始响应文本:", responseText);
+            
+            if (!responseText.trim()) {
+                console.warn("响应为空，返回空数组");
+                return false;
+            }
+            
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("JSON解析错误:", parseError);
+            console.error("响应内容:", responseText);
+            throw new Error(`响应格式错误: ${parseError.message}`);
+        }
+        
+        console.log("解析后的数据:", data);
+        
+        // 确保 data 是数组
+        if (!Array.isArray(data)) {
+            console.warn("返回的数据不是数组格式，返回false");
+            return false;
+        }
+        
+        // 检查数据库中是否存在相同年份前缀的记录
+        const yearDigit = String(year % 10);
+        const exists = data.some(record => {
+            // 检查记录的手机号是否以相同的年份数字开头
+            return record.phoneNumber && record.phoneNumber.startsWith(yearDigit);
+        });
+        
+        console.log("是否存在冲突:", exists);
+        return exists;
+    } catch (error) {
+        console.error("检查手机号冲突时出错:", error);
+        // 发生错误时返回 false，避免阻塞正常流程
+        return false;
+    }
+}
+        // 6. 获取下一个可用的手机号（带前缀和后缀）
+// 修改获取下一个可用手机号的函数，使用 SAVE_API_URL
+async function getNextAvailablePhone(basePhone, year) {
+    // 首先添加年份前缀
+    const phoneWithPrefix = addPhonePrefix(basePhone, year);
+    
+    // 检查基本前缀号码是否存在冲突
+    if (!(await checkPhoneExists(basePhone, year))) {
+        // 如果基本号码没有冲突（去掉前缀的部分），直接返回带前缀的号码
+        return phoneWithPrefix;
+    }
+    
+    // 如果存在冲突，开始添加后缀
+    let suffix = 1;
+    while (suffix <= 100) { // 添加循环限制，防止无限循环
+        const phoneWithSuffix = `${phoneWithPrefix}+${suffix}`;
+        
+        try {
+            // 检查这个带后缀的号码是否在当前年份中存在冲突
+            const response = await fetch(`${SAVE_API_URL}?search=${encodeURIComponent(extractRealPhone(phoneWithSuffix))}`);
+            const data = await response.json();
+            
+            // 检查是否有一样的年份前缀
+            const yearDigit = String(year % 10);
+            
+            // 检查数据库中是否存在相同的完整号码（包括后缀）
+            const exists = data.some(record => {
+                return record.phoneNumber === phoneWithSuffix;
+            });
+            
+            if (!exists) {
+                // 如果不存在冲突，返回这个带前缀和后缀的号码
+                return phoneWithSuffix;
+            }
+            
+            suffix++;
+        } catch (error) {
+            console.error("检查带后缀号码时出错:", error);
+            throw error; // 重新抛出错误
+        }
+    }
+    
+    // 如果尝试了太多后缀仍未找到，抛出错误
+    throw new Error("无法找到可用的手机号，可能已达最大后缀限制");
+}
+
+
+// 7. 保存资料（用户版 - 保留前缀用于年份判断）- 仅在修改当前年份记录时提示
+window.saveChanges = async function () {
+    // 检查年份是否已选择
+    const yearSelect = document.getElementById("registrationYear");
+    if (!yearSelect.value) {
+        alert("⚠️ 请先选择报名太岁年份！");
+        yearSelect.focus();
+        return;
+    }
+    
+    const selectedYear = parseInt(yearSelect.value);
+    
+    // 检查主家姓名
+    const name = document.getElementById("mainName").value.trim();
+    if (!name) {
+        alert("⚠️ 请填写主祈者姓名！");
+        document.getElementById("mainName").focus();
+        return;
+    }
+    
+    // 检查手机号码 - 在这里定义 realPhone
+    const phoneWithoutPrefix = document.getElementById("phoneNumber").value.trim();
+    if (!phoneWithoutPrefix) {
+        alert("⚠️ 手机号码不能为空！");
+        document.getElementById("phoneNumber").focus();
+        return;
+    }
+    
+    // 验证手机号格式（不带前缀）
+    const realPhone = extractRealPhone(phoneWithoutPrefix);
+    if (!isValidMalaysianPhone(realPhone)) {
+        alert("请输入有效的马来西亚手机号（以0开头，共10-11位数字）");
+        document.getElementById("phoneNumber").focus();
+        return;
+    }
+
+    const prayers = document.getElementById("prayersContainer").children;
+    const updatedData = Array.from(prayers).map(div => ({
+        name: div.querySelector(".pName").value,
+        zodiac: div.querySelector(".pZodiac").value, // 保存选择的生肖
+        taiSui: div.querySelector('input.pTaiSui:checked')?.value || "",
+        light: div.querySelector('input.pLight:checked')?.value || "",
+        longevity: div.querySelector('input.pLongevity:checked')?.value || "",
+        wisdom: div.querySelector('input.pWisdom:checked')?.value || "",
+        arhat: div.querySelector('input.pArhat:checked')?.value || "",
+        paperGold1: +div.querySelector(".pg1").value || 0,
+        paperGold2: +div.querySelector(".pg2").value || 0,
+        paperGold3: +div.querySelector(".pg3").value || 0,
+        paperGold4: +div.querySelector(".pg4").value || 0,
+        paperGold5: +div.querySelector(".pg5").value || 0,
+        donation: +div.querySelector(".donate").value || 0
+    }));
+
+    // 仅在以下条件满足时才显示提示：存在原始记录、是当前年份的记录、并且用户试图保存到当前年份
+    if (selectedEntry && selectedEntry.phoneNumber) {
+        // 获取当前年份的最后一位数字
+        const currentYearLastDigit = currentYear % 10;
+        // 获取原始记录的手机号第一位（年份前缀）
+        const originalPhoneFirstDigit = selectedEntry.phoneNumber.charAt(0);
+        
+        // 检查是否是当前年份的记录（原始记录以当前年份的数字开头）AND 用户选择保存到当前年份
+        if (String(currentYearLastDigit) === originalPhoneFirstDigit && selectedYear === currentYear) {
+            // 显示提示，询问用户是否转到新增表单
+            const shouldGoToNewForm = confirm(`⚠️  提示：您不能修改${currentYear}年的当前记录！\n\n需要添加新成员请填写新的报名表。是否要转到创建新增报名表单？\n点击"确定"将跳转到新增报名表单，点击"取消"返回`);
+            
+            if (shouldGoToNewForm) {
+                // 用户点击确定，跳转到新增表单
+                setTimeout(() => {
+                    // 使用清洗后的手机号调用 startNewEntry 函数
+                    startNewEntry(realPhone);
+                    
+                    alert(`✅ 已跳转到新增表单\n请选择年份并填写新的记录信息。`);
+                }, 50);
+                
+                return; // 返回，不执行保存
+            } else {
+                // 用户点击取消，直接返回，不执行任何操作
+                return;
+            }
+        }
+    }
+
+    // 如果选择了比当前年份大的年份，或者不是当前年份的记录，则静默执行保存
+    const btn = document.querySelector("button[onclick='saveChanges()']");
+    btn.innerHTML = "保存中...";
+    btn.disabled = true;
+
+    try {
+        console.log("开始获取可用手机号...");
+        // 获取最终要使用的手机号（检查冲突并添加前缀和后缀）
+        const finalPhone = await getNextAvailablePhone(realPhone, selectedYear);
+        console.log("获取到的最终手机号:", finalPhone);
+        
+        // 构建要提交的数据 - 使用带前缀的手机号（用于年份判断）
+        const submitData = {
+            phoneNumber: finalPhone, // 使用带前缀和可能带后缀的手机号
+            mainName: name,
+            data: updatedData,
+            receiptNumber: "", // 强制为空
+            receiptDate: "",   // 强制为空
+            // 用户版：强制清空备注信息，无论原数据是什么
+            wishReturn: "",    // 强制清空
+            offering: "",      // 强制清空
+            wishPaper: ""      // 强制清空
+        };
+        
+        console.log("准备提交的数据:", submitData);
+
+        // 使用专门的保存 Worker
+        console.log("发送保存请求到:", SAVE_API_URL);
+        const response = await fetch(SAVE_API_URL, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json; charset=utf-8"
+            },
+            body: JSON.stringify(submitData)
+        });
+        
+        console.log("响应状态:", response.status);
+        console.log("响应头:", response.headers);
+        
+        // 检查响应状态
+        if (!response.ok) {
+            // 如果响应不是 2xx，显示详细错误信息
+            const errorText = await response.text();
+            console.error(`HTTP Error: ${response.status} - ${response.statusText}`);
+            console.error(`Error details: ${errorText}`);
+            throw new Error(`保存服务错误: ${response.status} - ${response.statusText}. 详情: ${errorText}`);
+        }
+        
+        // 尝试解析 JSON 响应，但要处理可能的解析错误
+        let result;
+        try {
+            const responseText = await response.text();
+            console.log("服务器响应内容:", responseText);
+            if (!responseText.trim()) {
+                throw new Error("保存服务返回空响应");
+            }
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("JSON解析错误:", parseError);
+            console.error("响应内容:", responseText);
+            throw new Error(`保存服务响应格式错误: ${parseError.message}`);
+        }
+        
+        if (result.success) {
+            alert(`✅ 保存成功！\n使用手机号: ${finalPhone}`);
+            cancelEdit(); // 保存后返回首页
+        } else {
+            alert("❌ 保存失败：" + (result.message || "保存服务返回错误"));
+        }
+    } catch (error) {
+        console.error("保存出错:", error);
+        console.error("错误类型:", error.constructor.name);
+        console.error("错误消息:", error.message);
+        
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            alert("网络错误：无法连接到保存服务，请检查网络连接或稍后再试。\n\n错误详情: " + error.message);
+        } else if (error.message.includes('timeout')) {
+            alert("保存超时：请求时间过长，请稍后再试。\n\n错误详情: " + error.message);
+        } else if (error.message.includes('404')) {
+            alert("保存服务错误：找不到请求的地址，请联系管理员。\n\n错误详情: " + error.message);
+        } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+            alert("保存服务内部错误：服务器暂时无法处理请求，请稍后再试。\n\n错误详情: " + error.message);
+        } else if (error.message.includes('CORS')) {
+            alert("跨域请求错误：浏览器阻止了跨域请求，请联系网站管理员。\n\n错误详情: " + error.message);
+        } else {
+            // 显示完整的错误消息
+            alert(`保存错误：${error.message}\n\n请检查网络连接或联系技术支持。\n\n详细信息: ${error.stack || '无堆栈信息'}`);
+        }
+    } finally {
+        btn.innerHTML = "💾 保存资料";
+        btn.disabled = false;
+    }
+};
+	// 3. 修改检查手机是否存在冲突的函数，也使用保存 Worker
+async function checkPhoneExists(phone, year) {
+    try {
+        // 查询是否有相同手机号的记录
+        const response = await fetch(`${SAVE_API_URL}?search=${encodeURIComponent(phone)}`);
+        const data = await response.json();
+        
+        // 检查是否有一样的年份前缀
+        const yearDigit = String(year % 10);
+        
+        // 检查数据库中是否存在相同年份前缀的记录
+        return data.some(record => {
+            // 检查记录的手机号是否以相同的年份数字开头
+            return record.phoneNumber.startsWith(yearDigit);
+        });
+    } catch (error) {
+        console.error("检查手机号冲突时出错:", error);
+        // 发生错误时假设不存在冲突，避免阻塞正常流程
+        return false;
+    }
+}
+
+// 4. 修改获取下一个可用手机号的函数
+async function getNextAvailablePhone(basePhone, year) {
+    // 首先添加年份前缀
+    const phoneWithPrefix = addPhonePrefix(basePhone, year);
+    
+    // 检查基本前缀号码是否存在冲突
+    if (!(await checkPhoneExists(basePhone, year))) {
+        // 如果基本号码没有冲突（去掉前缀的部分），直接返回带前缀的号码
+        return phoneWithPrefix;
+    }
+    
+    // 如果存在冲突，开始添加后缀
+    let suffix = 1;
+    while (true) {
+        const phoneWithSuffix = `${phoneWithPrefix}+${suffix}`;
+        
+        // 检查这个带后缀的号码是否在当前年份中存在冲突
+        const response = await fetch(`${SAVE_API_URL}?search=${encodeURIComponent(extractRealPhone(phoneWithSuffix))}`);
+        const data = await response.json();
+        
+        // 检查是否有一样的年份前缀
+        const yearDigit = String(year % 10);
+        
+        // 检查数据库中是否存在相同的完整号码（包括后缀）
+        const exists = data.some(record => {
+            return record.phoneNumber === phoneWithSuffix;
+        });
+        
+        if (!exists) {
+            // 如果不存在冲突，返回这个带前缀和后缀的号码
+            return phoneWithSuffix;
+        }
+        
+        suffix++;
+    }
+}	
+		
+		// 8. 取消编辑（返回首页）
+        window.cancelEdit = function() {
+            document.getElementById("adminForm").classList.add("hidden");
+            document.getElementById("searchResultInfo").classList.add("hidden");
+            document.getElementById("resultSelector").classList.add("hidden");
+            
+            // 隐藏价格汇总
+            document.getElementById("priceSummary").classList.add("hidden");
+            
+            // 清空表单
+            document.getElementById("mainName").value = "";
+            document.getElementById("phoneNumber").value = "";
+            document.getElementById("searchInput").value = "";
+            
+            // 重置全局变量
+            selectedEntry = null;
+            fullData = [];
+            
+            // 重置年份选择器为"请选择"
+            const yearSelect = document.getElementById("registrationYear");
+            yearSelect.value = "";
+            
+            // 解锁查询按钮
+            unlockSearchButton();
+        };
+
+        // === 补全的辅助函数 ===
+
+        // 生成单选框组 - 修改版本，确保水平排列
+        function createRadioGroup(name, className, checkedVal, pgClass) {
+            return `
+              <div class="form-check d-flex align-items-center justify-content-center">
+                <input class="form-check-input ${className}" type="radio" name="${name}" value="是" ${checkedVal === "是" ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
+                <label class="form-check-label ms-1" style="font-size: 14px; font-weight: 500;">是</label>
+              </div>
+              <div class="form-check d-flex align-items-center justify-content-center">
+                <input class="form-check-input ${className}" type="radio" name="${name}" value="" ${!checkedVal ? "checked" : ""} onchange="togglePaperGold(this, '${pgClass}')">
+                <label class="form-check-label ms-1" style="font-size: 14px; font-weight: 500;">否</label>
+              </div>`;
+        }
+
+        // 控制纸金框的启用/禁用
+        window.togglePaperGold = function(radioElement, pgClass) {
+            const isYes = radioElement.value === "是";
+            const parentDiv = radioElement.closest('.prayer-card');
+            const pgInputs = parentDiv.querySelectorAll(`.${pgClass}`);
+            
+            pgInputs.forEach(input => {
+                input.disabled = !isYes;
+                if (isYes) {
+                    input.classList.remove('pg-disabled');
+                } else {
+                    input.classList.add('pg-disabled');
+                    input.value = ''; // 清空值
+                }
+            });
+            
+            // 重新计算价格
+            setTimeout(calculateTotalPrice, 100);
+        };
+
+        // 检查最小数量（防止删光了）
+        window.checkMin = function() {
+             const container = document.getElementById("prayersContainer");
+             if (container.children.length === 0) {
+                 container.appendChild(createPrayerBlock({}, 1));
+                 setTimeout(calculateTotalPrice, 100);
+             }
+             
+             // 确保最后一个卡片有"新增一位"按钮
+             setTimeout(updateAddButtonVisibility, 100);
+        };
+
+        // 生成生肖下拉选择
+        function createZodiacSelect(selectedValue = "") {
+            const zodiacs = [
+                { value: "", label: "-- 请选择 --" },
+                { value: "鼠", label: "🐭 鼠" },
+                { value: "牛", label: "🐮 牛" },
+                { value: "虎", label: "🐯 虎" },
+                { value: "兔", label: "🐰 兔" },
+                { value: "龙", label: "🐉 龙" },
+                { value: "蛇", label: "🐍 蛇" },
+                { value: "马", label: "🐎 马" },
+                { value: "羊", label: "🐑 羊" },
+                { value: "猴", label: "🐵 猴" },
+                { value: "鸡", label: "🐔 鸡" },
+                { value: "狗", label: "🐶 狗" },
+                { value: "猪", label: "🐷 猪" }
+            ];
+            
+            let options = "";
+            zodiacs.forEach(z => {
+                options += `<option value="${z.value}" ${selectedValue === z.value ? "selected" : ""}>${z.label}</option>`;
+            });
+            
+            return `<select class="form-select pZodiac" style="height:35px" oninput="calculateTotalPrice()">
+                ${options}
+            </select>`;
+        }
+
+        // === 你提供的完整 createPrayerBlock 函数（已修改生肖为下拉选择）===
+        function createPrayerBlock(data = {}, index = 1) {
+            const div = document.createElement("div");
+            div.className = "prayer-card"; // 使用自定义样式类
+
+            // 确定初始状态
+            const taiSuiChecked = data.taiSui === "是";
+            const lightChecked = data.light === "是";
+            const longevityChecked = data.longevity === "是";
+            const wisdomChecked = data.wisdom === "是";
+            const arhatChecked = data.arhat === "是";
+
+            div.innerHTML = `
+                <div class="remove-btn" onclick="this.parentElement.remove(); checkMin(); setTimeout(calculateTotalPrice, 100)">❌</div>
+                <div class="mb-2"><strong>🧍‍♂️ 第 ${index} 位祈福者</strong></div>
+
+                <div class="row g-2">
+                    <div class="col-6">姓名 <input value="${data.name || ''}" class="form-control pName" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                    <div class="col-6">生肖 ${createZodiacSelect(data.zodiac || '')}</div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-6">太岁 <div class="radio-group">${createRadioGroup(`pTaiSui${index}`, "pTaiSui", data.taiSui, "pg1")}</div></div>
+                    <div class="col-6">纸金 <input type="number" value="${data.paperGold1 || ''}" class="form-control pg1" style="height:35px" oninput="calculateTotalPrice()" ${taiSuiChecked ? '' : 'disabled'} ${!taiSuiChecked ? 'class="form-control pg1 pg-disabled"' : ''}/></div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-6">光明灯 <div class="radio-group">${createRadioGroup(`pLight${index}`, "pLight", data.light, "pg2")}</div></div>
+                    <div class="col-6">纸金 <input type="number" value="${data.paperGold2 || ''}" class="form-control pg2" style="height:35px" oninput="calculateTotalPrice()" ${lightChecked ? '' : 'disabled'} ${!lightChecked ? 'class="form-control pg2 pg-disabled"' : ''}/></div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-6">长生禄位<div class="radio-group">${createRadioGroup(`pLongevity${index}`, "pLongevity", data.longevity, "pg3")}</div></div>
+                    <div class="col-6">纸金 <input type="number" value="${data.paperGold3 || ''}" class="form-control pg3" style="height:35px" oninput="calculateTotalPrice()" ${longevityChecked ? '' : 'disabled'} ${!longevityChecked ? 'class="form-control pg3 pg-disabled"' : ''}/></div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-6">文昌帝君 <div class="radio-group">${createRadioGroup(`pWisdom${index}`, "pWisdom", data.wisdom, "pg4")}</div></div>
+                    <div class="col-6">纸金 <input type="number" value="${data.paperGold4 || ''}" class="form-control pg4" style="height:35px" oninput="calculateTotalPrice()" ${wisdomChecked ? '' : 'disabled'} ${!wisdomChecked ? 'class="form-control pg4 pg-disabled"' : ''}/></div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-6">十八罗汉 <div class="radio-group">${createRadioGroup(`pArhat${index}`, "pArhat", data.arhat, "pg5")}</div></div>
+                    <div class="col-6">纸金 <input type="number" value="${data.paperGold5 || ''}" class="form-control pg5" style="height:35px" oninput="calculateTotalPrice()" ${arhatChecked ? '' : 'disabled'} ${!arhatChecked ? 'class="form-control pg5 pg-disabled"' : ''}/></div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-12">安奉功德金 <input type="number" value="${data.donation || ''}" class="form-control donate" style="height:35px" oninput="calculateTotalPrice()"/></div>
+                </div>
+            `;
+
+            // 为每个输入框添加初始状态
+            setTimeout(() => {
+                const card = div;
+                
+                // 初始化太岁纸金框
+                const taiSuiYes = card.querySelector(`input[name="pTaiSui${index}"][value="是"]`);
+                if (taiSuiYes && taiSuiYes.checked) {
+                    togglePaperGold(taiSuiYes, 'pg1');
+                }
+                
+                // 初始化光明灯纸金框
+                const lightYes = card.querySelector(`input[name="pLight${index}"][value="是"]`);
+                if (lightYes && lightYes.checked) {
+                    togglePaperGold(lightYes, 'pg2');
+                }
+                
+                // 初始化长生禄纸金框
+                const longevityYes = card.querySelector(`input[name="pLongevity${index}"][value="是"]`);
+                if (longevityYes && longevityYes.checked) {
+                    togglePaperGold(longevityYes, 'pg3');
+                }
+                
+                // 初始化文昌纸金框
+                const wisdomYes = card.querySelector(`input[name="pWisdom${index}"][value="是"]`);
+                if (wisdomYes && wisdomYes.checked) {
+                    togglePaperGold(wisdomYes, 'pg4');
+                }
+                
+                // 初始化十六罗汉纸金框
+                const arhatYes = card.querySelector(`input[name="pArhat${index}"][value="是"]`);
+                if (arhatYes && arhatYes.checked) {
+                    togglePaperGold(arhatYes, 'pg5');
+                }
+            }, 10);
+
+            return div;
+        }
+    </script>
+</body>
+</html>
