@@ -11,7 +11,7 @@
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             padding: 20px;
@@ -32,6 +32,7 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            flex: 1;
         }
         button {
             padding: 8px 15px;
@@ -57,7 +58,7 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
         }
         th {
@@ -104,6 +105,10 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        .stats {
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -118,10 +123,14 @@
             </div>
         </div>
 
+        <div class="stats">
+            <span id="totalCount">总数据: 0</span> | 
+            <span id="selectedCount">已选择: 0</span>
+        </div>
+
         <div class="controls">
             <button onclick="toggleSelectAll()" id="selectAllBtn">全选</button>
             <button onclick="deleteSelected()" class="delete-btn">删除选中项</button>
-            <span id="selectedCount">已选择 0 条</span>
         </div>
 
         <div id="messageArea"></div>
@@ -136,7 +145,7 @@
         const API_BASE_URL = 'https://userts.gealarm2012.workers.dev'; // 替换为你的Cloudflare Worker URL
         
         let currentPage = 1;
-        const itemsPerPage = 20;
+        const itemsPerPage = 30;
         let allData = [];
         let filteredData = [];
         let selectedItems = new Set();
@@ -164,6 +173,7 @@
                 const data = await response.json();
                 allData = data;
                 filteredData = [...allData];
+                document.getElementById('totalCount').textContent = `总数据: ${filteredData.length}`;
                 renderTable();
             } catch (error) {
                 showError(`加载数据失败: ${error.message}`);
@@ -194,6 +204,7 @@
                 
                 const data = await response.json();
                 filteredData = data;
+                document.getElementById('totalCount').textContent = `总数据: ${filteredData.length}`;
                 renderTable();
             } catch (error) {
                 showError(`搜索失败: ${error.message}`);
@@ -235,11 +246,6 @@
                             <th class="checkbox-cell"><input type="checkbox" id="headerCheckbox" onchange="togglePageSelectAll(this)"></th>
                             <th>主联系人</th>
                             <th>手机号</th>
-                            <th>收据号码</th>
-                            <th>回向</th>
-                            <th>供品</th>
-                            <th>管理员</th>
-                            <th>往生纸钱</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -258,11 +264,6 @@
                         </td>
                         <td>${item.mainName || ''}</td>
                         <td>${item.phoneNumber || ''}</td>
-                        <td>${item.receiptNumber || ''}</td>
-                        <td>${item.wishReturn || ''}</td>
-                        <td>${item.offering || ''}</td>
-                        <td>${item.admin || ''}</td>
-                        <td>${item.wishPaper || 0}</td>
                     </tr>
                 `;
             });
@@ -357,7 +358,7 @@
 
         // 更新已选择计数
         function updateSelectedCount() {
-            document.getElementById('selectedCount').textContent = `已选择 ${selectedItems.size} 条`;
+            document.getElementById('selectedCount').textContent = `已选择: ${selectedItems.size}`;
         }
 
         // 删除选中的项目
@@ -393,6 +394,18 @@
                     
                     if (result.success) {
                         successCount++;
+                        
+                        // 从本地数据中移除
+                        const originalIndex = allData.findIndex(d => d.phoneNumber === item.phoneNumber);
+                        if (originalIndex !== -1) {
+                            allData.splice(originalIndex, 1);
+                        }
+                        
+                        // 从过滤数据中移除
+                        const filteredIndex = filteredData.findIndex(d => d.phoneNumber === item.phoneNumber);
+                        if (filteredIndex !== -1) {
+                            filteredData.splice(filteredIndex, 1);
+                        }
                     } else {
                         failCount++;
                         console.error('删除失败:', result.message);
@@ -409,8 +422,11 @@
                 showSuccess(`成功删除 ${successCount} 条数据`);
             }
 
-            // 重新加载数据
-            await loadAllData();
+            // 更新统计
+            document.getElementById('totalCount').textContent = `总数据: ${filteredData.length}`;
+            
+            // 重新渲染表格
+            renderTable();
             selectedItems.clear();
             updateSelectedCount();
         }
